@@ -395,3 +395,31 @@ balance read, the 404 for a transaction that does not exist, and the control
 whose only job is to pass. And `off-by-one` is wide — six cases go red for one
 cause — so its row tells a reader what is wrong with the partner without telling
 them which of the six is the most direct evidence.
+
+## 21. A session is a cookie nobody stores, and a secret nobody stores in the clear
+
+"Try it" needs no password, so it starts a session for anyone who presses it.
+What keeps that safe:
+
+- **The cookie's token is never stored.** The database holds its SHA-256, and
+  a separate random id is what other rows refer to. A copy of the table is not
+  a set of live sessions. The cookie is `HttpOnly`, `Secure` and
+  `SameSite=Lax`, and every endpoint that changes something is a `POST`, which
+  `Lax` keeps other sites from sending.
+- **The signing secret is encrypted.** It cannot be hashed — the suite signs
+  with it — so it is sealed with AES-GCM under `SECRET_KEY`, a Worker secret,
+  with a fresh IV each time. It is shown to the visitor once; the `UPDATE` that
+  marks it shown is the check, so two requests together cannot both see it.
+- **Starts are limited per address**, five an hour, counted in one upsert and
+  charged before the partner is asked to provision anything, so refused or
+  failing starts still count.
+- **A session ends when its tenant does.** Its expiry is the one the partner
+  answered with, so there is never a session pointing at a partner that has
+  forgotten it.
+- **Nothing has a default.** Without `SECRET_KEY` or `PROVISION_TOKEN` a start
+  answers `503` and the partner is not called.
+
+**Cost.** Whoever has the database and `SECRET_KEY` together can sign as the
+provider for every live session. Visitors behind one address — an office, a
+conference network — share five starts an hour. And a visitor who closes the
+dialog that showed the secret cannot see it again; they start a new session.

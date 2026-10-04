@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository has been made to fail by at least one row below:
-the 98 in `packages/partner`, the 19 in `packages/cases` and the 59 in `packages/api`. A new test is not done until it has a row too.
+the 98 in `packages/partner`, the 19 in `packages/cases` and the 80 in `packages/api`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -220,6 +220,35 @@ read its own.
 | 150 | `member/balance` dropped from the uncovered list                                       | has a version that makes each case fail, or says why not                                                                                                          | `member/balance is made to fail by no version, and is not listed as uncovered`                       |
 | 151 | A covered case (`member/known`) listed as uncovered                                    | has a version that makes each case fail, or says why not                                                                                                          | `member/known is listed as uncovered, but a version makes it fail`                                   |
 
+## Sessions
+
+| #   | Mutation                                                    | Caught by                                                                                           | Failure                                                                                      |
+| --- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 152 | The session cookie readable by scripts                      | POST /sessions sets a session cookie that scripts cannot read and other sites do not send           | `expected 'session=…' to match /HttpOnly/`                                                   |
+| 153 | The session cookie sent over plain HTTP                     | POST /sessions sets a session cookie that scripts cannot read and other sites do not send           | `expected 'session=…' to match /Secure/`                                                     |
+| 154 | The session cookie sent by other sites (`SameSite=None`)    | POST /sessions sets a session cookie that scripts cannot read and other sites do not send           | `expected 'session=…' to match /SameSite=Lax/`                                               |
+| 155 | The cookie token stored as it is                            | POST /sessions stores neither the cookie token nor the signing secret as they are — 6 in all        | `expected null not to be null`                                                               |
+| 156 | The signing secret stored as it is                          | POST /sessions stores neither the cookie token nor the signing secret as they are — 6 in all        | `SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON`                       |
+| 157 | The tenant taken from the request body                      | POST /sessions ignores anything the request says about where the partner is                         | `TypeError: Cannot read properties of undefined (reading 'tenant')`                          |
+| 158 | The start limit charged by a read and then a write          | POST /sessions counts starts that arrive together, rather than letting them all read the same count | `expected [ 201, 201, 201, 201, 201, 201, …(2) ] to have a length of 5 but got 8`            |
+| 159 | The start limit one too strict                              | POST /sessions refuses a client past its limit, and not a different one — 2 in all                  | `expected 429 to be 201`                                                                     |
+| 160 | Every client sharing one count                              | POST /sessions refuses a client past its limit, and not a different one — 9 in all                  | `expected 429 to be 201`                                                                     |
+| 161 | Missing secrets not checked before starting                 | POST /sessions is off, not open, without its secrets — and calls no partner                         | `expected 500 to be 503`                                                                     |
+| 162 | A partner refusing to provision ignored                     | POST /sessions answers 502 and keeps no session when the partner refuses to provision               | `expected 500 to be 502`                                                                     |
+| 163 | Expired sessions accepted                                   | GET /session answers 401 without a cookie, with a made-up one, and with an expired one              | `expected 200 to be 401`                                                                     |
+| 164 | Any cookie finds the newest session                         | shows each visitor their own session only — 6 in all                                                | `expected 't-52ac7250-…' to be 't-c4c351a8-…'` ("shows each visitor their own session only") |
+| 165 | The secret shown every time                                 | POST /session/secret shows the signing secret once, and never again — 2 in all                      | `expected 200 to be 410`                                                                     |
+| 166 | Balances not read from the partner                          | GET /session shows the session, with each member’s balance read from the partner                    | `expected [ null, null ] to deeply equal [ 1000, 1000 ]`                                     |
+| 167 | A session that outlives its tenant by an hour               | POST /sessions ends when the tenant on the partner ends, and not later                              | `expected 1791224881000 to be 1791221281000`                                                 |
+| 168 | One IV for every secret                                     | encrypt and decrypt never seals the same secret the same way twice                                  | `expected 'v1:AAAAAAAAAAAAAAAA:zFT1…' not to be 'v1:AAAAAAAAAAAAAAAA:zFT1…'`                 |
+| 169 | Any key length accepted                                     | encrypt and decrypt refuses a key that is not 32 bytes                                              | `promise resolved "'v1:…'" instead of rejecting`                                             |
+| 170 | The secret's one showing claimed by a read and then a write | POST /session/secret shows it to only one of two requests that arrive together                      | `expected [ 200, 200, 200 ] to deeply equal [ 200, 410, 410 ]`                               |
+| 171 | The partner's version list left out                         | POST /sessions provisions a tenant with two members, and says which                                 | `expected [] to include 'correct'`                                                           |
+| 172 | Decryption drops a character                                | encrypt and decrypt round-trips a secret — 5 in all                                                 | `expected 'hsec_example' to be 'whsec_example'`                                              |
+| 173 | Decryption swallows a failure                               | encrypt and decrypt refuses a different key, and a ciphertext changed by one character              | `Error: promise resolved "''" instead of rejecting`                                          |
+| 174 | Tokens keep `+` and `/`                                     | tokens are URL-safe, long, and different every time — 3 in all                                      | `expected 'B+LB9VCu…' to match /^[A-Za-z0-9_-]{43}$/`                                        |
+| 175 | Tokens hashed with SHA-1                                    | tokens are stored as their SHA-256                                                                  | `expected 'a9993e36…' to be 'ba7816bf…'`                                                     |
+
 ## Tests that could not fail, found on the way
 
 Running the mutations is what found these. Each one passed whatever the code
@@ -255,3 +284,8 @@ ignores-signature to fail it`.
   version also one point short on each, the earn is 1 under and the redemption
   1 over, the two cancel, and the end balance is the right 1,070. It now checks
   after each step — row 147.
+- **"tokens are URL-safe, long, and different every time".** It checked one
+  token against `^[A-Za-z0-9_-]{43}$`. A 43-character base64 string has about
+  a one-in-four chance of holding no `+` or `/` at all, so with the replacement
+  removed it would still have passed one run in four. It now checks fifty —
+  row 174.

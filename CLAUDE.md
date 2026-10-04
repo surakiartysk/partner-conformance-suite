@@ -15,7 +15,7 @@ afterthought.
 packages/spec      the Points Partner API (OpenAPI)
 packages/partner   a reference partner implementing it — Worker + D1
 packages/cases     the conformance cases and their matchers
-packages/api       the provider's side: signer and runner
+packages/api       the provider's side: sessions, signer and runner
 ```
 
 ## Non-negotiables

@@ -3,10 +3,13 @@ import type { D1Migration } from '@cloudflare/vitest-pool-workers'
 import { app as partner } from '../../partner/src/app'
 import { newSecret } from '../src/runner/signing'
 import type { Target } from '../src/runner/execute'
+import api from '../src/index'
+import type { Bindings } from '../src/types'
 
 declare global {
   namespace Cloudflare {
-    interface Env {
+    interface Env extends Omit<Bindings, 'PARTNER'> {
+      TEST_MIGRATIONS: D1Migration[]
       PARTNER_DB: D1Database
       PARTNER_MIGRATIONS: D1Migration[]
       PARTNER_PROVISION_TOKEN: string
@@ -15,6 +18,12 @@ declare global {
 }
 
 export const migratePartner = () => applyD1Migrations(env.PARTNER_DB, env.PARTNER_MIGRATIONS)
+
+/** Both databases: the suite's own, and the reference partner's. */
+export const migrateAll = async () => {
+  await applyD1Migrations(env.DB, env.TEST_MIGRATIONS)
+  await migratePartner()
+}
 
 /** The network, as far as these tests are concerned: straight into the partner's `fetch`. */
 export const toPartner = (request: Request): Promise<Response> =>
@@ -47,4 +56,47 @@ export async function provisionTarget(variant = 'correct'): Promise<Target> {
     secret,
     members: { A: members[0]!.id, B: members[1]!.id },
   }
+}
+
+/** The API Worker's bindings, with the partner reached through `toPartner`. */
+export const apiEnv = (overrides: Partial<Bindings> = {}): Bindings => ({
+  ...(env as unknown as Bindings),
+  PARTNER: { fetch: toPartner } as unknown as Fetcher,
+  ...overrides,
+})
+
+/** Calls the API Worker the way a browser would. */
+export async function callApi(
+  path: string,
+  init: RequestInit = {},
+  overrides: Partial<Bindings> = {},
+): Promise<Response> {
+  return api.fetch(
+    new Request(`https://suite.example${path}`, init),
+    apiEnv(overrides),
+    createExecutionContext(),
+  )
+}
+
+/** The cookie a response set, ready to send back. */
+export function cookieFrom(response: Response): string {
+  const header = response.headers.get('set-cookie') ?? ''
+  return header.split(';')[0]!
+}
+
+/** A fresh session, from an address of its own so the rate limit stays out of the way. */
+export async function startSession(): Promise<{ cookie: string; body: SessionView }> {
+  const response = await callApi('/sessions', {
+    method: 'POST',
+    headers: { 'cf-connecting-ip': `client-${crypto.randomUUID()}` },
+  })
+  if (response.status !== 201) throw new Error(`session failed: ${response.status}`)
+  return { cookie: cookieFrom(response), body: await response.json<SessionView>() }
+}
+
+export interface SessionView {
+  expiresAt: string
+  partner: { tenant: string; versions: string[] }
+  members: { slot: 'A' | 'B'; id: string; balance?: number | null }[]
+  secret: { revealed: boolean }
 }

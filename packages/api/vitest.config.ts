@@ -14,16 +14,22 @@ import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-pool-worker
 const partnerMigrations = await readD1Migrations(
   path.join(import.meta.dirname, '../partner/migrations'),
 )
+const migrations = await readD1Migrations(path.join(import.meta.dirname, 'migrations'))
 
 export default defineConfig({
   plugins: [
     cloudflareTest({
       miniflare: {
         compatibilityDate: '2024-12-18',
-        d1Databases: ['PARTNER_DB'],
+        d1Databases: ['DB', 'PARTNER_DB'],
         bindings: {
+          TEST_MIGRATIONS: migrations,
           PARTNER_MIGRATIONS: partnerMigrations,
           PARTNER_PROVISION_TOKEN: 'test-provision-token',
+          PROVISION_TOKEN: 'test-provision-token',
+          // 32 zero bytes: a test key, and obviously one.
+          SECRET_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          PARTNER_ORIGIN: 'https://partner.example',
         },
       },
     }),

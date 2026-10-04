@@ -1,0 +1,27 @@
+name = "conformance-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "conformance-api"
+# Read at deploy time only; local runs resolve by database_name.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# The reference partner, reached through a service binding rather than the
+# public internet. The suite never takes a partner URL from a request: this
+# binding and PARTNER_ORIGIN below are the only places a partner comes from.
+[[services]]
+binding = "PARTNER"
+service = "points-partner"
+
+[vars]
+# Shown to the visitor as the partner's base URL, and used to build the URL of
+# each request. The service binding decides where the request actually goes.
+PARTNER_ORIGIN = "https://points-partner.example"
+
+# Secrets — `wrangler secret put` for a deployment, `.dev.vars` locally. None
+# has a default: unset, the endpoints that need one answer 503.
+#   PROVISION_TOKEN   must equal the reference partner's PROVISION_TOKEN
+#   SECRET_KEY        32 random bytes, base64 — encrypts the signing secrets

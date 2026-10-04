@@ -5,16 +5,21 @@
   "type": "module",
   "description": "The provider's side: signs each case's requests, sends them to a partner, and judges the answers.",
   "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "db:migrate": "wrangler d1 migrations apply conformance-api --local",
+    "deploy": "wrangler deploy",
     "test": "vitest run",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@conformance/cases": "workspace:*"
+    "@conformance/cases": "workspace:*",
+    "hono": "^4.6.14"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@cloudflare/workers-types": "^5.20260827.1",
     "typescript": "^5.7.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "wrangler": "^4.124.0"
   }
 }

@@ -31,7 +31,11 @@ Built in stages. Done so far:
   cases each must make fail. The test that runs every case against every
   version reads that file, so it cannot drift from the code.
 
-Next: sessions, per-member locks and restoring balances, then the dashboard.
+- **Sessions** — [`packages/api`](packages/api) is now a Worker: "try it"
+  provisions a tenant on the reference partner, sets a session cookie, and
+  keeps the session's signing secret encrypted.
+
+Next: runs, per-member locks and restoring balances, then the dashboard.
 
 ## Layout
 
