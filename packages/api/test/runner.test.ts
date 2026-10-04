@@ -273,6 +273,30 @@ describe('the verdict', () => {
     ])
   })
 
+  it('is timed_out, not an error, when the partner is slow on the starting balance', async () => {
+    const transport = () => new Promise<Response>(() => {})
+    const result = await executeCase(readCase({ writes: true }), TARGET, {
+      transport,
+      timeoutMs: 50,
+    })
+    expect(result.status).toBe('timed_out')
+    expect(result.steps.map((s) => [s.phase, s.outcome])).toEqual([['start', 'timed_out']])
+  })
+
+  it('is timed_out, not an error, when the partner is slow on an arrange step', async () => {
+    const { transport, received } = scripted((request) =>
+      new URL(request.url).pathname.endsWith('/setup')
+        ? new Promise<Response>(() => {})
+        : json({ id: 'mbr_a' }),
+    )
+    const definition = readCase({
+      arrange: [{ name: 'setup', request: () => ({ method: 'POST', path: '/setup', body: {} }) }],
+    })
+    const result = await executeCase(definition, TARGET, { transport, timeoutMs: 50 })
+    expect(result.status).toBe('timed_out')
+    expect(received).toHaveLength(1)
+  })
+
   it('is an error when the starting balance of a writing case cannot be read', async () => {
     const { transport, received } = scripted(() => json({ balance: 'lots' }))
     const result = await executeCase(readCase({ writes: true }), TARGET, { transport })

@@ -1,3 +1,5 @@
+import type { Behaviour } from './variants'
+
 export interface Bindings {
   DB: D1Database
   /** Guards POST /_provision. Unset means provisioning is off. */
@@ -10,6 +12,7 @@ export interface Tenant {
 }
 
 export interface Variables {
+  behaviour: Behaviour
   tenant: Tenant
   /** The body exactly as received — what the signature covers. */
   rawBody: string

@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
+import type { Env } from './types'
 
 /**
  * Every error the partner returns, as an RFC 9457 problem document.
@@ -30,6 +31,13 @@ export const PROBLEM_BASE = 'https://points-partner.example/problems/'
 
 export function problem(c: Context, slug: ProblemSlug, detail?: string): Response {
   const [status, title] = PROBLEMS[slug]
+  // The one place a version of this partner answers an error wrongly: an
+  // unknown member as plain text. `behaviour` is not set yet for the errors
+  // raised before a request is authenticated, which are never this one.
+  const behaviour = (c as Context<Env>).get('behaviour')
+  if (slug === 'member-not-found' && behaviour && !behaviour.explainsUnknownMember) {
+    return c.text(title, status)
+  }
   const body = { type: PROBLEM_BASE + slug, title, status, ...(detail ? { detail } : {}) }
   return c.body(JSON.stringify(body), status, { 'content-type': 'application/problem+json' })
 }

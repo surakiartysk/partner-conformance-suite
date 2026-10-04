@@ -56,7 +56,13 @@ assert inside a case; return what is expected, so the page shows what was
 checked. Mark a case `writes` if it could move a balance on a partner that is
 wrong — the lanes trust it, and nothing checks it.
 
-**8. Comments and docs must be true.** If you remove behaviour, remove what
+**8. A new case needs a version that makes it fail.** Add a version (one
+behaviour off, nothing else) and a row in `docs/variants.md`, or list the case
+under "Cases no version makes fail" and say why. The version test reads that
+file and fails if the table and the code disagree — and the answer is never to
+edit the table to match what happened before you know why.
+
+**9. Comments and docs must be true.** If you remove behaviour, remove what
 describes it. Every decision states its cost.
 
 ## Commands
@@ -64,6 +70,7 @@ describes it. Every decision states its cost.
 ```bash
 pnpm verify        # what CI runs: format, lint (code + spec), types, leak, tests
 pnpm dev:partner   # the reference partner on :8788
+pnpm check:variants  # every case against every version, held to docs/variants.md
 pnpm check:leak    # the vocabulary tripwire alone
 ```
 

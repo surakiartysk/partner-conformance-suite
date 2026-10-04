@@ -26,9 +26,12 @@ Built in stages. Done so far:
   requests, sends them, and judges the answers. Every case passes against the
   reference partner.
 
-Next: reference partners that are deliberately wrong in one way each — so that
-every case is shown to catch the bug it is for — and then sessions, runs, and
-the dashboard.
+- **Nine versions of the reference partner** — `correct` and eight, each wrong
+  in one way, with [`docs/variants.md`](docs/variants.md) saying exactly which
+  cases each must make fail. The test that runs every case against every
+  version reads that file, so it cannot drift from the code.
+
+Next: sessions, per-member locks and restoring balances, then the dashboard.
 
 ## Layout
 
@@ -38,6 +41,7 @@ packages/partner   the reference partner: Worker + D1
 packages/cases     the cases, matchers and lanes
 packages/api       the provider's side: signer and runner
 docs/decisions.md  what was chosen, why, and what it costs
+docs/variants.md   what each wrong version must get wrong
 docs/mutations.md  every test, shown to fail
 ```
 

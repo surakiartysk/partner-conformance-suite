@@ -32,20 +32,28 @@ type Intent =
   | { type: 'earn' | 'redeem'; memberId: string; points: number }
   | { type: 'reversal'; reverses: string }
 
+/**
+ * A stored `reverses` is the transaction's id, plus `#` and a suffix when the
+ * version of the partner that wrote it does not keep one reversal per
+ * transaction. See `apply`.
+ */
+const reversedId = (row: TransactionRow) => row.reverses?.split('#')[0] ?? null
+
 function view(row: TransactionRow) {
+  const reverses = reversedId(row)
   return {
     transactionId: row.id,
     type: row.type,
     memberId: row.member_id,
     points: row.points,
     balance: row.balance_after,
-    ...(row.reverses ? { reverses: row.reverses } : {}),
+    ...(reverses ? { reverses } : {}),
   }
 }
 
 function matches(row: TransactionRow, intent: Intent): boolean {
   if (row.type !== intent.type) return false
-  if (intent.type === 'reversal') return row.reverses === intent.reverses
+  if (intent.type === 'reversal') return reversedId(row) === intent.reverses
   return row.member_id === intent.memberId && row.points === intent.points
 }
 
@@ -100,6 +108,14 @@ async function answerRepeat(c: Context<Env>, reference: string, intent: Intent) 
  * Inserts the transaction and moves the balance by `delta`, atomically.
  * `guard` is extra SQL on the member row, bound to `guardValue`; the insert
  * happens only if it holds. Returns the new row, or null if the guard failed.
+ *
+ * `unique` says whether the reference and the reversed id are held unique by
+ * the table's indexes, as they are for a correct partner. A version with the
+ * matching bug has no such index, and since all versions share one schema it
+ * gets past it by making each key unique: the reference or the reversed id is
+ * stored with `#` and the new transaction's id appended. Nothing reads those
+ * suffixes back — `reversedId` strips one, and a lookup by reference simply
+ * finds nothing, which is the bug.
  */
 async function apply(
   c: Context<Env>,
@@ -107,11 +123,14 @@ async function apply(
   delta: number,
   reverses: string | null,
   guard: { sql: string; value: number } | null,
+  unique: { reference: boolean; reverses: boolean } = { reference: true, reverses: true },
 ): Promise<TransactionRow | null> {
   const db = c.env.DB
   const tenant = c.var.tenant.id
   const id = newTransactionId()
   const now = Math.floor(Date.now() / 1000)
+  const storedReference = unique.reference ? fields.reference : `${fields.reference}#${id}`
+  const storedReverses = reverses && !unique.reverses ? `${reverses}#${id}` : reverses
 
   const insert = db
     .prepare(
@@ -123,11 +142,11 @@ async function apply(
     )
     .bind(
       id,
-      fields.reference,
+      storedReference,
       fields.type,
       fields.points,
       delta,
-      reverses,
+      storedReverses,
       now,
       tenant,
       fields.memberId,
@@ -166,7 +185,9 @@ async function move(c: Context<Env>, type: 'earn' | 'redeem'): Promise<Response>
   }
 
   const intent: Intent = { type, memberId, points }
-  const repeat = await answerRepeat(c, reference, intent)
+  // A version that does not dedupe earns never looks for the earlier one.
+  const dedupes = type === 'redeem' || c.var.behaviour.dedupesEarn
+  const repeat = dedupes ? await answerRepeat(c, reference, intent) : null
   if (repeat) return repeat
 
   const member = await c.env.DB.prepare('SELECT 1 FROM members WHERE tenant = ? AND id = ?')
@@ -181,7 +202,10 @@ async function move(c: Context<Env>, type: 'earn' | 'redeem'): Promise<Response>
       { type, memberId, points, reference },
       type === 'earn' ? points : -points,
       null,
-      type === 'redeem' ? { sql: 'balance >= ?', value: points } : null,
+      type === 'redeem' && c.var.behaviour.guardsRedeem
+        ? { sql: 'balance >= ?', value: points }
+        : null,
+      { reference: dedupes, reverses: true },
     )
   } catch (error) {
     // The same reference arriving twice at once: both passed the lookup
@@ -220,12 +244,15 @@ export async function reverse(c: Context<Env>): Promise<Response> {
   if (!original) return problem(c, 'transaction-not-found')
   if (original.type === 'reversal') return problem(c, 'not-reversible')
 
-  const reversed = await c.env.DB.prepare(
-    'SELECT 1 FROM transactions WHERE tenant = ? AND reverses = ?',
-  )
-    .bind(c.var.tenant.id, transactionId)
-    .first()
-  if (reversed) return problem(c, 'already-reversed')
+  const once = c.var.behaviour.reversesOnce
+  if (once) {
+    const reversed = await c.env.DB.prepare(
+      'SELECT 1 FROM transactions WHERE tenant = ? AND reverses = ?',
+    )
+      .bind(c.var.tenant.id, transactionId)
+      .first()
+    if (reversed) return problem(c, 'already-reversed')
+  }
 
   // Undoing an earn takes the points back, so it needs them to still be there.
   const undoingEarn = original.type === 'earn'
@@ -237,6 +264,7 @@ export async function reverse(c: Context<Env>): Promise<Response> {
       undoingEarn ? -original.points : original.points,
       transactionId,
       undoingEarn ? { sql: 'balance >= ?', value: original.points } : null,
+      { reference: true, reverses: once },
     )
   } catch (error) {
     // Either index can be the one that refused: the reference, if this exact

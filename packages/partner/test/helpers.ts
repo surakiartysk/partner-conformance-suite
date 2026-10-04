@@ -101,6 +101,7 @@ export interface SignedOptions {
   omit?: 'id' | 'timestamp' | 'signature'
   /** Changes the body after signing it. */
   tamper?: (body: string) => string
+  signal?: AbortSignal
 }
 
 export const nowSeconds = () => Math.floor(Date.now() / 1000)
@@ -130,6 +131,7 @@ export async function signed(
     method,
     headers,
     body: method === 'GET' ? undefined : options.tamper ? options.tamper(body) : body,
+    signal: options.signal,
   })
 }
 

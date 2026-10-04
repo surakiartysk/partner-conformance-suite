@@ -306,12 +306,17 @@ export async function executeCase(
       expect: () => ({ status: 200 }),
     })
     const balance = (read.response?.body as { balance?: unknown } | undefined)?.balance
+    // A partner that does not answer in time has timed out, whichever step
+    // it was slow on; only a wrong answer to a setup step is an error.
+    if (read.outcome === 'timed_out') return finish('timed_out')
     if (read.outcome !== 'ok' || !Number.isInteger(balance)) return finish('error')
     start = new Quantity('balance at start', balance as number)
   }
 
   for (const step of definition.arrange ?? []) {
-    if ((await run('arrange', step)).outcome !== 'ok') return finish('error')
+    const record = await run('arrange', step)
+    if (record.outcome === 'timed_out') return finish('timed_out')
+    if (record.outcome !== 'ok') return finish('error')
   }
 
   let status: CaseStatus = 'passed'

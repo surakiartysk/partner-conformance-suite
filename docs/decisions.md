@@ -212,6 +212,13 @@ If arrange goes wrong, the case ends as `error`, not `failed`. A reversal case
 whose earn was refused has learned nothing about reversals, and calling it a
 failed reversal would send a partner to look in the wrong place.
 
+The exception is a partner that does not answer a setup step in time — the
+starting balance, or an arrange step. That ends the case as `timed_out`, the
+same as a slow act. Stage 2 returned `error` there; building `slow-balance`
+showed it was wrong, because it made ten cases report `error` ("something is
+wrong with this case") for a partner that was merely slow. A wrong answer to a
+setup step is an `error`; no answer is a `timed_out`, wherever it happens.
+
 **Cost.** A partner whose earn is broken sees the earn cases fail and the
 reversal cases come back as errors — more red than the one bug deserves. The
 statuses are different on purpose, but someone has to read them as different.
@@ -287,3 +294,97 @@ media type.
 **Cost.** A partner that reports a stale timestamp as an invalid signature
 passes, though its logs will mislead whoever reads them. Tightening this would
 be a change to the spec first, and to the cases after.
+
+## 16. Every wrong version is `correct` with one behaviour off
+
+The reference partner is served as nine versions, and eight of them are wrong.
+They are not eight copies with different bugs patched in: each is the correct
+partner with exactly one flag in a `Behaviour` record switched off, and the
+routes read the flag. Every flag is written so that `true` is the correct
+behaviour, which keeps "what is a bug" a single reading of the record.
+
+Three tests hold the rule. Every other version differs from `correct` in
+exactly one flag; every flag is off in exactly one version; and a version that
+is wrong in two ways — which would send whoever reads a red case to the wrong
+place — fails the first.
+
+**Cost.** The partner's code now has seven places that ask "is this the version
+that is wrong here?". They are small and named, but a reader of `points.ts`
+meets them before meeting the logic. The alternative, a separate copy of the
+partner per bug, would have been eight files that drift from `correct` the
+first time it changes.
+
+## 17. A bug that has to get past an index does it by making the key unique
+
+Two of the bugs — repeating an earn's reference, reversing a transaction twice
+— are things the schema forbids, on purpose: `(tenant, reference)` and
+`(tenant, reverses)` are unique (decision 5). All versions share one schema, so
+a version with the matching bug cannot drop the index. It gets past it the way
+a real partner without the index effectively would: it stores the reference, or
+the reversed id, with `#` and the new transaction's id appended, so every key
+is different. A lookup by reference then finds nothing, which is the bug, and
+one function strips the suffix when a reversal is read back.
+
+**Cost.** Correct code carries a line that only a wrong version uses, and the
+suffix is a convention that two functions have to agree on. Mutations 105 and
+106 are what check that they do: strip it in one place and not the other and a
+reversal answers with an id nobody issued.
+
+## 18. `docs/variants.md` is the expectation, and the test reads it
+
+What each version must get wrong is a table in a document, and
+`variants.test.ts` parses that document. The expectation is not a second copy
+in code that could drift from what the page says: change one and the test is
+red until the other agrees.
+
+The test runs every case against every version, each case on a tenant of its
+own, and compares in both directions. A case that goes red where the table does
+not expect it depends on something it should not; a case that stays green where
+the table expects red does not check what it claims. The failure says which case
+and which version — `security/tampered-body was failed, and the table does not
+expect ignores-signature to fail it` — because the first version of the test said
+`expected { …(3) } to deeply equal { …(2) }`.
+
+**Cost.** The test parses markdown, and a table reformatted in a way the parser
+does not expect is red for a reason that has nothing to do with the cases. It
+reads backticked case ids from the last cell and the status from the third, and
+fails loudly rather than skipping a row it cannot read.
+
+## 19. `slow-balance` is wide, and says so
+
+A partner that holds a balance read cannot be tested for anything that moves
+points, because every such case reads the balance first. The version is
+therefore expected to fail eleven cases — `member/balance` and the ten that
+declare `writes` — and all of them as `timed_out`. The test checks that list
+against the cases' own `writes` flags. A case that starts reading a balance
+without declaring `writes` is one the version now times out and the table does
+not expect, so it goes red until someone decides which is wrong. What it cannot
+notice is the reverse — a case that moves a balance and says it does not — which
+stays the promise decision 13 says it is.
+
+The wait is held until the caller gives up and not for a fixed time: the partner
+sleeps on the request's abort signal, so a runner that times out and aborts frees
+the request, and a test with a 300 ms timeout does not leave a 15-second timer
+behind it.
+
+**Cost.** A very wide red is one that says little: eleven `timed_out` cases is
+"the balance is slow", which is exactly right, but no case in this version
+exercises its own assertions. The version proves the runner's handling of
+slowness, not any case.
+
+## 20. Cases that no version makes fail are listed, not hidden
+
+The rule is that every case needs a version that makes it fail, or it has not
+been shown to catch anything. The nine versions agreed in design make ten of the
+twenty cases fail by assertion. The other ten — one a deliberate control — are
+listed in `docs/variants.md` under "Cases no version makes fail", and the test
+holds that list to the code in both directions: a case on it that a version now
+makes fail is an error, and so is a new case that is neither covered nor listed.
+
+This does not close the gap. It makes it visible, and stops it growing without
+anyone choosing to let it. Closing it takes more versions: one that omits a
+field, one that miscounts an earn, one that accepts zero points, one that
+dedupes redemptions the way `double-earn` fails to dedupe earns.
+
+**Cost.** Nine of those ten cases are, today, assertions nobody has seen fail.
+Their arithmetic and shapes are checked only against a partner that is right.

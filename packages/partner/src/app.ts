@@ -5,7 +5,7 @@ import { getBalance, getMember } from './routes/members'
 import { earn, redeem, reverse } from './routes/points'
 import { TOLERANCE_SECONDS, verify } from './signature'
 import type { Env } from './types'
-import { isVariant } from './variants'
+import { VARIANTS, isVariant } from './variants'
 
 /**
  * The reference partner.
@@ -32,7 +32,9 @@ app.post('/_provision', provision)
 const BASE = '/:variant/:tenant'
 
 app.use(`${BASE}/*`, async (c, next) => {
-  if (!isVariant(c.req.param('variant'))) return problem(c, 'not-found', 'no such variant')
+  const variant = c.req.param('variant')
+  if (!isVariant(variant)) return problem(c, 'not-found', 'no such variant')
+  const behaviour = VARIANTS[variant]
 
   const now = Math.floor(Date.now() / 1000)
   const tenant = await c.env.DB.prepare('SELECT id, secret, expires_at FROM tenants WHERE id = ?')
@@ -50,6 +52,7 @@ app.use(`${BASE}/*`, async (c, next) => {
     },
     rawBody,
     now,
+    { signature: behaviour.checksSignature, timestamp: behaviour.checksTimestamp },
   )
   if (!verdict.ok) return problem(c, verdict.problem)
 
@@ -57,15 +60,18 @@ app.use(`${BASE}/*`, async (c, next) => {
   // cannot use up an id. The upsert refuses an id seen within the memory
   // window and accepts one last seen before it, in a single statement — a
   // read-then-insert would let two copies of one request both through.
-  const recorded = await c.env.DB.prepare(
-    `INSERT INTO seen_messages (tenant, id, seen_at) VALUES (?, ?, ?)
-     ON CONFLICT (tenant, id) DO UPDATE SET seen_at = excluded.seen_at
-       WHERE seen_messages.seen_at < ?`,
-  )
-    .bind(tenant.id, c.req.header('webhook-id'), now, now - REPLAY_MEMORY_SECONDS)
-    .run()
-  if (recorded.meta.changes === 0) return problem(c, 'replayed-request')
+  if (behaviour.refusesReplays) {
+    const recorded = await c.env.DB.prepare(
+      `INSERT INTO seen_messages (tenant, id, seen_at) VALUES (?, ?, ?)
+       ON CONFLICT (tenant, id) DO UPDATE SET seen_at = excluded.seen_at
+         WHERE seen_messages.seen_at < ?`,
+    )
+      .bind(tenant.id, c.req.header('webhook-id'), now, now - REPLAY_MEMORY_SECONDS)
+      .run()
+    if (recorded.meta.changes === 0) return problem(c, 'replayed-request')
+  }
 
+  c.set('behaviour', behaviour)
   c.set('tenant', { id: tenant.id, secret: tenant.secret })
   c.set('rawBody', rawBody)
   await next()

@@ -38,21 +38,34 @@ function decodeBase64(value: string): Uint8Array | null {
   }
 }
 
+/**
+ * Which checks to make. Both on is the standard; the reference partner's
+ * deliberately wrong versions turn one off.
+ */
+export interface Checks {
+  signature: boolean
+  timestamp: boolean
+}
+
 export async function verify(
   secret: string,
   headers: SignedHeaders,
   body: string,
   nowSeconds: number,
+  checks: Checks = { signature: true, timestamp: true },
 ): Promise<Verdict> {
   const { id, timestamp, signature } = headers
-  if (!id || !timestamp || !signature) return { ok: false, problem: 'missing-signature' }
+  if (!id || !timestamp || (checks.signature && !signature)) {
+    return { ok: false, problem: 'missing-signature' }
+  }
 
   // Seconds only. `Number('')`, `Number('1e9')` and `Number(' 12 ')` all parse,
   // and a timestamp that means something different to each side is not one.
   if (!/^[0-9]+$/.test(timestamp)) return { ok: false, problem: 'invalid-signature' }
-  if (Math.abs(nowSeconds - Number(timestamp)) > TOLERANCE_SECONDS) {
+  if (checks.timestamp && Math.abs(nowSeconds - Number(timestamp)) > TOLERANCE_SECONDS) {
     return { ok: false, problem: 'stale-timestamp' }
   }
+  if (!checks.signature) return { ok: true }
 
   const keyBytes = decodeSecret(secret)
   if (!keyBytes) throw new Error('tenant secret is not a whsec_ key')
@@ -68,7 +81,7 @@ export async function verify(
   // Several signatures may be present while a secret is being rotated; any
   // one that verifies is enough. `crypto.subtle.verify` compares in constant
   // time, which a string comparison of two base64 values would not.
-  for (const entry of signature.split(' ')) {
+  for (const entry of (signature ?? '').split(' ')) {
     const [version, value] = entry.split(',', 2)
     if (version !== 'v1' || !value) continue
     const candidate = decodeBase64(value)

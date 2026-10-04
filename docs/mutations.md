@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository has been made to fail by at least one row below:
-the 63 in `packages/partner`, the 19 in `packages/cases` and the 39 in
+the 86 in `packages/partner`, the 19 in `packages/cases` and the 55 in
 `packages/api`. A new test is not done until it has a row too.
 
 ## Reference partner
@@ -141,6 +141,58 @@ tenant at 1,000 points and an assumed starting balance is right by luck; only
 the run that shares one tenant across every case shows that each case must
 read its own.
 
+## The wrong versions of the reference partner
+
+| #   | Mutation                                                                           | Caught by                                                                                                                                    | Failure                                                                                              |
+| --- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 92  | The signature is checked in `ignores-signature` after all                          | ignores-signature accepts a request with no signature, a wrong one, and a body changed after signing — 2 in all                              | `expected 401 to be 200`                                                                             |
+| 93  | The signature header is still required when the signature is not checked           | ignores-signature accepts a request with no signature…                                                                                       | `expected 401 to be 200`                                                                             |
+| 94  | `ignores-signature` also skips the timestamp check                                 | ignores-signature still refuses a stale timestamp, a replayed id and a request with no id                                                    | `expected 200 to be 401`                                                                             |
+| 95  | The timestamp is checked in `accepts-stale` after all                              | accepts-stale accepts a correctly signed request from a long time ago                                                                        | `expected 401 to be 200`                                                                             |
+| 96  | Replays are refused in `no-replay-guard` after all                                 | no-replay-guard accepts the same request twice, and applies it twice                                                                         | `expected 409 to be 200`                                                                             |
+| 97  | Every earn deduped, `double-earn` included                                         | double-earn earns again for a repeated reference                                                                                             | `expected 'txn_d8385a1b…' not to be 'txn_d8385a1b…'`                                                 |
+| 98  | `double-earn`'s reference not made unique, so the index refuses its second earn    | double-earn earns again for a repeated reference                                                                                             | `expected 'txn_7dcaf753…' not to be 'txn_7dcaf753…'`                                                 |
+| 99  | Redemptions deduped by the earn flag, not always                                   | double-earn still dedupes a repeated redemption and refuses a reference reused for another payload                                           | `expected 'txn_5814ff25…' to be 'txn_9b572e64…'`                                                     |
+| 100 | Reversal uniqueness follows the earn flag                                          | double-earn still reverses once, and reads the reversal back as what it reversed — 4 in all, `double-reversal` among them                    | `expected 200 to be 409`                                                                             |
+| 101 | Redemptions always guarded, `overdraws` included                                   | overdraws lets a redemption take the balance below zero                                                                                      | `expected 422 to be 200`                                                                             |
+| 102 | `overdraws` also drops the guard on reversing an earn                              | overdraws still refuses to reverse an earn whose points were spent, and dedupes a repeat                                                     | `expected 200 to be 422`                                                                             |
+| 103 | Reversal always once, `double-reversal` included                                   | double-reversal reverses the same transaction twice, taking the points back twice                                                            | `expected 409 to be 200`                                                                             |
+| 104 | `double-reversal`'s reversed id not made unique, so the index refuses the second   | double-reversal reverses the same transaction twice…                                                                                         | `expected 409 to be 200`                                                                             |
+| 105 | The `#` suffix not stripped from the `reverses` a reversal answers with — 3 in all | double-reversal reverses the same transaction twice…                                                                                         | `expected { …(6) } to match object { …(2) }`                                                         |
+| 106 | A repeated reversal compared by its raw `reverses`, suffix and all                 | double-reversal still answers a repeated reversal request with the original, and refuses to reverse a reversal                               | `expected { …(3) } to deeply equal { …(6) }`                                                         |
+| 107 | An unknown member always explained, `plain-errors` included                        | plain-errors answers an unknown member in plain text, for a read and for an earn                                                             | `expected 'application/problem+json' to match /^text\/plain/`                                        |
+| 108 | `plain-errors` answers every problem as plain text                                 | plain-errors still answers every other error as a problem document                                                                           | `expected 'text/plain; charset=UTF-8' to be 'application/problem+json'`                              |
+| 109 | The balance never slow, `slow-balance` included                                    | slow-balance holds a balance read until the caller gives up                                                                                  | `expected 5 to be greater than or equal to 140`                                                      |
+| 110 | The stall ignores an abort                                                         | slow-balance holds a balance read until the caller gives up                                                                                  | `Error: STACK_TRACE_ERROR` — vitest's own time limit: the held request was never released            |
+| 111 | The stall ignores a signal that is already aborted                                 | slow-balance answers a balance read that was already abandoned, rather than waiting                                                          | `Error: STACK_TRACE_ERROR`                                                                           |
+| 112 | `slow-balance` stalls a member read too                                            | slow-balance answers everything else at once, and the balance is right once it does answer                                                   | `Error: STACK_TRACE_ERROR`                                                                           |
+| 113 | `correct` itself has a behaviour off (the timestamp check)                         | signature refuses a timestamp outside the tolerance, in either direction — 16 in all                                                         | `expected 200 to be 401`                                                                             |
+| 114 | A version wrong in two ways                                                        | the variant list makes every other version differ from `correct` in exactly one behaviour — 4 in all                                         | `expected { name: 'ignores-signature', …(1) } to deeply equal { name: 'ignores-signature', …(1) }`   |
+| 115 | Two versions share one behaviour                                                   | the variant list turns each behaviour off in exactly one version — 4 in all                                                                  | `expected { Object (flag, versions) } to deeply equal { Object (flag, versions) }`                   |
+| 116 | A tenth version                                                                    | the variant list lists the nine versions the suite is documented against; docs/variants.md lists every version the partner serves — 3 in all | `expected [ 'accepts-stale', 'correct', …(8) ] to deeply equal [ …(7) ]`                             |
+| 117 | A property every object has taken for a version (`value in VARIANTS`)              | the variant list does not take a property every object has for a version                                                                     | `expected { name: 'constructor', status: 200 } to deeply equal { name: 'constructor', status: 404 }` |
+
+## The runner, again
+
+| #   | Mutation                                     | Caught by                                                                               | Failure                              |
+| --- | -------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------ |
+| 118 | A slow starting balance reported as an error | is timed_out, not an error, when the partner is slow on the starting balance — 2 in all | `expected 'error' to be 'timed_out'` |
+| 119 | A slow arrange step reported as an error     | is timed_out, not an error, when the partner is slow on an arrange step                 | `expected 'error' to be 'timed_out'` |
+
+## The table of expected results
+
+| #   | Mutation                                         | Caught by                                                                                            | Failure                                                                                         |
+| --- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 120 | The table leaves out a case that goes red        | ignores-signature: the cases that go red are the ones the table says — 2 in all                      | `security/tampered-body was failed, and the table does not expect ignores-signature to fail it` |
+| 121 | The table expects a case to go red that does not | accepts-stale: the cases that go red are the ones the table says — 2 in all                          | `member/known passed, and the table expects accepts-stale to fail it`                           |
+| 122 | The table gives the wrong status                 | slow-balance: the cases that go red are the ones the table says — 2 in all                           | `member/balance was timed_out, and the table expects failed`                                    |
+| 123 | The table drops a version                        | docs/variants.md lists every version the partner serves, and no other                                | `expected [ 'accepts-stale', 'correct', …(6) ] to deeply equal [ …(7) ]`                        |
+| 124 | A covered case missing from the uncovered list   | has a version that makes each case fail, or says why not                                             | `member/known is made to fail by no version, and is not listed as uncovered`                    |
+| 125 | A covered case listed as uncovered               | has a version that makes each case fail, or says why not                                             | `earn/duplicate-reference is listed as uncovered, but a version makes it fail`                  |
+| 126 | The table names a case that does not exist       | docs/variants.md names only cases that exist                                                         | `expected [ 'security/no-such-case' ] to deeply equal []`                                       |
+| 127 | The slow-balance list drops a writing case       | docs/variants.md says slow-balance fails exactly the balance read and the cases that declare writes  | `expected [ 'earn/adds-points', …(9) ] to deeply equal [ 'earn/adds-points', …(10) ]`           |
+| 128 | A status left blank                              | docs/variants.md gives a known status to every version that is expected to fail something — 3 in all | `expected { Object (version, status) } to deeply equal { version: 'accepts-stale', …(1) }`      |
+
 ## Tests that could not fail, found on the way
 
 Running the mutations is what found these. Each one passed whatever the code
@@ -161,3 +213,13 @@ did.
   checks whatever the object check did. The object check was removed as
   redundant, and the test now also sends `null`, the one body that would
   otherwise reach the destructuring — row 31.
+- **"has a status for every version that is expected to fail something".** It
+  checked the status was not `null`, but a blank cell parses to `''`, which is
+  not `null` either. A version with no status passed it. It now requires one of
+  the two statuses there are — row 128.
+- **The version-by-version test's own failure message.** It compared three
+  arrays inside an object, so a red read `expected { …(3) } to deeply equal {
+unexpectedlyRed: [], …(2) }` — no case, no version. Not a test that could not
+  fail, but one that failed without saying why. It now throws a sentence per
+  problem: `security/tampered-body was failed, and the table does not expect
+ignores-signature to fail it`.
