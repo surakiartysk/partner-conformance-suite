@@ -4,8 +4,9 @@ A test that has never failed has not shown it can. Each row is a deliberate
 break in the **implementation** — never in a test's assertion — the test that
 went red, and the message it gave. Every break was reverted after its run.
 
-All 63 tests in `packages/partner` have been made to fail by at least one row
-below. A new test is not done until it has a row too.
+Every test in the repository has been made to fail by at least one row below:
+the 63 in `packages/partner`, the 19 in `packages/cases` and the 39 in
+`packages/api`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -79,6 +80,66 @@ below. A new test is not done until it has a row too.
 | --- | ------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | 45  | The reversals route not registered    | serves exactly the operations the spec lists  | `expected [ 'GET /members/{memberId}', …(3) ] to deeply equal [ 'GET /members/{memberId}', …(4) ]` |
 | 46  | A problem type the spec does not name | names every problem it can return in the spec | `expected [ 'points-frozen' ] to deeply equal []`                                                  |
+
+## Cases and matchers
+
+| #   | Mutation                                                   | Caught by                                                                                                                    | Failure                                                                                       |
+| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 47  | A response with fields the expectation does not name fails | passes a response with fields the expectation does not name — 20 in all, every case against the reference partner among them | `expected [ { path: '$', … } ] to deeply equal []`                                            |
+| 48  | A missing field not flagged                                | fails a field the expectation names and the response lacks, as missing                                                       | `expected [] to deeply equal [ { path: '$.tier', … } ]`                                       |
+| 49  | Nested paths not built                                     | names the path of a nested mismatch                                                                                          | `expected [ { path: '$[1]', … } ] to deeply equal [ { path: '$.a.b[1].c', … } ]`              |
+| 50  | Array length unchecked                                     | requires arrays to match in length                                                                                           | `expected [] to deeply equal [ { path: '$', … } ]`                                            |
+| 51  | A non-object accepted where an object is expected          | fails an object expected where something else arrived                                                                        | `expected [] to deeply equal [ { path: '$', … } ]`                                            |
+| 52  | Loose equality                                             | does not treat a number and its string as equal                                                                              | `expected [] to have a length of 1 but got +0`                                                |
+| 53  | A matcher's mismatch reported without its description      | uses a matcher where one is given, and reports its description                                                               | `expected [ { path: '$.balance', … } ] to deeply equal [ { path: '$.balance', … } ]`          |
+| 54  | Matchers shown as raw objects in the expected column       | shows matchers by description, and literals as they are                                                                      | `expected { id: { kind: 'matcher', … } } to deeply equal { id: '‹any non-empty string›', … }` |
+| 55  | `any.string` accepts `''`                                  | any.string wants a non-empty string                                                                                          | `expected [ true, true, false ] to deeply equal [ true, false, false ]`                       |
+| 56  | `any.integer` accepts `'3'`                                | any.integer wants an integer, not a numeric string or a fraction                                                             | `expected [ true, false, true ] to deeply equal [ true, false, false ]`                       |
+| 57  | `oneOf` accepts anything                                   | oneOf matches only its values                                                                                                | `expected [ true, true ] to deeply equal [ true, false ]`                                     |
+| 58  | `mediaType` compared as a whole string                     | mediaType ignores parameters and case, and nothing else                                                                      | `expected false to be true`                                                                   |
+| 59  | `Quantity.plus` describes the start rather than the sum    | uses a matcher where one is given, and reports its description                                                               | `expected [ { path: '$.balance', … } ] to deeply equal [ … ]`                                 |
+| 60  | Two cases share an id                                      | has unique ids, each prefixed by its service                                                                                 | `expected 19 to be 20`                                                                        |
+| 61  | An act without an expectation                              | gives every act and verify step an expectation                                                                               | `expected [ 'member/unknown:request' ] to deeply equal []`                                    |
+| 62  | A case asks for `/points/reverse`, which the spec lacks    | asks only for operations the spec lists                                                                                      | `expected [ Array(1) ] to deeply equal []`                                                    |
+| 63  | A replay names its own step                                | names, in every replay, a step that comes before it                                                                          | `expected [ 'original' ] to include 'replay'`                                                 |
+| 64  | Every writing case queued on member A                      | queues writing cases per member in order…                                                                                    | `expected false to be true`                                                                   |
+| 65  | Lane order reversed                                        | queues writing cases per member in order…                                                                                    | `expected [ 11, 10, 9, 4 ] to deeply equal [ 4, 9, 10, 11 ]`                                  |
+| 66  | A case filed under the wrong service                       | has unique ids, each prefixed by its service                                                                                 | `expected 'earn' to be 'redeem'`                                                              |
+
+## The runner
+
+| #   | Mutation                                           | Caught by                                                                                  | Failure                                                                                                 |
+| --- | -------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| 67  | Signed content joined with `:`                     | sign produces the published test vector — 19 in all                                        | `expected 'v1,XQXFGNL04yyfi0mNo5guVq6SFdpEnOJGo3…' to be 'v1,g0hM9SsE+OTPJTGt/tmIKtSyZlE3uFJELV…'`      |
+| 68  | The `whsec_` prefix not checked                    | refuses a secret that is not in whsec_ form                                                | `expected [Function] to throw error matching /whsec_/ but got 'Imported HMAC key length (0) must be …'` |
+| 69  | Secrets of 16 bytes                                | newSecret is whsec_ and 32 random bytes — 22 in all, as the reference partner refuses them | `expected 'whsec_…' (24 base64 characters) to match /^whsec_[A-Za-z0-9+/]{43}=$/`                       |
+| 70  | The same secret every time                         | newSecret is … different every time                                                        | `expected 'whsec_BwcHBwcH…' not to be 'whsec_BwcHBwcH…'`                                                |
+| 71  | The body sent pretty-printed                       | builds the URL from the target and signs the body exactly as sent                          | `expected '{\n "b": 1, …' to be '{"b":1,"a":[2]}'`                                                      |
+| 72  | A trailing slash on the base URL kept              | builds the URL from the target…                                                            | `expected 'https://partner.example/base//points/…' to be 'https://partner.example/base/points/e…'`      |
+| 73  | The signature computed over an empty body          | builds the URL from the target and signs the body exactly as sent — 14 in all              | `expected 'v1,4UOUxKSd7PndJylh…' to be 'v1,ZmTzRPxqIlEYiJmV…'`                                          |
+| 74  | One webhook-id for the whole case                  | gives every request its own webhook-id — 12 in all                                         | `expected 1 to be 4`                                                                                    |
+| 75  | A replay rebuilt rather than resent                | replays an earlier request byte for byte                                                   | `expected 'msg_ee635cf5…' to be 'msg_ec07c6e0…'`                                                        |
+| 76  | `omit` ignored                                     | applies each signing fault, and only that fault                                            | `expected true to be false`                                                                             |
+| 77  | `timestampOffset` ignored                          | applies each signing fault…                                                                | `expected '1700000000' to be '1699999640'`                                                              |
+| 78  | `tamper` applied before signing                    | applies each signing fault…                                                                | `expected 'v1,BBw2Cbmj…' to be 'v1,GRkbfUOe…'`                                                          |
+| 79  | `wrongSecret` ignored                              | applies each signing fault…                                                                | `expected 'v1,FpSk2kaa…' not to be 'v1,FpSk2kaa…'`                                                      |
+| 80  | References not remembered per label                | keeps one reference per label within a case                                                | `expected 'ref_f2e628b3…' to be 'ref_6f1601db…'`                                                        |
+| 81  | Headers not redacted                               | shows allowlisted headers and hides the rest by value                                      | `expected 'secret-value' to be '•••'`                                                                   |
+| 82  | The body limit not enforced                        | keeps no more than the body limit, and says it cut it                                      | `expected false to be true`                                                                             |
+| 83  | A body that is not JSON kept as `null`             | keeps a body that is not JSON as text, and fails the case                                  | `expected { … } to match object { json: false, body: 'Not Found' }`                                     |
+| 84  | Status not judged                                  | fails on a wrong status, and says which                                                    | `expected 'passed' to be 'failed'`                                                                      |
+| 85  | A missing header not marked as missing             | reports a header the expectation names but the response lacks as missing                   | `expected [ { …(3) } ] to deeply equal [ { …(3) } ]`                                                    |
+| 86  | The timeout only aborts, without the race          | is timed_out, not failed, when the partner does not answer in time                         | `Error: STACK_TRACE_ERROR` — vitest's own time limit: the case never returned                           |
+| 87  | A timeout reported as an error                     | is timed_out, not failed…                                                                  | `expected 'error' to be 'timed_out'`                                                                    |
+| 88  | An arrange failure ignored                         | is an error, and does not act, when an arrange step fails                                  | `expected 'passed' to be 'error'`                                                                       |
+| 89  | The starting balance not checked to be an integer  | is an error when the starting balance of a writing case cannot be read                     | `expected 'failed' to be 'error'`                                                                       |
+| 90  | Verify steps skipped                               | judges verify steps too: a right answer with a wrong balance afterwards fails              | `expected 'passed' to be 'failed'`                                                                      |
+| 91  | The starting balance assumed to be 1,000, not read | all pass one after another against a single tenant                                         | `expected false to be true`                                                                             |
+
+Row 91 is the reason that test exists. Run alone, each case gets a fresh
+tenant at 1,000 points and an assumed starting balance is right by luck; only
+the run that shares one tenant across every case shows that each case must
+read its own.
 
 ## Tests that could not fail, found on the way
 

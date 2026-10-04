@@ -20,15 +20,23 @@ Built in stages. Done so far:
   implementation of that contract on Cloudflare Workers and D1, for the suite
   to run against.
 
-Next: the runner and its cases, then reference partners that are deliberately
-wrong in one way each — so that every case is shown to catch the bug it is
-for — and then the dashboard.
+- **The cases and their runner** — [`packages/cases`](packages/cases): twenty
+  cases across five services, each saying what it expects as a value the
+  result page can show. [`packages/api`](packages/api) signs each case's
+  requests, sends them, and judges the answers. Every case passes against the
+  reference partner.
+
+Next: reference partners that are deliberately wrong in one way each — so that
+every case is shown to catch the bug it is for — and then sessions, runs, and
+the dashboard.
 
 ## Layout
 
 ```
 packages/spec      the Points Partner API, linted with Redocly
 packages/partner   the reference partner: Worker + D1
+packages/cases     the cases, matchers and lanes
+packages/api       the provider's side: signer and runner
 docs/decisions.md  what was chosen, why, and what it costs
 docs/mutations.md  every test, shown to fail
 ```

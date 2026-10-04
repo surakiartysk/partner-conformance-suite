@@ -14,6 +14,8 @@ afterthought.
 ```
 packages/spec      the Points Partner API (OpenAPI)
 packages/partner   a reference partner implementing it — Worker + D1
+packages/cases     the conformance cases and their matchers
+packages/api       the provider's side: signer and runner
 ```
 
 ## Non-negotiables
@@ -49,7 +51,12 @@ and the suite must restore balances through the API like anywhere else.
 fails when a route or a problem type exists on one side only. Change both in
 the same commit.
 
-**7. Comments and docs must be true.** If you remove behaviour, remove what
+**7. A case's expectation is a value, and `writes` is a promise.** Never
+assert inside a case; return what is expected, so the page shows what was
+checked. Mark a case `writes` if it could move a balance on a partner that is
+wrong — the lanes trust it, and nothing checks it.
+
+**8. Comments and docs must be true.** If you remove behaviour, remove what
 describes it. Every decision states its cost.
 
 ## Commands

@@ -174,3 +174,116 @@ the Worker's own `fetch`, and use a real local D1.
 **Cost.** Storage is shared within a test file, so every test provisions its own
 tenant and asserts only against it. A test that counted rows globally would
 pass alone and fail in company.
+
+## 10. A case says what it expects as a value, not as assertions
+
+A case's expectation is a plain object — status, some headers, a body — whose
+leaves are literals or matchers. The runner compares a response against it,
+and the result page will show the same object in its "expected" column. What
+is shown and what is checked are one thing, so they cannot disagree. With
+`expect(...)` calls scattered through code, the expected column would need a
+description written beside them, and one day it would describe something the
+code no longer checks.
+
+The matcher vocabulary is kept small — any string, any integer, one of, a
+media type, and arithmetic on a balance — because each one is something a
+partner's engineer has to read and agree with. The arithmetic carries its own
+description: `start.plus(100)` checks for 1,100 and reads "balance at start +
+100 = 1,100" from the same call, so the formula on the page is the sum that
+was tested.
+
+Comparison is tolerant in one direction only. A field the expectation names
+must be there and match; a field the response adds is ignored, so a spec can
+grow without breaking partners who answer with more than it asks.
+
+**Cost.** A check the vocabulary cannot say needs a new matcher, which is a
+change to review rather than a line in a case. And a case cannot express "this
+or that, depending" — it says one thing, or it is two cases.
+
+## 11. A case is arrange, act, verify — and a failed arrange is not a failure
+
+**Arrange** puts the partner where the case needs it: an earn to reverse, a
+request to replay. **Act** is the request being judged. **Verify** reads back
+what the act should have changed — the balance after a refused redemption — and
+is judged as well, because a partner that answers "insufficient points" and
+takes the points anyway has not conformed.
+
+If arrange goes wrong, the case ends as `error`, not `failed`. A reversal case
+whose earn was refused has learned nothing about reversals, and calling it a
+failed reversal would send a partner to look in the wrong place.
+
+**Cost.** A partner whose earn is broken sees the earn cases fail and the
+reversal cases come back as errors — more red than the one bug deserves. The
+statuses are different on purpose, but someone has to read them as different.
+
+## 12. Every writing case reads its own starting balance
+
+Before a case that can change a balance, the runner reads that balance, and
+every expectation about it is relative: "balance at start + 100", never
+"1,100". A fixed number is right only on a fresh member; a member used by
+anything since — an earlier case, an earlier run, the partner's own testers —
+breaks it.
+
+The test that holds this runs every case, in order, against one tenant. Run
+one at a time on fresh tenants, an assumed starting balance of 1,000 would be
+right by luck, and that test alone notices when it is assumed rather than read
+(mutation 91).
+
+**Cost.** One more request per writing case. And a balance that someone else
+moves _during_ a case still breaks it — reading first only protects against
+what happened before. Stopping that is the job of the per-member lock, which
+comes with runs.
+
+## 13. Which cases may run together is decided by member, not by money
+
+The first framing was "money cases run one at a time, the rest in parallel".
+What actually breaks an expectation is narrower: two cases changing the same
+member's balance at once, each reading a starting balance the other is about
+to move. So a case declares which member it is about and whether it `writes`,
+and `planLanes` queues writing cases per member in their declared order, while
+everything else runs alongside. The catalogue puts its writing cases on both
+members, so a run has two lanes moving side by side.
+
+`writes` means _could_ change the balance — including only if the partner is
+wrong. Earning zero points writes nothing on a correct partner, and is still
+marked `writes`, because the partner under test may not be correct.
+
+**Cost.** `writes` is a declaration, and nothing checks that it is honest. A
+case that moves a balance while claiming not to would run beside the cases
+that read that balance, and fail now and then for no reason anyone could see.
+
+## 14. The runner builds every request, and owns every limit
+
+Everything a request carries — the URL, the body, the headers, the signature —
+is built by the runner from the case and from a target the server chose. The
+same applies to how much of the answer is kept:
+
+- **Timeouts are raced, not only aborted.** The request is given an abort
+  signal, and the wait for it also races a timer, so a transport that ignores
+  the signal still cannot hold a case past its limit. A case that runs out of
+  time is `timed_out`, not `failed`: a partner that is slow and a partner that
+  is wrong need different fixes.
+- **A body is read up to 64 KB and no further.** It is streamed and cut, not
+  read whole and trimmed, so a partner that answers with a gigabyte does not
+  get one into memory. A body that was cut is kept as text and fails the case.
+- **Headers are shown by allowlist.** `content-type` and the three signing
+  headers are shown; every other header is shown by name with its value
+  hidden. A denylist fails open: the day a partner answers with a token in a
+  header nobody thought of, it would be on the page. An allowlist can only
+  hide too much.
+
+**Cost.** The allowlist hides headers a partner may want while debugging — a
+request id of their own shows as `•••`. And 64 KB is a guess; a legitimate
+response larger than that cannot pass.
+
+## 15. A refused signature may be reported as any of the three problem types
+
+The spec names three problem types for a request the partner cannot
+authenticate — missing signature, invalid signature, stale timestamp — and
+does not require a particular one for each fault. So the security cases accept
+any of the three, and insist only on the `401`, the problem document and its
+media type.
+
+**Cost.** A partner that reports a stale timestamp as an invalid signature
+passes, though its logs will mislead whoever reads them. Tightening this would
+be a change to the spec first, and to the cases after.

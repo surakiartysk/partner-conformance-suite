@@ -1,0 +1,20 @@
+{
+  "name": "@conformance/cases",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The conformance cases, and the matchers that say what each expects.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11",
+    "yaml": "^2.6.1"
+  }
+}
