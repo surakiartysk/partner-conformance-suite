@@ -1,0 +1,40 @@
+name: CI
+
+# One definition of green: `pnpm verify`, the same command run locally.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # On a runner the leak check has only its structural half — the word
+      # list is never published — and it says so in the log. The half that
+      # matters runs in the pre-commit hook, before a word reaches history.
+      - name: Verify
+        run: pnpm verify

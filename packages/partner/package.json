@@ -1,0 +1,25 @@
+{
+  "name": "@conformance/partner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A reference partner: an implementation of the Points Partner API for the suite to run against.",
+  "scripts": {
+    "dev": "wrangler dev --port 8788",
+    "db:migrate": "wrangler d1 migrations apply points-partner --local",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/workers-types": "^5.20260827.1",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.124.0",
+    "yaml": "^2.6.1"
+  }
+}

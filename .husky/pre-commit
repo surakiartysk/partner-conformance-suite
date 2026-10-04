@@ -1,0 +1,8 @@
+# Formatting and lint on staged files only, so the hook stays fast enough
+# that nobody reaches for --no-verify. Correctness is CI's job.
+pnpm exec lint-staged
+
+# The leak check runs here because this is the only layer that can stop a
+# word before it is in the history, and the only place the word list exists.
+# See scripts/check-leak.mjs.
+pnpm check:leak

@@ -1,0 +1,18 @@
+name = "points-partner"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+
+# The reference partner keeps its own database. It stands in for a partner's
+# system, so it shares nothing with the provider's side — not a database, not
+# a secret, not a line of code.
+[[d1_databases]]
+binding = "DB"
+database_name = "points-partner"
+# Read at deploy time only; local runs resolve by database_name.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# Secrets — `wrangler secret put` for a deployment, `.dev.vars` locally:
+#   PROVISION_TOKEN   guards POST /_provision. There is deliberately no default:
+#                     unset, provisioning answers 503 rather than accepting a
+#                     token anyone could read in this file.

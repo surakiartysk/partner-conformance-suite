@@ -1,0 +1,437 @@
+openapi: 3.1.0
+
+info:
+  title: Points Partner API
+  version: 1.0.0
+  summary: The API a partner implements so the provider can read and move a member's points.
+  description: |
+    The provider calls this API; the partner implements it. Every call goes
+    from the provider to the partner, never the other way.
+
+    ## Signing
+
+    Every request is signed following [Standard Webhooks](https://www.standardwebhooks.com/).
+    The signed content is `{webhook-id}.{webhook-timestamp}.{body}`, with the
+    body as sent and an empty string for a request without one. The signature
+    is HMAC-SHA256 under the partner's signing secret — a `whsec_` prefix
+    followed by the base64 key — sent as `v1,{base64 signature}`.
+
+    `webhook-signature` may carry several space-separated signatures. A request
+    is authentic when any one of them verifies, which is what lets a secret be
+    rotated without a window in which requests fail.
+
+    A partner must refuse, with no effect:
+
+    - a request with no signature, or none that verifies — `401`
+    - a request whose timestamp is more than five minutes from the partner's
+      clock, in either direction — `401`
+    - a request whose `webhook-id` it has already accepted — `409`
+
+    A partner must remember an accepted `webhook-id` for at least ten minutes,
+    twice the tolerance: a timestamp five minutes ahead of its clock is
+    accepted, and stays acceptable until five minutes after it.
+
+    The provider never re-sends a `webhook-id`. A retry is a new request with a
+    new id; the idempotency of the business operation is carried by `reference`.
+
+    ## Idempotency
+
+    Every operation that moves points carries a `reference` chosen by the
+    provider. A reference is unique per partner across all operation types.
+
+    - The same reference with the same payload returns the original result and
+      moves no further points.
+    - The same reference with a different payload is refused with `409`.
+
+    ## Errors
+
+    Every error is an [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem
+    document, served as `application/problem+json`, whose `type` is one of the
+    URIs listed under each response.
+  license:
+    name: MIT
+    identifier: MIT
+
+servers:
+  - url: https://points-partner.example
+    description: The partner's own base URL, configured per partner.
+
+security:
+  - signature: []
+
+tags:
+  - name: Members
+    description: Reading a member and their balance. Never moves points.
+  - name: Points
+    description: Operations that move points. Each one is idempotent by `reference`.
+
+paths:
+  /members/{memberId}:
+    parameters:
+      - $ref: '#/components/parameters/MemberId'
+      - $ref: '#/components/parameters/WebhookId'
+      - $ref: '#/components/parameters/WebhookTimestamp'
+      - $ref: '#/components/parameters/WebhookSignature'
+    get:
+      operationId: getMember
+      tags: [Members]
+      summary: Read a member
+      responses:
+        '200':
+          description: The member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/MemberNotFound'
+        '409':
+          $ref: '#/components/responses/Replayed'
+
+  /members/{memberId}/balance:
+    parameters:
+      - $ref: '#/components/parameters/MemberId'
+      - $ref: '#/components/parameters/WebhookId'
+      - $ref: '#/components/parameters/WebhookTimestamp'
+      - $ref: '#/components/parameters/WebhookSignature'
+    get:
+      operationId: getBalance
+      tags: [Members]
+      summary: Read a member's balance
+      responses:
+        '200':
+          description: The member's balance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/MemberNotFound'
+        '409':
+          $ref: '#/components/responses/Replayed'
+
+  /points/earn:
+    parameters:
+      - $ref: '#/components/parameters/WebhookId'
+      - $ref: '#/components/parameters/WebhookTimestamp'
+      - $ref: '#/components/parameters/WebhookSignature'
+    post:
+      operationId: earnPoints
+      tags: [Points]
+      summary: Add points to a member's balance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PointsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Transaction'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/MemberNotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /points/redeem:
+    parameters:
+      - $ref: '#/components/parameters/WebhookId'
+      - $ref: '#/components/parameters/WebhookTimestamp'
+      - $ref: '#/components/parameters/WebhookSignature'
+    post:
+      operationId: redeemPoints
+      tags: [Points]
+      summary: Take points from a member's balance
+      description: A redemption larger than the balance is refused and moves nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PointsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Transaction'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/MemberNotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/InsufficientPoints'
+
+  /points/reversals:
+    parameters:
+      - $ref: '#/components/parameters/WebhookId'
+      - $ref: '#/components/parameters/WebhookTimestamp'
+      - $ref: '#/components/parameters/WebhookSignature'
+    post:
+      operationId: reverseTransaction
+      tags: [Points]
+      summary: Undo an earn or a redemption
+      description: |
+        Moves the original transaction's points back. A transaction can be
+        reversed once; a reversal cannot itself be reversed. Reversing an earn
+        whose points have since been spent is refused and moves nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReversalRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Transaction'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: No transaction with that id.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://points-partner.example/problems/transaction-not-found
+                title: Transaction not found
+                status: 404
+        '409':
+          description: |
+            One of: `replayed-request`, `reference-conflict`, or
+            `already-reversed` — the transaction was reversed by an earlier
+            request with a different reference.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            One of: `insufficient-points` — reversing this earn would take the
+            balance below zero — or `not-reversible`, for a reversal.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+components:
+  securitySchemes:
+    signature:
+      type: apiKey
+      in: header
+      name: webhook-signature
+      description: |
+        Not a key: an HMAC signature over the request, as described under
+        Signing. OpenAPI has no scheme for request signing, so this entry
+        documents where the signature travels rather than how it is made.
+
+  parameters:
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    WebhookId:
+      name: webhook-id
+      in: header
+      required: true
+      description: Unique per request. Never re-sent by the provider.
+      schema:
+        type: string
+        minLength: 1
+    WebhookTimestamp:
+      name: webhook-timestamp
+      in: header
+      required: true
+      description: Unix time in seconds at which the request was signed.
+      schema:
+        type: string
+        pattern: '^[0-9]+$'
+    WebhookSignature:
+      name: webhook-signature
+      in: header
+      required: true
+      description: One or more space-separated `v1,{base64}` signatures.
+      schema:
+        type: string
+
+  schemas:
+    Member:
+      type: object
+      required: [id, name, tier]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        tier:
+          type: string
+          enum: [standard, silver, gold]
+          description: Shown to the member. Has no effect on any operation.
+
+    Balance:
+      type: object
+      required: [memberId, balance]
+      properties:
+        memberId:
+          type: string
+        balance:
+          type: integer
+          minimum: 0
+
+    PointsRequest:
+      type: object
+      required: [memberId, points, reference]
+      properties:
+        memberId:
+          type: string
+          minLength: 1
+        points:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        reference:
+          type: string
+          minLength: 1
+          maxLength: 64
+
+    ReversalRequest:
+      type: object
+      required: [transactionId, reference]
+      properties:
+        transactionId:
+          type: string
+          minLength: 1
+        reference:
+          type: string
+          minLength: 1
+          maxLength: 64
+
+    Transaction:
+      type: object
+      required: [transactionId, type, memberId, points, balance]
+      properties:
+        transactionId:
+          type: string
+        type:
+          type: string
+          enum: [earn, redeem, reversal]
+        memberId:
+          type: string
+        points:
+          type: integer
+          minimum: 1
+          description: Always positive; `type` says which way the points moved.
+        balance:
+          type: integer
+          minimum: 0
+          description: The member's balance immediately after this transaction.
+        reverses:
+          type: string
+          description: Present on a reversal — the transaction it undid.
+
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+
+  responses:
+    Transaction:
+      description: |
+        The transaction. A repeated reference with the same payload returns
+        the original transaction, unchanged — including its `balance`, which
+        is the balance as it stood then, not now.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Transaction'
+
+    InvalidRequest:
+      description: The body is not JSON, or does not match the schema.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://points-partner.example/problems/invalid-request
+            title: Invalid request
+            status: 400
+            detail: points must be an integer from 1 to 1000000
+
+    Unauthenticated:
+      description: |
+        One of: `missing-signature`, `invalid-signature`, or `stale-timestamp`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://points-partner.example/problems/invalid-signature
+            title: Invalid signature
+            status: 401
+
+    MemberNotFound:
+      description: No member with that id.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://points-partner.example/problems/member-not-found
+            title: Member not found
+            status: 404
+
+    Replayed:
+      description: This `webhook-id` was already accepted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://points-partner.example/problems/replayed-request
+            title: Replayed request
+            status: 409
+
+    Conflict:
+      description: One of `replayed-request`, or `reference-conflict` — the reference was used with a different payload.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://points-partner.example/problems/reference-conflict
+            title: Reference already used
+            status: 409
+
+    InsufficientPoints:
+      description: The redemption is larger than the balance.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://points-partner.example/problems/insufficient-points
+            title: Insufficient points
+            status: 422

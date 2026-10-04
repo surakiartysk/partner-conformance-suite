@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-pool-workers/types"],
+    "lib": ["ES2022"]
+  },
+  // vitest.config.ts runs in Node, not workerd, so it is left out.
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

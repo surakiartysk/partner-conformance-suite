@@ -1,0 +1,2 @@
+# Conventional Commits, enforced: the history is part of what this repo shows.
+pnpm exec commitlint --edit "$1"

@@ -1,0 +1,13 @@
+{
+  "name": "@conformance/spec",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Points Partner API: the contract a partner implements, and the one every case is checked against.",
+  "scripts": {
+    "lint": "redocly lint openapi.yaml"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.0.0"
+  }
+}
