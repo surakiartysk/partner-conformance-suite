@@ -49,6 +49,7 @@ packages/spec      the Points Partner API, linted with Redocly
 packages/partner   the reference partner: Worker + D1
 packages/cases     the cases, matchers and lanes
 packages/api       the provider's side: signer and runner
+docs/architecture.md how the pieces fit, and what is not built yet
 docs/decisions.md  what was chosen, why, and what it costs
 docs/variants.md   what each wrong version must get wrong
 docs/mutations.md  every test, shown to fail
