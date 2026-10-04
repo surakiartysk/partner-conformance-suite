@@ -25,3 +25,8 @@ PARTNER_ORIGIN = "https://points-partner.example"
 # has a default: unset, the endpoints that need one answer 503.
 #   PROVISION_TOKEN   must equal the reference partner's PROVISION_TOKEN
 #   SECRET_KEY        32 random bytes, base64 — encrypts the signing secrets
+
+# The sweep: pays back balances owed by runs that did not finish, and deletes
+# sessions that have ended. See src/sweeper.ts.
+[triggers]
+crons = ["*/10 * * * *"]

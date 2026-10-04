@@ -100,3 +100,47 @@ export interface SessionView {
   members: { slot: 'A' | 'B'; id: string; balance?: number | null }[]
   secret: { revealed: boolean }
 }
+
+export interface NextAnswer {
+  lane: string
+  done: boolean
+  position?: number
+  total?: number
+  result?: { caseId: string; status: string }
+  restore?: { status: string; target?: number } | null
+  error?: string
+}
+
+export async function createRun(cookie: string, body: unknown): Promise<Response> {
+  return callApi('/runs', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+export async function next(cookie: string, runId: string, lane: string): Promise<Response> {
+  return callApi(`/runs/${runId}/lanes/${lane}/next`, { method: 'POST', headers: { cookie } })
+}
+
+/** Calls `next` on a lane until it is done; returns every answer. */
+export async function driveLane(
+  cookie: string,
+  runId: string,
+  lane: string,
+): Promise<NextAnswer[]> {
+  const answers: NextAnswer[] = []
+  for (let i = 0; i < 50; i++) {
+    const response = await next(cookie, runId, lane)
+    const answer = await response.json<NextAnswer>()
+    if (response.status !== 200) throw new Error(`${lane}: ${response.status} ${answer.error}`)
+    answers.push(answer)
+    if (answer.done) return answers
+  }
+  throw new Error(`${lane} never finished`)
+}
+
+export async function balances(cookie: string): Promise<(number | null | undefined)[]> {
+  const session = await (await callApi('/session', { headers: { cookie } })).json<SessionView>()
+  return session.members.map((m) => m.balance)
+}

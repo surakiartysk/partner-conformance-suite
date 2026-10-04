@@ -35,7 +35,12 @@ Built in stages. Done so far:
   provisions a tenant on the reference partner, sets a session cookie, and
   keeps the session's signing secret encrypted.
 
-Next: runs, per-member locks and restoring balances, then the dashboard.
+- **Runs** — a run is three lanes the browser drives one case at a time, with
+  each member held by one run at a time and every point a run moves written
+  down before it moves, so it is always given back: by the run, by a later run,
+  or by a sweep every ten minutes.
+
+Next: the dashboard.
 
 ## Layout
 

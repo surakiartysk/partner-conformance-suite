@@ -423,3 +423,69 @@ What keeps that safe:
 provider for every live session. Visitors behind one address — an office, a
 conference network — share five starts an hour. And a visitor who closes the
 dialog that showed the secret cannot see it again; they start a new session.
+
+## 22. A run is driven by the browser and decided by the server, one claim at a time
+
+A run is three lanes — the cases that move no balance, and each member's
+writing cases — and the browser calls `POST /runs/:id/lanes/:lane/next` until
+each says it is done. Each call runs one case. The browser names a run and a
+lane and nothing else: which case is next, what is sent and where, and the
+verdict are all the server's.
+
+Each call first **claims** its lane with a conditional `UPDATE` that holds only
+if the lane is at the position the call read and no other call holds it. Of
+two tabs pressing at once, one runs the case and the other is told the lane is
+busy. The claim lasts two minutes — a case is at most five requests of ten
+seconds — so a call that dies mid-case leaves a claim that lapses, and the next
+call runs that case again from the start. Starting runs is limited to twenty an
+hour per session, counted and inserted in one statement.
+
+**Cost.** A case interrupted after it moved points and before its result was
+saved runs twice, and moves points twice. That is safe only because the
+member's baseline (decision 24) is the balance before the run, not before the
+case — the restore puts back both. A closed tab simply stops the run; nothing
+on the server carries it on.
+
+## 23. A member is held by one run at a time, on a lease
+
+Two runs moving the same member's balance at once would each read a starting
+balance the other is about to change. So a member lane takes a **lock** on its
+member before every case — an upsert that replaces the row only if it is this
+run's own or has expired — and a second run asking for the member is answered
+`423` with `Retry-After`, to try again. The lock is renewed by every `next` and
+released when the lane ends; unrenewed, it lapses after five minutes, so a
+closed tab or a dead Worker gives the member back without anyone doing it.
+
+**Cost.** Five minutes is a guess with two sides: shorter, and a slow visitor
+between two presses loses the member to another run; longer, and an abandoned
+run keeps it from everyone for longer. And a run that loses its lock mid-lane
+and gets it back has had another run's cases interleaved with its own — which
+the cases tolerate, because each reads its own starting balance.
+
+## 24. Points owed back are written down before any are moved
+
+A run moves real points on a partner's test member, and one of the first
+requirements written for this project was that the balance is always put back,
+even when cases fail. The difficulty is everything that can stop "put it back" from
+running: a failed case, a slow partner, a closed tab, a Worker that dies.
+
+So the debt is data, not a step. When a lane takes its member, before the first
+case, it writes a **baseline**: the balance as it stands. A baseline is never
+overwritten — if one exists, an earlier run never paid it, and the balance now
+is not the one owed. It is deleted only by a restore that **read the balance
+back and found the target**. A restore that fails, times out or lands on the
+wrong number leaves it in place, and whoever holds the member next pays it:
+the end of a later run's lane, or the cron sweep, which every ten minutes takes
+each owed member it can lock and restores it through the version it was last
+used with.
+
+The restore is itself a case — read the balance, move the difference, read it
+back — so it is signed, timed and recorded like every other, and its reference
+names the run, the member and the amount: retried for the same amount it is the
+same transaction, never a second one.
+
+**Cost.** A restore goes through the partner's API, so a partner whose API is
+wrong cannot always be restored: under `off-by-one` the restore lands one short
+and the debt stays until a run against `correct` pays it. And the sweep can only
+pay what it can lock and reach; a partner that is down owes its members until it
+comes back or the session ends.

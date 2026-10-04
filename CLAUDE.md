@@ -15,7 +15,7 @@ afterthought.
 packages/spec      the Points Partner API (OpenAPI)
 packages/partner   a reference partner implementing it — Worker + D1
 packages/cases     the conformance cases and their matchers
-packages/api       the provider's side: sessions, signer and runner
+packages/api       the provider's side: sessions, runs, signer and runner
 ```
 
 ## Non-negotiables
@@ -62,7 +62,13 @@ under "Cases no version makes fail" and say why. The version test reads that
 file and fails if the table and the code disagree — and the answer is never to
 edit the table to match what happened before you know why.
 
-**9. Comments and docs must be true.** If you remove behaviour, remove what
+**9. No point moves until the debt is written down.** A member lane takes its
+lock and writes the baseline before its first case. Never move points outside a
+lane that holds the member, and never delete a baseline except after reading the
+balance back at its target — see
+[decision 24](docs/decisions.md#24-points-owed-back-are-written-down-before-any-are-moved).
+
+**10. Comments and docs must be true.** If you remove behaviour, remove what
 describes it. Every decision states its cost.
 
 ## Commands
