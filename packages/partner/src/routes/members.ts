@@ -10,6 +10,7 @@ export async function getMember(c: Context<Env>): Promise<Response> {
     .bind(c.var.tenant.id, c.req.param('memberId'))
     .first<{ id: string; name: string; tier: string }>()
   if (!member) return problem(c, 'member-not-found')
+  if (!c.var.behaviour.returnsTier) return c.json({ id: member.id, name: member.name })
   return c.json(member)
 }
 

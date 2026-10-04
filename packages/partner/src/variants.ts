@@ -19,6 +19,14 @@ export interface Behaviour {
   refusesReplays: boolean
   /** Treats a repeated reference on an earn as the same earn. */
   dedupesEarn: boolean
+  /** Treats a repeated reference on a redemption as the same redemption. */
+  dedupesRedeem: boolean
+  /** Moves exactly the points asked on an earn and on a redemption. */
+  movesExactPoints: boolean
+  /** Checks `points` itself, and does not leave it to the table's CHECK. */
+  validatesPoints: boolean
+  /** Includes `tier` in a member. */
+  returnsTier: boolean
   /** Refuses a redemption larger than the balance. */
   guardsRedeem: boolean
   /** Refuses to reverse a transaction that has been reversed. */
@@ -34,6 +42,10 @@ const CORRECT: Behaviour = {
   checksTimestamp: true,
   refusesReplays: true,
   dedupesEarn: true,
+  dedupesRedeem: true,
+  movesExactPoints: true,
+  validatesPoints: true,
+  returnsTier: true,
   guardsRedeem: true,
   reversesOnce: true,
   explainsUnknownMember: true,
@@ -48,6 +60,10 @@ export const VARIANTS = {
   'accepts-stale': bug('checksTimestamp'),
   'no-replay-guard': bug('refusesReplays'),
   'double-earn': bug('dedupesEarn'),
+  'double-redeem': bug('dedupesRedeem'),
+  'off-by-one': bug('movesExactPoints'),
+  'unvalidated-points': bug('validatesPoints'),
+  'missing-tier': bug('returnsTier'),
   overdraws: bug('guardsRedeem'),
   'double-reversal': bug('reversesOnce'),
   'plain-errors': bug('explainsUnknownMember'),

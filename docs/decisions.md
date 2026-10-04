@@ -297,8 +297,8 @@ be a change to the spec first, and to the cases after.
 
 ## 16. Every wrong version is `correct` with one behaviour off
 
-The reference partner is served as nine versions, and eight of them are wrong.
-They are not eight copies with different bugs patched in: each is the correct
+The reference partner is served as thirteen versions, and twelve of them are
+wrong. They are not twelve copies with different bugs patched in: each is the correct
 partner with exactly one flag in a `Behaviour` record switched off, and the
 routes read the flag. Every flag is written so that `true` is the correct
 behaviour, which keeps "what is a bug" a single reading of the record.
@@ -308,10 +308,10 @@ exactly one flag; every flag is off in exactly one version; and a version that
 is wrong in two ways — which would send whoever reads a red case to the wrong
 place — fails the first.
 
-**Cost.** The partner's code now has seven places that ask "is this the version
-that is wrong here?". They are small and named, but a reader of `points.ts`
+**Cost.** The partner's code now has about ten places that ask "is this the
+version that is wrong here?". They are small and named, but a reader of `points.ts`
 meets them before meeting the logic. The alternative, a separate copy of the
-partner per bug, would have been eight files that drift from `correct` the
+partner per bug, would have been twelve files that drift from `correct` the
 first time it changes.
 
 ## 17. A bug that has to get past an index does it by making the key unique
@@ -375,16 +375,23 @@ slowness, not any case.
 ## 20. Cases that no version makes fail are listed, not hidden
 
 The rule is that every case needs a version that makes it fail, or it has not
-been shown to catch anything. The nine versions agreed in design make ten of the
-twenty cases fail by assertion. The other ten — one a deliberate control — are
-listed in `docs/variants.md` under "Cases no version makes fail", and the test
-holds that list to the code in both directions: a case on it that a version now
-makes fail is an error, and so is a new case that is neither covered nor listed.
+been shown to catch anything. The nine versions first agreed in design made ten
+of the twenty cases fail by assertion. Four more — `missing-tier`,
+`off-by-one`, `unvalidated-points` and `double-redeem` — brought it to
+seventeen. The three left, and why, are listed in `docs/variants.md` under
+"Cases no version makes fail", and the test holds that list to the code in both
+directions: a case on it that a version now makes fail is an error, and so is
+a new case that is neither covered nor listed.
 
-This does not close the gap. It makes it visible, and stops it growing without
-anyone choosing to let it. Closing it takes more versions: one that omits a
-field, one that miscounts an earn, one that accepts zero points, one that
-dedupes redemptions the way `double-earn` fails to dedupe earns.
+The four were chosen to cover the cases that checked arithmetic and shape,
+which were the bulk of what was missing. Two of the seventeen are covered only
+by consequence: under `off-by-one` an earn credits one point fewer than a
+reversal takes back, so `reversal/undoes-earn` and `reversal/twice` go red
+because earn and reversal no longer cancel. That is a real property of the
+partner and not a bug in reversing, and no version isolates one.
 
-**Cost.** Nine of those ten cases are, today, assertions nobody has seen fail.
-Their arithmetic and shapes are checked only against a partner that is right.
+**Cost.** Three cases are still assertions nobody has seen fail: the shape of a
+balance read, the 404 for a transaction that does not exist, and the control
+whose only job is to pass. And `off-by-one` is wide — six cases go red for one
+cause — so its row tells a reader what is wrong with the partner without telling
+them which of the six is the most direct evidence.

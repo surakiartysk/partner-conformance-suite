@@ -1,6 +1,6 @@
 # The reference partner's versions
 
-The reference partner is served as nine versions. `correct` implements the
+The reference partner is served as thirteen versions. `correct` implements the
 spec; each of the others is `correct` with **one** behaviour switched off, so a
 case that goes red points at one cause.
 
@@ -16,17 +16,21 @@ sees.
 
 ## What each version does wrong, and what must go red
 
-| Version             | The bug                                                                     | Status      | Cases that must not pass                                                                                                                                                                                                                                          |
-| ------------------- | --------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `correct`           | none                                                                        | —           | none                                                                                                                                                                                                                                                              |
-| `ignores-signature` | never checks the signature, so a missing, wrong or tampered one is accepted | `failed`    | `security/missing-signature`, `security/wrong-signature`, `security/tampered-body`                                                                                                                                                                                |
-| `accepts-stale`     | checks the signature but not the timestamp                                  | `failed`    | `security/stale-timestamp`                                                                                                                                                                                                                                        |
-| `no-replay-guard`   | does not remember the `webhook-id`s it has accepted                         | `failed`    | `security/replayed-request`                                                                                                                                                                                                                                       |
-| `double-earn`       | ignores `reference` on an earn, so a repeated earn adds the points again    | `failed`    | `earn/duplicate-reference`                                                                                                                                                                                                                                        |
-| `overdraws`         | lets a redemption take the balance below zero                               | `failed`    | `redeem/over-balance`                                                                                                                                                                                                                                             |
-| `double-reversal`   | lets one transaction be reversed more than once                             | `failed`    | `reversal/twice`                                                                                                                                                                                                                                                  |
-| `plain-errors`      | answers an unknown member as plain text, not an RFC 9457 problem            | `failed`    | `member/unknown`, `earn/unknown-member`                                                                                                                                                                                                                           |
-| `slow-balance`      | takes longer than the runner's timeout to answer a balance read             | `timed_out` | `member/balance`, `security/tampered-body`, `earn/adds-points`, `earn/duplicate-reference`, `earn/invalid-points`, `redeem/takes-points`, `redeem/over-balance`, `redeem/duplicate-reference`, `redeem/negative-points`, `reversal/undoes-earn`, `reversal/twice` |
+| Version              | The bug                                                                                                                  | Status      | Cases that must not pass                                                                                                                                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `correct`            | none                                                                                                                     | —           | none                                                                                                                                                                                                                                                              |
+| `ignores-signature`  | never checks the signature, so a missing, wrong or tampered one is accepted                                              | `failed`    | `security/missing-signature`, `security/wrong-signature`, `security/tampered-body`                                                                                                                                                                                |
+| `accepts-stale`      | checks the signature but not the timestamp                                                                               | `failed`    | `security/stale-timestamp`                                                                                                                                                                                                                                        |
+| `no-replay-guard`    | does not remember the `webhook-id`s it has accepted                                                                      | `failed`    | `security/replayed-request`                                                                                                                                                                                                                                       |
+| `double-earn`        | ignores `reference` on an earn, so a repeated earn adds the points again                                                 | `failed`    | `earn/duplicate-reference`                                                                                                                                                                                                                                        |
+| `overdraws`          | lets a redemption take the balance below zero                                                                            | `failed`    | `redeem/over-balance`                                                                                                                                                                                                                                             |
+| `double-reversal`    | lets one transaction be reversed more than once                                                                          | `failed`    | `reversal/twice`                                                                                                                                                                                                                                                  |
+| `missing-tier`       | omits `tier` from a member                                                                                               | `failed`    | `member/known`                                                                                                                                                                                                                                                    |
+| `off-by-one`         | moves one point fewer than asked on an earn and on a redemption, while a reversal still takes back all of what was asked | `failed`    | `earn/adds-points`, `earn/duplicate-reference`, `redeem/takes-points`, `redeem/duplicate-reference`, `reversal/undoes-earn`, `reversal/twice`                                                                                                                     |
+| `unvalidated-points` | does not check `points` itself, so zero or a negative reaches the table's `CHECK` and comes back as a 500                | `failed`    | `earn/invalid-points`, `redeem/negative-points`                                                                                                                                                                                                                   |
+| `double-redeem`      | ignores `reference` on a redemption, so a repeated redemption takes the points again                                     | `failed`    | `redeem/duplicate-reference`                                                                                                                                                                                                                                      |
+| `plain-errors`       | answers an unknown member as plain text, not an RFC 9457 problem                                                         | `failed`    | `member/unknown`, `earn/unknown-member`                                                                                                                                                                                                                           |
+| `slow-balance`       | takes longer than the runner's timeout to answer a balance read                                                          | `timed_out` | `member/balance`, `security/tampered-body`, `earn/adds-points`, `earn/duplicate-reference`, `earn/invalid-points`, `redeem/takes-points`, `redeem/over-balance`, `redeem/duplicate-reference`, `redeem/negative-points`, `reversal/undoes-earn`, `reversal/twice` |
 
 `slow-balance` is wide on purpose. Everything that moves points reads the
 balance first, so a partner whose balance read hangs cannot be tested for any
@@ -45,12 +49,12 @@ is neither covered nor listed here.
 - `security/valid-signature` — a control, not a check. Its job is to pass, so
   that a partner refusing every request cannot pass the cases that expect a
   refusal.
-- `member/known`
-- `member/balance`
-- `earn/adds-points`
-- `earn/invalid-points`
-- `redeem/takes-points`
-- `redeem/duplicate-reference`
-- `redeem/negative-points`
-- `reversal/undoes-earn`
+- `member/balance` — `slow-balance` times it out, which shows the runner copes
+  with a slow partner and nothing about this case's own assertions.
 - `reversal/unknown-transaction`
+
+`reversal/undoes-earn` and `reversal/twice` are covered, but by consequence:
+under `off-by-one` an earn credits one point fewer than a reversal takes back,
+so an earn followed by its reversal leaves the balance one short. They check
+that an earn and its reversal cancel, which is a real property, and they do not
+isolate a bug in reversing.

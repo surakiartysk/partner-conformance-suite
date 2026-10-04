@@ -26,8 +26,8 @@ Built in stages. Done so far:
   requests, sends them, and judges the answers. Every case passes against the
   reference partner.
 
-- **Nine versions of the reference partner** — `correct` and eight, each wrong
-  in one way, with [`docs/variants.md`](docs/variants.md) saying exactly which
+- **Thirteen versions of the reference partner** — `correct` and twelve, each
+  wrong in one way, with [`docs/variants.md`](docs/variants.md) saying exactly which
   cases each must make fail. The test that runs every case against every
   version reads that file, so it cannot drift from the code.
 

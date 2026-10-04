@@ -172,11 +172,13 @@ async function move(c: Context<Env>, type: 'earn' | 'redeem'): Promise<Response>
   if (typeof memberId !== 'string' || memberId.length === 0) {
     return problem(c, 'invalid-request', 'memberId must be a non-empty string')
   }
+  // A version that does not validate still wants a number, which is what the
+  // statements below bind; it leaves the range to the table's CHECK, which
+  // refuses zero and negatives as a 500.
+  const b = c.var.behaviour
   if (
     typeof points !== 'number' ||
-    !Number.isInteger(points) ||
-    points < 1 ||
-    points > MAX_POINTS
+    (b.validatesPoints && (!Number.isInteger(points) || points < 1 || points > MAX_POINTS))
   ) {
     return problem(c, 'invalid-request', `points must be an integer from 1 to ${MAX_POINTS}`)
   }
@@ -185,8 +187,9 @@ async function move(c: Context<Env>, type: 'earn' | 'redeem'): Promise<Response>
   }
 
   const intent: Intent = { type, memberId, points }
-  // A version that does not dedupe earns never looks for the earlier one.
-  const dedupes = type === 'redeem' || c.var.behaviour.dedupesEarn
+  // A version that does not dedupe a kind of movement never looks for the
+  // earlier one.
+  const dedupes = type === 'redeem' ? b.dedupesRedeem : b.dedupesEarn
   const repeat = dedupes ? await answerRepeat(c, reference, intent) : null
   if (repeat) return repeat
 
@@ -195,16 +198,17 @@ async function move(c: Context<Env>, type: 'earn' | 'redeem'): Promise<Response>
     .first()
   if (!member) return problem(c, 'member-not-found')
 
+  // One point fewer than asked, for the version with that bug. The row still
+  // records what was asked, and a reversal takes back what was asked.
+  const moved = b.movesExactPoints ? points : points - 1
   let row: TransactionRow | null
   try {
     row = await apply(
       c,
       { type, memberId, points, reference },
-      type === 'earn' ? points : -points,
+      type === 'earn' ? moved : -moved,
       null,
-      type === 'redeem' && c.var.behaviour.guardsRedeem
-        ? { sql: 'balance >= ?', value: points }
-        : null,
+      type === 'redeem' && b.guardsRedeem ? { sql: 'balance >= ?', value: points } : null,
       { reference: dedupes, reverses: true },
     )
   } catch (error) {

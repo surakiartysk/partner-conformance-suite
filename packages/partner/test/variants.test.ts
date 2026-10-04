@@ -62,18 +62,22 @@ describe('the variant list', () => {
     }
   })
 
-  it('lists the nine versions the suite is documented against', () => {
+  it('lists the thirteen versions the suite is documented against', () => {
     expect([...VARIANT_NAMES].sort()).toEqual(
       [
         'accepts-stale',
         'correct',
         'double-earn',
+        'double-redeem',
         'double-reversal',
         'ignores-signature',
+        'missing-tier',
         'no-replay-guard',
+        'off-by-one',
         'overdraws',
         'plain-errors',
         'slow-balance',
+        'unvalidated-points',
       ].sort(),
     )
   })
@@ -324,5 +328,152 @@ describe('slow-balance', () => {
       signal: controller.signal,
     }).catch(() => undefined)
     expect(Date.now() - began).toBeLessThan(3000)
+  })
+})
+
+describe('missing-tier', () => {
+  it('returns a member without a tier', async () => {
+    const { tenant, member } = await setup('missing-tier')
+    const response = await signed(tenant, 'GET', `/members/${member.id}`)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ id: member.id, name: 'Member A' })
+  })
+
+  it('still answers an unknown member as a problem, and a balance as before', async () => {
+    const { tenant, balance } = await setup('missing-tier')
+    const unknown = await signed(tenant, 'GET', '/members/mbr_nobody')
+    expect(await problemType(unknown)).toBe('member-not-found')
+    expect(await balance()).toBe(1000)
+  })
+})
+
+describe('off-by-one', () => {
+  it('credits one point fewer than an earn asked for, and says what the balance is', async () => {
+    const { member, send, balance } = await setup('off-by-one')
+    const response = await send('/points/earn', {
+      memberId: member.id,
+      points: 100,
+      reference: ref(),
+    })
+    expect(await response.json()).toMatchObject({ type: 'earn', points: 100, balance: 1099 })
+    expect(await balance()).toBe(1099)
+  })
+
+  it('takes one point fewer than a redemption asked for', async () => {
+    const { member, send, balance } = await setup('off-by-one')
+    const response = await send('/points/redeem', {
+      memberId: member.id,
+      points: 100,
+      reference: ref(),
+    })
+    expect(await response.json()).toMatchObject({ type: 'redeem', points: 100, balance: 901 })
+    expect(await balance()).toBe(901)
+  })
+
+  it('moves nothing for a single point, and still records the point asked', async () => {
+    const { member, send, balance } = await setup('off-by-one')
+    const response = await send('/points/earn', {
+      memberId: member.id,
+      points: 1,
+      reference: ref(),
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ points: 1, balance: 1000 })
+    expect(await balance()).toBe(1000)
+  })
+
+  it('still takes back all of what was asked when it reverses an earn', async () => {
+    const { member, send, balance } = await setup('off-by-one')
+    const earned = await (
+      await send('/points/earn', { memberId: member.id, points: 100, reference: ref() })
+    ).json<Tx>()
+    const reversal = await send('/points/reversals', {
+      transactionId: earned.transactionId,
+      reference: ref(),
+    })
+    expect(await reversal.json()).toMatchObject({ points: 100, balance: 999 })
+    expect(await balance()).toBe(999)
+  })
+
+  it('still dedupes a repeated reference, and still refuses a redemption over the balance', async () => {
+    const { member, send, balance } = await setup('off-by-one')
+    const body = { memberId: member.id, points: 100, reference: ref() }
+    const first = await (await send('/points/earn', body)).json<Tx>()
+    const again = await (await send('/points/earn', body)).json<Tx>()
+    expect(again.transactionId).toBe(first.transactionId)
+    expect(await balance()).toBe(1099)
+
+    const over = await send('/points/redeem', {
+      memberId: member.id,
+      points: 1100,
+      reference: ref(),
+    })
+    expect(over.status).toBe(422)
+    expect(await balance()).toBe(1099)
+  })
+})
+
+describe('unvalidated-points', () => {
+  it('answers zero points and negative points with a 500, and moves nothing', async () => {
+    const { member, send, balance } = await setup('unvalidated-points')
+    const earn = await send('/points/earn', { memberId: member.id, points: 0, reference: ref() })
+    expect(earn.status).toBe(500)
+    const redeem = await send('/points/redeem', {
+      memberId: member.id,
+      points: -5,
+      reference: ref(),
+    })
+    expect(redeem.status).toBe(500)
+    expect(await balance()).toBe(1000)
+  })
+
+  it('still refuses what is not a number, a missing reference and a missing member', async () => {
+    const { member, send } = await setup('unvalidated-points')
+    const notANumber = await send('/points/earn', {
+      memberId: member.id,
+      points: '10',
+      reference: ref(),
+    })
+    expect(notANumber.status).toBe(400)
+    expect((await send('/points/earn', { memberId: member.id, points: 10 })).status).toBe(400)
+    expect((await send('/points/earn', { points: 10, reference: ref() })).status).toBe(400)
+  })
+
+  it('still earns and redeems valid points exactly', async () => {
+    const { member, send, balance } = await setup('unvalidated-points')
+    // Checked after each step: an earn one short and a redemption one short
+    // cancel out, and a check at the end alone would pass them.
+    await send('/points/earn', { memberId: member.id, points: 100, reference: ref() })
+    expect(await balance()).toBe(1100)
+    await send('/points/redeem', { memberId: member.id, points: 30, reference: ref() })
+    expect(await balance()).toBe(1070)
+  })
+})
+
+describe('double-redeem', () => {
+  it('takes the points again for a repeated reference', async () => {
+    const { member, send, balance } = await setup('double-redeem')
+    const body = { memberId: member.id, points: 100, reference: ref() }
+    const first = await (await send('/points/redeem', body)).json<Tx>()
+    const second = await (await send('/points/redeem', body)).json<Tx>()
+    expect(second.transactionId).not.toBe(first.transactionId)
+    expect(second.balance).toBe(800)
+    expect(await balance()).toBe(800)
+  })
+
+  it('still dedupes a repeated earn, and still refuses a redemption over the balance', async () => {
+    const { member, send, balance } = await setup('double-redeem')
+    const earn = { memberId: member.id, points: 100, reference: ref() }
+    const first = await (await send('/points/earn', earn)).json<Tx>()
+    const again = await (await send('/points/earn', earn)).json<Tx>()
+    expect(again.transactionId).toBe(first.transactionId)
+    expect(await balance()).toBe(1100)
+
+    const over = await send('/points/redeem', {
+      memberId: member.id,
+      points: 1101,
+      reference: ref(),
+    })
+    expect(over.status).toBe(422)
   })
 })
