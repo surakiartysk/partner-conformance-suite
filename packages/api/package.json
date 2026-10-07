@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "wrangler dev --port 8787",
     "db:migrate": "wrangler d1 migrations apply conformance-api --local",
-    "deploy": "wrangler deploy",
+    "deploy": "pnpm --filter @conformance/ui build && wrangler deploy",
     "test": "vitest run",
     "type-check": "tsc --noEmit"
   },

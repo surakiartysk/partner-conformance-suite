@@ -11,6 +11,10 @@
   },
   "scripts": {
     "dev:partner": "pnpm --filter @conformance/partner dev",
+    "dev": "mkdir -p packages/ui/dist && pnpm --filter @conformance/api exec wrangler dev -c wrangler.toml -c ../partner/wrangler.toml --port 8787",
+    "dev:ui": "pnpm --filter @conformance/ui dev",
+    "db:migrate": "pnpm --filter @conformance/api exec wrangler d1 migrations apply conformance-api --local --persist-to .wrangler/state && pnpm --filter @conformance/api exec wrangler d1 migrations apply points-partner --local -c ../partner/wrangler.toml --persist-to .wrangler/state",
+    "build:ui": "pnpm --filter @conformance/ui build",
     "test": "pnpm -r --sequential test",
     "lint": "eslint . && pnpm --filter @conformance/spec lint",
     "lint:fix": "eslint . --fix",
@@ -19,7 +23,7 @@
     "type-check": "pnpm -r type-check",
     "check:leak": "node scripts/check-leak.mjs",
     "check:variants": "pnpm --filter @conformance/api exec vitest run test/variants.test.ts",
-    "verify": "pnpm format:check && pnpm lint && pnpm type-check && pnpm check:leak && pnpm test",
+    "verify": "pnpm format:check && pnpm lint && pnpm type-check && pnpm check:leak && pnpm test && pnpm build:ui",
     "prepare": "husky"
   },
   "devDependencies": {

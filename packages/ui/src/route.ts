@@ -1,0 +1,21 @@
+/**
+ * Which page the address bar names.
+ *
+ * Plain paths and `history.pushState`, no router library: there are a handful
+ * of pages and one way through them, and a library would be most of the
+ * bundle. Every path the page answers is listed here, so an unknown one is a
+ * page that says so rather than a blank.
+ */
+
+export type Route = { page: 'home' } | { page: 'connection' } | { page: 'not-found' }
+
+export function parseRoute(pathname: string): Route {
+  const path = pathname.replace(/\/+$/, '') || '/'
+  if (path === '/') return { page: 'home' }
+  if (path === '/connection') return { page: 'connection' }
+  return { page: 'not-found' }
+}
+
+export function pathFor(route: Exclude<Route, { page: 'not-found' }>): string {
+  return route.page === 'home' ? '/' : `/${route.page}`
+}
