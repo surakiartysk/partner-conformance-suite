@@ -424,6 +424,12 @@ provider for every live session. Visitors behind one address — an office, a
 conference network — share five starts an hour. And a visitor who closes the
 dialog that showed the secret cannot see it again; they start a new session.
 
+The secret is decrypted before the showing is claimed, not after. Claimed first,
+a secret that cannot be decrypted (the key was changed under live sessions)
+answered `500` and used up the one showing, so the next request got `410` even
+with the right key: measured. Decrypted first, the failure costs nothing; the
+price is one decrypt for each request that is then refused with `410`.
+
 ## 22. A run is driven by the browser and decided by the server, one claim at a time
 
 A run is three lanes — the cases that move no balance, and each member's
@@ -489,3 +495,62 @@ wrong cannot always be restored: under `off-by-one` the restore lands one short
 and the debt stays until a run against `correct` pays it. And the sweep can only
 pay what it can lock and reach; a partner that is down owes its members until it
 comes back or the session ends.
+
+## 25. The sweep takes the debt it tried least recently, not the oldest
+
+The sweep reads at most twenty owed members a sweep, so that one sweep stays
+inside a Worker's limits. It used to take the oldest twenty. A debt that cannot
+be paid — a partner whose restore lands one short, or a partner that is down —
+stays where it is, by design (decision 24), so it was the oldest again next
+time, and the next. With twenty of those the sweep never reached anything newer:
+a debt that could have been paid waited until its session ended a day later.
+Measured, not assumed: twenty such rows left a payable one unpaid after three
+sweeps, and nineteen did not.
+
+A member that a live run holds was in the same position: taken, found locked,
+skipped, and taken again.
+
+So each baseline carries `last_attempt_at`, the sweep orders by it, and it
+marks every row it takes up before it tries any. A row that fails, or is
+skipped, goes to the back; rows never attempted (0) go first.
+
+**Cost.** A new column and a migration, and a write for every row each sweep
+takes, including ones it then skips. A debt that a run held at the moment of the
+sweep is tried again only after every other debt has had its turn, so a long
+queue delays it by whole sweeps, ten minutes each; this was not measured beyond
+the two cases in the tests. Twenty a sweep is still the ceiling on how much one
+sweep restores: a queue of more than twenty payable debts takes more than one
+sweep, as it always did.
+
+## 26. The partner forgets what has expired, on a cron of its own
+
+Nothing was ever deleted on the partner. A tenant expires after a day and is
+refused from then on, but its row, its two members, its transactions and every
+webhook-id it used stayed. Measured on one session that ran every case once:
+one tenant, two members, ten transactions and forty-nine ids left behind, and
+the same numbers after the session had ended and the sweep had run. The suite's
+side cleaned up after itself, apart from one `session_starts` row per client
+address, kept for good although its window lasts an hour.
+
+So the partner has a cron (`src/purge.ts`, every ten minutes) that deletes
+expired tenants — their members, transactions and ids go with them, by the
+foreign keys — and ids older than the memory window. The suite's sweep deletes
+`session_starts` whose window has passed. Both are deletions the existing logic
+already treats as no-ops: an id older than the window is accepted again by the
+replay check, and a start in a past window is reset to one by the rate limit.
+
+It is the partner's own cron, not a call from the suite, because the two sides
+share nothing (non-negotiable 3): a partner that depended on the provider to
+clean up would be wrong about what a partner is, and a real partner has to
+manage its own storage.
+
+**Cost.** The partner is now a Worker with a trigger to configure and deploy,
+and a second place where a ten-minute clock runs. Each run is bounded (fifty
+tenants, five thousand ids), so a backlog takes several runs to clear and one
+run cannot stall on it. Deleting a tenant at the second it expires means a
+session that outlives its tenant by a few minutes finds nothing to restore
+against; the session expires at the same moment, so that was already so. How
+much the unbounded growth would have mattered was not measured: the rows are
+small, a few kilobytes a run by estimate, and D1's limits were not looked up
+for this, so this fixes a leak that was real and is not shown to have been
+urgent.

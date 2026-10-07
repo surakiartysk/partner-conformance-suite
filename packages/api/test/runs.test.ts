@@ -5,9 +5,12 @@ import {
   env,
   waitOnExecutionContext,
 } from 'cloudflare:test'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import api from '../src/index'
-import { RUNS_ALLOWED } from '../src/runs'
+import { DEFAULT_TIMEOUT_MS } from '../src/runner/execute'
+import { LANE_LEASE_SECONDS, RUNS_ALLOWED } from '../src/runs'
+import { SESSION_START_WINDOW_SECONDS } from '../src/sessions'
+import { SWEEP_BATCH } from '../src/sweeper'
 import {
   apiEnv,
   balances,
@@ -17,6 +20,7 @@ import {
   migrateAll,
   next,
   startSession,
+  toPartner,
   type NextAnswer,
 } from './helpers'
 
@@ -289,7 +293,35 @@ describe('giving points back', () => {
   })
 })
 
+/**
+ * A lane's claim must outlast the slowest `next`.
+ *
+ * `next` clears the claim when it fails (`unclaim`) without checking that the
+ * claim is still its own. That is safe only while no `next` can outlive its
+ * lease and be overtaken by another; if one could, the first one failing would
+ * release the second's claim and let a third run the same case alongside it.
+ * Nothing enforced the lease, only a comment saying a case is five requests of
+ * ten seconds, so it is worked out here from the cases themselves.
+ */
+describe('the lane lease', () => {
+  it('is longer than the slowest case could take, with the balance read before it', () => {
+    // arrange + act + verify, and the read of the starting balance a writing
+    // case begins with; the baseline read before the first case is one more.
+    const requests = CASES.map(
+      (c) => (c.arrange?.length ?? 0) + 1 + (c.verify?.length ?? 0) + (c.writes ? 1 : 0),
+    )
+    const slowestSeconds = ((Math.max(...requests) + 1) * DEFAULT_TIMEOUT_MS) / 1000
+    expect(slowestSeconds).toBeLessThan(LANE_LEASE_SECONDS)
+  })
+})
+
 describe('the sweep', () => {
+  // A sweep takes a bounded batch of whatever is owed, so debts left behind by
+  // other tests would change who is in it. Each test here starts from none.
+  beforeEach(async () => {
+    await env.DB.prepare('DELETE FROM sessions').run()
+  })
+
   const runSweep = async () => {
     const ctx = createExecutionContext()
     await api.scheduled(createScheduledController(), apiEnv(), ctx)
@@ -342,6 +374,116 @@ describe('the sweep', () => {
 
     await runSweep()
     expect((await balances(cookie))[0]).toBe(1000)
+  })
+
+  /**
+   * A sweep takes SWEEP_BATCH rows, and a row it cannot pay stays where it was.
+   * Taken oldest-first every time, a full batch of those is the whole sweep for
+   * as long as they last, and a newer debt that could be paid never is.
+   */
+  describe('with more rows it cannot pay than a batch holds', () => {
+    const lapseAll = () => env.DB.prepare('UPDATE member_locks SET expires_at = 0').run()
+    const olderThanTheRest = (id: string) =>
+      env.DB.prepare('UPDATE member_baselines SET recorded_at = 1 WHERE session_id = ?')
+        .bind(id)
+        .run()
+
+    async function owing(version: string, services = ['earn']) {
+      const { cookie, body: session } = await startSession()
+      const id = await sessionId(session.partner.tenant)
+      const run = await (await createRun(cookie, { version, services })).json<RunView>()
+      await next(cookie, run.id, 'A')
+      return { cookie, id }
+    }
+
+    const baselinesOf = async (id: string) =>
+      (await env.DB.prepare('SELECT COUNT(*) AS n FROM member_baselines WHERE session_id = ?')
+        .bind(id)
+        .first<{ n: number }>())!.n
+
+    it('still pays a newer debt that can be paid, within two sweeps', async () => {
+      // Each of these restores one point short, so none is ever paid.
+      for (let i = 0; i < SWEEP_BATCH; i++) await olderThanTheRest((await owing('off-by-one')).id)
+      const payable = await owing('correct')
+      await lapseAll()
+
+      await runSweep()
+      await runSweep()
+
+      expect((await balances(payable.cookie))[0]).toBe(1000)
+      expect(await baselinesOf(payable.id)).toBe(0)
+    })
+
+    it('does not let rows another run still holds use up the batch either', async () => {
+      // Held by runs that are still going: the sweep must leave them alone.
+      for (let i = 0; i < SWEEP_BATCH; i++) await olderThanTheRest((await owing('correct')).id)
+      const payable = await owing('correct')
+      await env.DB.prepare('UPDATE member_locks SET expires_at = 0 WHERE session_id = ?')
+        .bind(payable.id)
+        .run()
+
+      await runSweep()
+      await runSweep()
+
+      expect((await balances(payable.cookie))[0]).toBe(1000)
+    })
+  })
+
+  it('forgets a client whose rate-limit window has passed, and keeps one still inside it', async () => {
+    const at = Math.floor(Date.now() / 1000)
+    const insert = env.DB.prepare(
+      'INSERT INTO session_starts (client, window_start, attempts) VALUES (?, ?, 5)',
+    )
+    await env.DB.batch([
+      insert.bind('past', at - SESSION_START_WINDOW_SECONDS - 5),
+      insert.bind('just-inside', at - SESSION_START_WINDOW_SECONDS + 60),
+    ])
+    await runSweep()
+    const left = await env.DB.prepare(
+      "SELECT client FROM session_starts WHERE client IN ('past', 'just-inside')",
+    ).all<{ client: string }>()
+    expect(left.results.map((r) => r.client)).toEqual(['just-inside'])
+  })
+
+  /**
+   * A restore whose answer never arrives has still moved the points. The next
+   * restore — in a later second, so under a different reference — must read
+   * the balance it finds and move only what is still owed, which is nothing.
+   */
+  it('does not move points twice when the answer to a restore was lost', async () => {
+    const { cookie, body: session } = await startSession()
+    const id = await sessionId(session.partner.tenant)
+    const run = await (
+      await createRun(cookie, { version: 'correct', services: ['earn'] })
+    ).json<RunView>()
+    await next(cookie, run.id, 'A')
+    await env.DB.prepare('UPDATE member_locks SET expires_at = 0 WHERE session_id = ?')
+      .bind(id)
+      .run()
+
+    // The partner does the work and the answer is dropped on the way back.
+    const lossy = {
+      fetch: async (request: Request) => {
+        const response = await toPartner(request)
+        if (new URL(request.url).pathname.includes('/points/')) throw new Error('connection reset')
+        return response
+      },
+    } as unknown as Fetcher
+    const ctx = createExecutionContext()
+    await api.scheduled(createScheduledController(), apiEnv({ PARTNER: lossy }), ctx)
+    await waitOnExecutionContext(ctx)
+
+    const owed = async () =>
+      (await env.DB.prepare('SELECT COUNT(*) AS n FROM member_baselines WHERE session_id = ?')
+        .bind(id)
+        .first<{ n: number }>())!.n
+    expect(await owed()).toBe(1) // the debt is not written off on an answer nobody saw
+    expect((await balances(cookie))[0]).toBe(1000) // though the partner had already paid it
+
+    await new Promise((resolve) => setTimeout(resolve, 1100)) // another second, another reference
+    await runSweep()
+    expect((await balances(cookie))[0]).toBe(1000)
+    expect(await owed()).toBe(0)
   })
 
   it('deletes sessions that have ended, with their runs', async () => {

@@ -156,6 +156,10 @@ export async function getSession(c: Context<Env>): Promise<Response> {
 export async function revealSecret(c: Context<Env>): Promise<Response> {
   if (!c.env.SECRET_KEY) return c.json({ error: 'not configured' }, 503)
   const session = c.var.session
+  // Decrypted before it is claimed: a secret that cannot be decrypted (the key
+  // has changed) must not use up the one showing, or it is lost for good. The
+  // cost is a decrypt for a request that is then refused with 410.
+  const secret = await decrypt(session.secret, c.env.SECRET_KEY)
   const claimed = await c.env.DB.prepare(
     'UPDATE sessions SET secret_revealed_at = ? WHERE id = ? AND secret_revealed_at IS NULL',
   )
@@ -164,5 +168,5 @@ export async function revealSecret(c: Context<Env>): Promise<Response> {
   if (claimed.meta.changes === 0) {
     return c.json({ error: 'the secret has already been shown once' }, 410)
   }
-  return c.json({ secret: await decrypt(session.secret, c.env.SECRET_KEY) })
+  return c.json({ secret })
 }
