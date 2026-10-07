@@ -47,6 +47,12 @@ describe('the page headers', () => {
     expect(csp['connect-src']).toEqual(["'self'"])
   })
 
+  it('serve fonts and images from the page itself, so a font cannot come from elsewhere', () => {
+    const csp = policy()
+    expect(csp['font-src']).toEqual(["'self'"])
+    expect(csp['img-src']).toEqual(["'self'", 'data:'])
+  })
+
   it('refuse to be framed, and a base tag, and form posts', () => {
     const csp = policy()
     expect(csp['frame-ancestors']).toEqual(["'none'"])

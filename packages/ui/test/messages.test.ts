@@ -5,6 +5,10 @@ import { messageFor } from '../src/messages'
 const ALL: Failure[] = [
   'no-session',
   'rate-limited',
+  'run-limit',
+  'member-busy',
+  'lane-busy',
+  'not-found',
   'not-configured',
   'already-shown',
   'unavailable',
@@ -23,6 +27,11 @@ describe('messageFor', () => {
     expect(messageFor('rate-limited', 3600)).toContain('60 min')
     expect(messageFor('rate-limited', 61)).toContain('2 min')
     expect(messageFor('rate-limited', 1)).toContain('1 min')
+  })
+
+  it('says a run limit in whole minutes too, and names no wait it was not given', () => {
+    expect(messageFor('run-limit', 600)).toContain('10 min')
+    expect(messageFor('run-limit')).not.toMatch(/\d|NaN|undefined/)
   })
 
   it('does not name a wait it was not given', () => {

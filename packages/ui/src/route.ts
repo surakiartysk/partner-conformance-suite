@@ -7,12 +7,14 @@
  * page that says so rather than a blank.
  */
 
-export type Route = { page: 'home' } | { page: 'connection' } | { page: 'not-found' }
+export type Route =
+  { page: 'home' } | { page: 'connection' } | { page: 'run' } | { page: 'not-found' }
 
 export function parseRoute(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '') || '/'
   if (path === '/') return { page: 'home' }
   if (path === '/connection') return { page: 'connection' }
+  if (path === '/run') return { page: 'run' }
   return { page: 'not-found' }
 }
 

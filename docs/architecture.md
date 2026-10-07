@@ -109,10 +109,10 @@ them, and ids older than the memory window ([decision 26](decisions.md#26-the-pa
 
 ## Not built yet
 
-- **Most of the page.** Home (starts a session) and Connection (the partner's
-  address, the signing secret once, the members' balances) exist. Choosing a
-  version and services, the lanes running, the verdicts and the history do not.
-  Stage 5.
+- **Most of the page.** Home, Connection and Run exist: a visitor can start a
+  session, choose a version and services, watch the lanes run and see which
+  cases did not pass. Opening a case to read its request, the answer and what
+  was expected, and the history of runs, do not exist. Stage 5.
 - **Testing a partner of your own.** The design has a self-hosted mode in which
   a partner enters its own base URL, behind a guard against server-side request
   forgery. The deployed suite only ever tests the reference partner; nothing
