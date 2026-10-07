@@ -1,9 +1,9 @@
 import type { Context, MiddlewareHandler } from 'hono'
 import { getCookie, setCookie } from 'hono/cookie'
-import { PARTNER_VERSIONS, readBalance, targetFor } from './partner'
+import { PARTNER_VERSIONS, baseUrl, readBalance, targetFor } from './partner'
 import { newSecret } from './runner/signing'
 import { decrypt, encrypt, newToken, randomId, sha256Hex } from './secrets'
-import type { Env, Session } from './types'
+import type { Bindings, Env, Session } from './types'
 
 /**
  * "Try it": a session, a tenant on the reference partner, and a cookie.
@@ -49,10 +49,16 @@ async function chargeStart(c: Context<Env>): Promise<number> {
   return row!.attempts
 }
 
-function view(session: Session, balances?: Record<'A' | 'B', number | null>) {
+function view(env: Bindings, session: Session, balances?: Record<'A' | 'B', number | null>) {
   return {
     expiresAt: new Date(session.expires_at * 1000).toISOString(),
-    partner: { tenant: session.tenant, versions: PARTNER_VERSIONS },
+    partner: {
+      tenant: session.tenant,
+      versions: PARTNER_VERSIONS,
+      // The address each version is reached at, as the runner builds it: what
+      // the Connection page shows is what a case is sent to, not a copy of it.
+      baseUrls: Object.fromEntries(PARTNER_VERSIONS.map((v) => [v, baseUrl(env, session, v)])),
+    },
     members: (['A', 'B'] as const).map((slot) => ({
       slot,
       id: slot === 'A' ? session.member_a : session.member_b,
@@ -123,7 +129,7 @@ export async function startSession(c: Context<Env>): Promise<Response> {
     path: '/',
     maxAge: session.expires_at - session.created_at,
   })
-  return c.json(view(session), 201)
+  return c.json(view(c.env, session), 201)
 }
 
 export const requireSession: MiddlewareHandler<Env> = async (c, next) => {
@@ -146,7 +152,7 @@ export async function getSession(c: Context<Env>): Promise<Response> {
     readBalance(c.env, target, 'A'),
     readBalance(c.env, target, 'B'),
   ])
-  return c.json(view(session, { A: a, B: b }))
+  return c.json(view(c.env, session, { A: a, B: b }))
 }
 
 /**
