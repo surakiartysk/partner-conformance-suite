@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Run, in progress</title>
+    <link rel="stylesheet" href="mockup.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&family=JetBrains+Mono:wght@400..600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="bar-in">
+        <a class="brand" href="#">Partner conformance suite</a>
+        <nav class="nav" aria-label="Pages">
+          <a href="#">Connection</a>
+          <a href="#" aria-current="page">Run</a>
+          <a href="#">History</a>
+        </nav>
+        <div class="session">
+          <span>Session ends in 23 h 41 min</span>
+          <button
+            class="theme"
+            type="button"
+            onclick="
+              document.documentElement.dataset.theme =
+                document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
+            "
+          >
+            Light / dark
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <h1>Run</h1>
+      <p class="sub">
+        Pick a partner and what to check. Each case is a signed request from the suite; the verdict
+        is decided on the server.
+      </p>
+
+      <div class="grid">
+        <form class="card fieldset-gap" onsubmit="return false">
+          <div>
+            <h2>Partner version</h2>
+            <div role="radiogroup" aria-label="Partner version">
+              <div class="opt" role="radio" aria-checked="false" tabindex="0">
+                <span class="dot"></span>
+                <span
+                  ><span class="mono">correct</span
+                  ><small>Implements the spec. Everything should pass.</small></span
+                >
+              </div>
+              <div class="opt" role="radio" aria-checked="true" tabindex="0">
+                <span class="dot"></span>
+                <span
+                  ><span class="mono">double-earn</span
+                  ><small>Wrong in one way. The result says how.</small></span
+                >
+              </div>
+              <div class="opt" role="radio" aria-checked="false" tabindex="0">
+                <span class="dot"></span>
+                <span><span class="mono">off-by-one</span></span>
+              </div>
+              <div class="opt" role="radio" aria-checked="false" tabindex="0">
+                <span class="dot"></span>
+                <span><span class="mono">overdraws</span></span>
+              </div>
+              <div class="opt" role="radio" aria-checked="false" tabindex="0">
+                <span class="dot"></span>
+                <span><span class="mono">…9 more</span></span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2>Services</h2>
+            <div class="chips" role="group" aria-label="Services">
+              <button class="chip" type="button" aria-pressed="true">security</button>
+              <button class="chip" type="button" aria-pressed="true">member</button>
+              <button class="chip" type="button" aria-pressed="true">earn</button>
+              <button class="chip" type="button" aria-pressed="true">redeem</button>
+              <button class="chip" type="button" aria-pressed="true">reversal</button>
+            </div>
+          </div>
+          <button class="btn primary" type="button">Run 20 cases</button>
+        </form>
+
+        <section class="card" aria-labelledby="live">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              flex-wrap: wrap;
+              gap: 8px;
+            "
+          >
+            <h2 id="live">Running <span class="mono">double-earn</span></h2>
+            <span class="mono" style="color: var(--t4); font-size: 12px"
+              >12 of 20 done · 1 failed so far · 14 s</span
+            >
+          </div>
+          <p class="sub" style="margin-bottom: 16px; font-size: 13px">
+            Read-only cases run together. Each member's cases run one at a time, because two cases
+            moving one balance at once would corrupt each other's expectations.
+          </p>
+
+          <div class="lanes">
+            <div class="lane">
+              <header>Read-only <span class="mono">8 / 10</span></header>
+              <div class="bar-prog"><i class="w-70"></i></div>
+              <div class="row">
+                <span
+                  ><span class="id mono">security/<wbr />valid-signature</span></span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">security/<wbr />missing-signature</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">security/<wbr />wrong-signature</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">security/<wbr />stale-timestamp</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">security/<wbr />replayed-request</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">member/<wbr />known</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">member/<wbr />unknown</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">member/<wbr />balance</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row now">
+                <span class="id mono">earn/<wbr />unknown-member</span
+                ><span class="st run"><i class="spin"></i> Running</span>
+              </div>
+              <div class="row">
+                <span class="id mono">reversal/<wbr />unknown-transaction</span
+                ><span class="st idle">Waiting</span>
+              </div>
+            </div>
+
+            <div class="lane">
+              <header>Member A <span class="mono">3 / 4</span></header>
+              <div class="bar-prog"><i class="w-70"></i></div>
+              <div class="row">
+                <span class="id mono">security/<wbr />tampered-body</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">earn/<wbr />adds-points</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row">
+                <span class="id mono">earn/<wbr />duplicate-reference</span
+                ><span class="st fail">✕ Failed</span>
+              </div>
+              <div class="row now">
+                <span class="id mono">earn/<wbr />invalid-points</span
+                ><span class="st run"><i class="spin"></i> Running</span>
+              </div>
+            </div>
+
+            <div class="lane">
+              <header>Member B <span class="mono">1 / 6</span></header>
+              <div class="bar-prog"><i class="w-40"></i></div>
+              <div class="row">
+                <span class="id mono">redeem/<wbr />takes-points</span
+                ><span class="st pass">✓ Passed</span>
+              </div>
+              <div class="row now">
+                <span class="id mono">redeem/<wbr />over-balance</span
+                ><span class="st run"><i class="spin"></i> Running</span>
+              </div>
+              <div class="row">
+                <span class="id mono">redeem/<wbr />duplicate-reference</span
+                ><span class="st idle">Waiting</span>
+              </div>
+              <div class="row">
+                <span class="id mono">redeem/<wbr />negative-points</span
+                ><span class="st idle">Waiting</span>
+              </div>
+              <div class="row">
+                <span class="id mono">reversal/<wbr />undoes-earn</span
+                ><span class="st idle">Waiting</span>
+              </div>
+              <div class="row">
+                <span class="id mono">reversal/<wbr />twice</span
+                ><span class="st idle">Waiting</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="sub" style="margin: 16px 0 0; font-size: 12px">
+            Closing this tab stops the run. The points it moved are written down first and given
+            back, by this run, a later one, or the sweep that runs every ten minutes.
+          </p>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
