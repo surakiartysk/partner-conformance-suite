@@ -5,9 +5,10 @@ import {
   env,
   waitOnExecutionContext,
 } from 'cloudflare:test'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import api from '../src/index'
 import { RUNS_ALLOWED } from '../src/runs'
+import { SWEEP_BATCH } from '../src/sweeper'
 import {
   apiEnv,
   balances,
@@ -290,6 +291,12 @@ describe('giving points back', () => {
 })
 
 describe('the sweep', () => {
+  // A sweep takes a bounded batch of whatever is owed, so debts left behind by
+  // other tests would change who is in it. Each test here starts from none.
+  beforeEach(async () => {
+    await env.DB.prepare('DELETE FROM sessions').run()
+  })
+
   const runSweep = async () => {
     const ctx = createExecutionContext()
     await api.scheduled(createScheduledController(), apiEnv(), ctx)
@@ -342,6 +349,59 @@ describe('the sweep', () => {
 
     await runSweep()
     expect((await balances(cookie))[0]).toBe(1000)
+  })
+
+  /**
+   * A sweep takes SWEEP_BATCH rows, and a row it cannot pay stays where it was.
+   * Taken oldest-first every time, a full batch of those is the whole sweep for
+   * as long as they last, and a newer debt that could be paid never is.
+   */
+  describe('with more rows it cannot pay than a batch holds', () => {
+    const lapseAll = () => env.DB.prepare('UPDATE member_locks SET expires_at = 0').run()
+    const olderThanTheRest = (id: string) =>
+      env.DB.prepare('UPDATE member_baselines SET recorded_at = 1 WHERE session_id = ?')
+        .bind(id)
+        .run()
+
+    async function owing(version: string, services = ['earn']) {
+      const { cookie, body: session } = await startSession()
+      const id = await sessionId(session.partner.tenant)
+      const run = await (await createRun(cookie, { version, services })).json<RunView>()
+      await next(cookie, run.id, 'A')
+      return { cookie, id }
+    }
+
+    const baselinesOf = async (id: string) =>
+      (await env.DB.prepare('SELECT COUNT(*) AS n FROM member_baselines WHERE session_id = ?')
+        .bind(id)
+        .first<{ n: number }>())!.n
+
+    it('still pays a newer debt that can be paid, within two sweeps', async () => {
+      // Each of these restores one point short, so none is ever paid.
+      for (let i = 0; i < SWEEP_BATCH; i++) await olderThanTheRest((await owing('off-by-one')).id)
+      const payable = await owing('correct')
+      await lapseAll()
+
+      await runSweep()
+      await runSweep()
+
+      expect((await balances(payable.cookie))[0]).toBe(1000)
+      expect(await baselinesOf(payable.id)).toBe(0)
+    })
+
+    it('does not let rows another run still holds use up the batch either', async () => {
+      // Held by runs that are still going: the sweep must leave them alone.
+      for (let i = 0; i < SWEEP_BATCH; i++) await olderThanTheRest((await owing('correct')).id)
+      const payable = await owing('correct')
+      await env.DB.prepare('UPDATE member_locks SET expires_at = 0 WHERE session_id = ?')
+        .bind(payable.id)
+        .run()
+
+      await runSweep()
+      await runSweep()
+
+      expect((await balances(payable.cookie))[0]).toBe(1000)
+    })
   })
 
   it('deletes sessions that have ended, with their runs', async () => {

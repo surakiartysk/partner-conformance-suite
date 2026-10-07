@@ -90,7 +90,7 @@ Standard Webhooks publishes ([decision 7](decisions.md#7-the-partners-verifier-i
 | A second run wants a member a run holds | `423` with `Retry-After`; the lock is the holder's until it ends the lane or the lease lapses.     |
 | The tab is closed mid-run               | The run stops. The member's lock lapses after five minutes; its baseline stays.                    |
 | A restore cannot reach the target       | The baseline stays, and the next holder of the member pays it.                                     |
-| Nobody comes back                       | The cron sweep restores each owed member it can lock, through the version it was last used with.   |
+| Nobody comes back                       | The cron sweep restores owed members it can lock, twenty a sweep, least recently tried first.      |
 | The partner does not answer in time     | The case is `timed_out`, wherever the wait was — act, verify, or setup.                            |
 | The session ends                        | The sweep deletes it, with its runs, locks and baselines; its tenant has ended on the partner too. |
 

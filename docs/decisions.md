@@ -489,3 +489,29 @@ wrong cannot always be restored: under `off-by-one` the restore lands one short
 and the debt stays until a run against `correct` pays it. And the sweep can only
 pay what it can lock and reach; a partner that is down owes its members until it
 comes back or the session ends.
+
+## 25. The sweep takes the debt it tried least recently, not the oldest
+
+The sweep reads at most twenty owed members a sweep, so that one sweep stays
+inside a Worker's limits. It used to take the oldest twenty. A debt that cannot
+be paid — a partner whose restore lands one short, or a partner that is down —
+stays where it is, by design (decision 24), so it was the oldest again next
+time, and the next. With twenty of those the sweep never reached anything newer:
+a debt that could have been paid waited until its session ended a day later.
+Measured, not assumed: twenty such rows left a payable one unpaid after three
+sweeps, and nineteen did not.
+
+A member that a live run holds was in the same position: taken, found locked,
+skipped, and taken again.
+
+So each baseline carries `last_attempt_at`, the sweep orders by it, and it
+marks every row it takes up before it tries any. A row that fails, or is
+skipped, goes to the back; rows never attempted (0) go first.
+
+**Cost.** A new column and a migration, and a write for every row each sweep
+takes, including ones it then skips. A debt that a run held at the moment of the
+sweep is tried again only after every other debt has had its turn, so a long
+queue delays it by whole sweeps, ten minutes each; this was not measured beyond
+the two cases in the tests. Twenty a sweep is still the ceiling on how much one
+sweep restores: a queue of more than twenty payable debts takes more than one
+sweep, as it always did.

@@ -28,10 +28,21 @@ export async function sweep(env: Bindings): Promise<{ restored: number; skipped:
   const owed = await env.DB.prepare(
     `SELECT b.slot, b.version, s.*
        FROM member_baselines b JOIN sessions s ON s.id = b.session_id
-      ORDER BY b.recorded_at LIMIT ?`,
+      ORDER BY b.last_attempt_at, b.recorded_at LIMIT ?`,
   )
     .bind(SWEEP_BATCH)
     .all<Session & { slot: MemberSlot; version: string }>()
+
+  // Every row taken is marked as attempted now, before any is tried — the ones
+  // that are skipped as much as the ones that fail. Oldest-first alone would
+  // take the same rows every time: a debt that cannot be paid, or a member a
+  // live run holds, stays in the batch and keeps out the newer ones behind it.
+  if (owed.results.length > 0) {
+    const attempted = env.DB.prepare(
+      'UPDATE member_baselines SET last_attempt_at = ? WHERE session_id = ? AND slot = ?',
+    )
+    await env.DB.batch(owed.results.map((row) => attempted.bind(now(), row.id, row.slot)))
+  }
 
   let restored = 0
   let skipped = 0
