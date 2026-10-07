@@ -56,8 +56,11 @@ the suite put the points back.
 - **Master and detail.** Cases are listed with the failures first, then each lane. The open
   case shows a sentence saying what did not match, with the formula and the values (`balance`
   should be the starting balance plus 100: 1,000 + 100 = 1,100; the partner answered 1,200),
-  then its steps. Steps that matched are collapsed to one line; the step that did not match is
-  open, with **Expected** and **Actual** side by side and the differing line marked.
+  then its steps in the order the case runs them. Every step shows its **request body** and what
+  came back. The steps that are judged (the act and the verify) are open: the request, then
+  **Expected** and **Actual** side by side with the differing lines marked. The setup (reading the
+  starting balance, and the arrange step that puts the partner in the state the case needs) is not
+  judged, so it is collapsed into one line that opens to the same request and response.
 - **Headers are folded** and shown from an allowlist; the rest appear as names with the value
   hidden (`•••`).
 - **The reveal** comes last: what was wrong with that version, which case catches it, and why
@@ -65,6 +68,14 @@ the suite put the points back.
   pass a partner with this bug.
 
 ## Found while reviewing the mockups
+
+- **The first drawing was wrong in two ways, and the owner caught the larger one.** It left out
+  the request bodies (a case is a request, and the request is what a partner's developer needs
+  to reproduce it). It also drew the repeated earn as a step that matched, from memory of the
+  case rather than from its definition. In `earn/duplicate-reference` the repeat is the judged
+  step: it must return the first transaction's id and the balance plus 100, so the repeat fails
+  on both, and the verify fails after it. The mockup now follows the definition in
+  `packages/cases/src/cases/earn.ts`.
 
 - **Phone width.** The mockup lists every case before the open one, so on a phone the evidence
   is a long scroll away. The build must put the first failed case's detail directly under the
