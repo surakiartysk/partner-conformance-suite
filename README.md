@@ -40,7 +40,13 @@ Built in stages. Done so far:
   down before it moves, so it is always given back: by the run, by a later run,
   or by a sweep every ten minutes.
 
-Next: the dashboard.
+- **The page** — [`packages/ui`](packages/ui), served by the same Worker as
+  the API: a home page that starts a session, and a Connection page with the
+  partner's address, the signing secret (shown once) and the test members'
+  balances. Running the cases, reading the verdicts and the history are not
+  built yet.
+
+Next: the rest of the page.
 
 ## Layout
 
@@ -48,7 +54,8 @@ Next: the dashboard.
 packages/spec      the Points Partner API, linted with Redocly
 packages/partner   the reference partner: Worker + D1
 packages/cases     the cases, matchers and lanes
-packages/api       the provider's side: signer and runner
+packages/api       the provider's side: signer, runner, and the Worker that also serves the page
+packages/ui        the page: React and Vite
 docs/architecture.md how the pieces fit, and what is not built yet
 docs/decisions.md  what was chosen, why, and what it costs
 docs/variants.md   what each wrong version must get wrong
@@ -61,13 +68,17 @@ Node 22 and pnpm.
 
 ```bash
 pnpm install
-pnpm verify                  # format, lint (code and spec), types, leak check, tests
-pnpm --filter @conformance/partner db:migrate
-pnpm dev:partner             # the reference partner on :8788
+pnpm verify                  # format, lint (code and spec), types, leak check, tests, the page builds
+pnpm db:migrate              # the local databases of both Workers
+pnpm dev                     # the API, the reference partner and the built page on :8787
+pnpm dev:ui                  # optional: the page with hot reload on :5173, proxying /api to :8787
 ```
 
-Provisioning a tenant needs `PROVISION_TOKEN` in `packages/partner/.dev.vars`;
-there is no default, on purpose.
+`pnpm dev` serves whatever is in `packages/ui/dist`, so build the page first
+(`pnpm build:ui`) or use `pnpm dev:ui` beside it. Secrets have no defaults, on
+purpose: put `PROVISION_TOKEN` and `SECRET_KEY` (32 random bytes, base64) in
+`packages/api/.dev.vars`, and the same `PROVISION_TOKEN` in
+`packages/partner/.dev.vars`. Both files are ignored by git.
 
 ## License
 

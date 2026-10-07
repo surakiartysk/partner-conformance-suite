@@ -596,3 +596,38 @@ not travel over the public internet to it: it goes through a service binding
 route a visitor could call. The Connection page has to say so, or it suggests
 something the deployment does not do. `no-store` also means the browser never
 reuses a session read, so the page asks again each time.
+
+## 29. The page is plain: no router library, nothing from another origin, nothing inline
+
+The page is React and Vite, served by the API Worker as static assets
+(decision 27). Three choices keep it small and keep its security policy honest.
+
+**No router library.** There are a handful of pages and one way through them, so
+the address bar is read by a function in `route.ts` and written with
+`history.pushState`; every path the page answers is in that one file, and an
+unknown one says "not found". Only the paths in it can be reloaded: the Worker
+falls back to the page for any path outside `/api`, and the page decides.
+
+**Nothing from another origin, nothing inline.** The policy is
+`default-src 'none'` with scripts, styles and requests from the page's own
+origin only — no `'unsafe-inline'`, no web fonts, no analytics — in
+`public/_headers`, and the tests read that file and the source rather than
+trusting it. The page does not set a `style` attribute anywhere, and never
+turns text into markup: what comes back from the API, and later what a partner
+answers, is rendered as text only, and a test hands the Connection page markup
+in every field the API fills and checks it comes out escaped.
+
+**The page only talks to the API through one module,** which sends no body that
+could say where a request should go (decision 1.1), maps every failure to a
+message the page chose and never shows the server's own text, and refuses a
+`200` that is not JSON — in development a route missing from the proxy falls
+through to the page's HTML with a success status.
+
+**Cost.** A system font stack rather than a chosen typeface. A route table to
+edit for every new page, and a deep link to one run's results needs a pattern
+in it, which this one does not yet have. No inline `style` means every dynamic
+look is a class, so a progress bar is a few classes rather than a width. The
+bundle is about 150 kB, 49 kB compressed, almost all of it React. And the page
+was checked in one browser (Chromium, desktop and 375 and 320 px wide) and with
+tests that render it to a string; nothing yet drives it in a real browser on
+every change — that is the end-to-end stage.
