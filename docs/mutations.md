@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository has been made to fail by at least one row below:
-the 106 in `packages/partner`, the 19 in `packages/cases` and the 104 in `packages/api`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases` and the 106 in `packages/api`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -295,6 +295,10 @@ read its own.
 | 215 | The cron handler does not call the purge                                                                                                   | the scheduled handler runs the purge                                                                                                                                                      | `expected 1 to be +0`                                                                        |
 | 216 | The sweep never deletes `session_starts`                                                                                                   | forgets a client whose rate-limit window has passed, and keeps one still inside it                                                                                                        | `expected [ 'just-inside', 'past' ] to deeply equal [ 'just-inside' ]`                       |
 | 217 | The sweep deletes `session_starts` still inside their window                                                                               | the same                                                                                                                                                                                  | `expected [] to deeply equal [ 'just-inside' ]`                                              |
+| 218 | The lane lease shortened from two minutes to thirty seconds                                                                                | the lane lease is longer than the slowest case could take, with the balance read before it                                                                                                | `expected 60 to be less than 30`                                                             |
+| 219 | The default request timeout raised from ten seconds to thirty                                                                              | the same                                                                                                                                                                                  | `expected 180 to be less than 120`                                                           |
+| 220 | A restore that moves a fixed amount instead of what the balance it reads says is owed                                                      | the sweep does not move points twice when the answer to a restore was lost                                                                                                                | `expected 900 to be 1000`                                                                    |
+| 221 | A restore deleted from the baselines even when its case did not pass                                                                       | the same                                                                                                                                                                                  | `expected +0 to be 1`                                                                        |
 
 Rows 187 and 188 were first run under other names. Row 187 was meant to write
 the baseline after the first case and instead removed it altogether; row 188
