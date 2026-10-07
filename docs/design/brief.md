@@ -61,6 +61,20 @@ the suite put the points back.
   **Expected** and **Actual** side by side with the differing lines marked. The setup (reading the
   starting balance, and the arrange step that puts the partner in the state the case needs) is not
   judged, so it is collapsed into one line that opens to the same request and response.
+- **A case that passed** (`mockups/passed.html`, drawn from `earn/adds-points`; 19 of 20 cases
+  are in this state, so it is the common one). It opens with one sentence saying everything the
+  case checks matched. Judged steps that matched are one line each (status, request line, time)
+  and open to the same view as a failure: the request body, then **Expected** and **Actual** side
+  by side, with a green bar on each field that matched. Expected is the expectation as the case
+  states it, not a copy of the answer: `"balance"` reads `balance at start + 100 = 1,100` and
+  `"transactionId"` reads `any non-empty string`, because the same object is both what is checked
+  and what is shown. Fields in an answer that the case does not name are not checked, and the page
+  says so. A matched step is collapsed by default but never removed: a developer comparing a pass
+  with a failure needs the pass's request and answer, and a reader needs to see that the case did
+  not pass by checking too little.
+- **Why setup has no Expected.** The starting balance read is not judged, and an arrange step only
+  has to answer 2xx (if it does not, the case ends as `error`, not `failed`, because nothing it
+  then said about the partner would mean anything).
 - **Headers are folded** and shown from an allowlist; the rest appear as names with the value
   hidden (`•••`).
 - **The reveal** comes last: what was wrong with that version, which case catches it, and why

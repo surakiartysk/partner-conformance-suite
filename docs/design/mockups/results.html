@@ -106,9 +106,9 @@
             <p style="font-weight: 700; margin-bottom: 4px">What didn't match</p>
             <p>
               The repeat should have returned the first transaction,
-              <span class="eq">txn_a1</span>, with <span class="eq">balance</span> at the starting
-              balance plus 100: <span class="eq">1,000 + 100 = 1,100</span>. The partner returned a
-              new transaction, <span class="eq">txn_b7</span>, and <span class="eq">1,200</span>.
+              <span class="eq">txn_a1</span>, with <span class="eq">balance</span> at
+              <span class="eq">balance at start + 100 = 1,100</span>. The partner returned a new
+              transaction, <span class="eq">txn_b7</span>, and <span class="eq">1,200</span>.
             </p>
           </div>
 
@@ -172,7 +172,7 @@ webhook-signature: v1,•••</pre>
             <div class="two">
               <div class="pane">
                 <h4>Expected</h4>
-                <pre><span class="ln">{</span><span class="ln bad">  "transactionId": "txn_a1",   <span style="color: var(--t4)">// the first one</span></span><span class="ln bad">  "balance": 1100              <span style="color: var(--t4)">// start 1,000 + 100</span></span><span class="ln">}</span></pre>
+                <pre><span class="ln">{</span><span class="ln bad">  "transactionId": <span style="color: var(--t4)">"txn_a1", the first one</span></span><span class="ln bad">  "balance": <span style="color: var(--t4)">balance at start + 100 = 1,100</span></span><span class="ln">}</span></pre>
               </div>
               <div class="pane">
                 <h4>Actual</h4>
@@ -203,7 +203,7 @@ response  content-type: application/json</pre>
             <div class="two">
               <div class="pane">
                 <h4>Expected</h4>
-                <pre><span class="ln">{</span><span class="ln">  "memberId": "mbr_1b7e",</span><span class="ln bad">  "balance": 1100   <span style="color: var(--t4)">// start 1,000 + 100</span></span><span class="ln">}</span></pre>
+                <pre><span class="ln">{</span><span class="ln">  "memberId": "mbr_1b7e",</span><span class="ln bad">  "balance": <span style="color: var(--t4)">balance at start + 100 = 1,100</span></span><span class="ln">}</span></pre>
               </div>
               <div class="pane">
                 <h4>Actual</h4>
