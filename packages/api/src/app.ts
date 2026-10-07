@@ -16,7 +16,7 @@ export const app = new Hono<Env>().basePath('/api')
  * `nosniff` because some of what the API returns is text a partner wrote, and
  * a browser must not decide it is something else. `no-store` because the
  * answers belong to one session and must not sit in a shared cache. The page's
- * own headers are in packages/ui/public/_headers.
+ * own headers will be a `_headers` file shipped with it.
  */
 app.use('*', async (c, next) => {
   await next()
