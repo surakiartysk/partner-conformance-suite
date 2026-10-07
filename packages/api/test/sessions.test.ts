@@ -46,6 +46,19 @@ describe('the API path space', () => {
     expect(after!.n).toBe(before!.n)
   })
 
+  it('puts security headers on every answer, an error and a missing route included', async () => {
+    const answers = [
+      await bare('/api/sessions'),
+      await bare('/api/session', 'GET'), // 401: no cookie
+      await bare('/api/nowhere', 'GET'), // 404
+    ]
+    expect(answers.map((a) => a.status)).toEqual([201, 401, 404])
+    for (const answer of answers) {
+      expect(answer.headers.get('x-content-type-options')).toBe('nosniff')
+      expect(answer.headers.get('cache-control')).toBe('no-store')
+    }
+  })
+
   it('serves the same route under /api', async () => {
     expect((await bare('/api/sessions')).status).toBe(201)
   })
@@ -57,13 +70,20 @@ describe('POST /api/sessions', () => {
     expect(response.status).toBe(201)
     const body = await response.json<{
       members: { slot: string; id: string }[]
-      partner: { tenant: string; versions: string[] }
+      partner: { tenant: string; versions: string[]; baseUrls: Record<string, string> }
       secret: { revealed: boolean }
     }>()
     expect(body.members.map((m) => m.slot)).toEqual(['A', 'B'])
     expect(body.members[0]!.id).toMatch(/^mbr_/)
     expect(body.partner.versions).toContain('correct')
     expect(body.secret.revealed).toBe(false)
+    // Each version's address is the one the runner will build for it.
+    for (const version of body.partner.versions) {
+      expect(body.partner.baseUrls[version]).toBe(
+        `https://partner.example/${version}/${body.partner.tenant}`,
+      )
+    }
+    expect(Object.keys(body.partner.baseUrls).sort()).toEqual([...body.partner.versions].sort())
   })
 
   it('sets a session cookie that scripts cannot read and other sites do not send', async () => {

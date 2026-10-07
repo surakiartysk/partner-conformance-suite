@@ -572,3 +572,27 @@ that is true only because no UI or deployment exists. A request outside `/api`
 answers `404` from this Worker for now, and will fall through to the page once
 there is one. The page and the API are deployed together, so there is no preview
 of one without the other.
+
+## 28. The API names its own addresses and sends its own security headers
+
+Two small things the page needs from the API, made before the page exists.
+
+The Connection page has to show where the partner is. The session view now
+carries `partner.baseUrls`, one address per version, built by the same function
+the runner uses (`baseUrl`), so what the visitor reads is what a case is sent
+to. A page that assembled the address itself from `PARTNER_ORIGIN` and a tenant
+would be a second copy that could drift.
+
+Every answer under `/api` carries `X-Content-Type-Options: nosniff` and
+`Cache-Control: no-store`, errors and unmatched routes included. Some of what
+the API returns is text a partner wrote (decision 22), and an answer that
+belongs to one session must not sit in a shared cache. The page's own headers
+will come in a `_headers` file shipped with it, because the Worker does not
+touch the files it serves as assets; none exists yet.
+
+**Cost.** The address shown is the one the runner builds, but the request does
+not travel over the public internet to it: it goes through a service binding
+(`wrangler.toml`), so the address is a name the partner knows itself by, not a
+route a visitor could call. The Connection page has to say so, or it suggests
+something the deployment does not do. `no-store` also means the browser never
+reuses a session read, so the page asks again each time.
