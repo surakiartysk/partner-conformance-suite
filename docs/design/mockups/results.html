@@ -105,45 +105,100 @@
           <div class="why" role="note">
             <p style="font-weight: 700; margin-bottom: 4px">What didn't match</p>
             <p>
-              After the repeat, <span class="eq">balance</span> should be the starting balance plus
-              100: <span class="eq">1,000 + 100 = 1,100</span>. The partner answered
-              <span class="eq">1,200</span>.
+              The repeat should have returned the first transaction,
+              <span class="eq">txn_a1</span>, with <span class="eq">balance</span> at the starting
+              balance plus 100: <span class="eq">1,000 + 100 = 1,100</span>. The partner returned a
+              new transaction, <span class="eq">txn_b7</span>, and <span class="eq">1,200</span>.
             </p>
           </div>
 
-          <div class="step">
-            <header>
-              <span
-                ><b>1 · Act</b> — earn 100 points with reference
-                <span class="mono">ref_8f2a</span></span
-              >
-              <span class="st pass">✓ Matched</span>
-            </header>
-            <div class="pane"><div class="req">POST /points/earn → 200 · 41 ms</div></div>
-            <details>
-              <summary>Headers (3 shown, 2 hidden)</summary>
-              <pre>
+          <details class="setup">
+            <summary>Setup · 2 steps, not judged</summary>
+            <div class="step">
+              <header>
+                <span><b>Start</b> — read the balance before anything moves</span>
+                <span class="st idle">Not judged</span>
+              </header>
+              <div class="pane">
+                <div class="req">GET /members/mbr_1b7e/balance → 200 · 22 ms</div>
+              </div>
+              <div class="two">
+                <div class="pane">
+                  <h4>Request body</h4>
+                  <pre class="none">none</pre>
+                </div>
+                <div class="pane">
+                  <h4>Response</h4>
+                  <pre><span class="ln">{ "memberId": "mbr_1b7e", "balance": 1000 }</span></pre>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <header>
+                <span><b>Arrange · first</b> — earn 100 points</span>
+                <span class="st idle">Not judged</span>
+              </header>
+              <div class="pane"><div class="req">POST /points/earn → 200 · 41 ms</div></div>
+              <div class="two">
+                <div class="pane">
+                  <h4>Request body</h4>
+                  <pre><span class="ln">{</span><span class="ln">  "memberId": "mbr_1b7e",</span><span class="ln">  "points": 100,</span><span class="ln">  "reference": "ref_8f2a"</span><span class="ln">}</span></pre>
+                </div>
+                <div class="pane">
+                  <h4>Response</h4>
+                  <pre><span class="ln">{</span><span class="ln">  "transactionId": "txn_a1",</span><span class="ln">  "balance": 1100</span><span class="ln">}</span></pre>
+                </div>
+              </div>
+              <details>
+                <summary>Request headers (3 shown, 2 hidden)</summary>
+                <pre>
 content-type: application/json
 webhook-id: msg_4c1d…
 webhook-signature: v1,•••</pre>
+              </details>
+            </div>
+          </details>
+
+          <div class="step">
+            <header>
+              <span><b>Act · repeat</b> — the same earn again, same reference</span>
+              <span class="st fail">✕ Did not match</span>
+            </header>
+            <div class="pane"><div class="req">POST /points/earn → 200 · 38 ms</div></div>
+            <div class="pane">
+              <h4>Request body (identical to the first, byte for byte)</h4>
+              <pre><span class="ln">{ "memberId": "mbr_1b7e", "points": 100, "reference": "ref_8f2a" }</span></pre>
+            </div>
+            <div class="two">
+              <div class="pane">
+                <h4>Expected</h4>
+                <pre><span class="ln">{</span><span class="ln bad">  "transactionId": "txn_a1",   <span style="color: var(--t4)">// the first one</span></span><span class="ln bad">  "balance": 1100              <span style="color: var(--t4)">// start 1,000 + 100</span></span><span class="ln">}</span></pre>
+              </div>
+              <div class="pane">
+                <h4>Actual</h4>
+                <pre><span class="ln">{</span><span class="ln bad">  "transactionId": "txn_b7",</span><span class="ln bad">  "balance": 1200</span><span class="ln">}</span></pre>
+              </div>
+            </div>
+            <details>
+              <summary>Request and response headers (4 shown, 3 hidden)</summary>
+              <pre>
+request   webhook-id: msg_9e07…   (a new id: the body is repeated, the message is not)
+request   webhook-signature: v1,•••
+response  content-type: application/json</pre>
             </details>
           </div>
 
           <div class="step">
             <header>
-              <span><b>2 · Act</b> — the same earn again, same reference</span>
-              <span class="st pass">✓ Matched</span>
-            </header>
-            <div class="pane"><div class="req">POST /points/earn → 200 · 38 ms</div></div>
-          </div>
-
-          <div class="step">
-            <header>
-              <span><b>3 · Verify</b> — read the balance back</span>
+              <span><b>Verify · balance</b> — read the balance back</span>
               <span class="st fail">✕ Did not match</span>
             </header>
             <div class="pane">
               <div class="req">GET /members/mbr_1b7e/balance → 200 · 22 ms</div>
+            </div>
+            <div class="pane">
+              <h4>Request body</h4>
+              <pre class="none">none</pre>
             </div>
             <div class="two">
               <div class="pane">
@@ -155,10 +210,6 @@ webhook-signature: v1,•••</pre>
                 <pre><span class="ln">{</span><span class="ln">  "memberId": "mbr_1b7e",</span><span class="ln bad">  "balance": 1200</span><span class="ln">}</span></pre>
               </div>
             </div>
-            <details>
-              <summary>Headers (1 shown, 1 hidden)</summary>
-              <pre>content-type: application/json</pre>
-            </details>
           </div>
         </article>
       </div>

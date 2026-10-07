@@ -542,3 +542,23 @@ summary {
     margin-bottom: 8px;
   }
 }
+
+.setup {
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  padding: 0;
+  color: var(--t1);
+  font-size: 13px;
+}
+.setup > summary {
+  padding: 10px 12px;
+  color: var(--t3);
+  font-weight: 600;
+}
+.setup .step {
+  margin: 0 12px 12px;
+}
+pre.none {
+  color: var(--t4);
+  font-family: var(--font-ui);
+}
