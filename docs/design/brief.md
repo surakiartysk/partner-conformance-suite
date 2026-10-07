@@ -39,7 +39,7 @@ the suite put the points back.
 ## What is deliberately different from the dashboard
 
 - **A type scale from the start**: 12, 13, 14, 16, 20, 28. The dashboard has fifteen sizes.
-- **Two radii** (6 for controls, 10 for cards); the dashboard has eleven.
+- **Two radii and a pill** (6 for controls, 10 for cards, a full pill for chips); the dashboard has eleven radii.
 - **Status colour used as text is a themed token.** Found while checking the mockups: the
   literal green `#22c55e` and amber `#f59e0b` measure 2.05:1 and 1.96:1 as text on their own
   light-mode tint, short of AA for 12 px text. The fill and icon stay literal; the text uses
@@ -99,13 +99,22 @@ the suite put the points back.
 - Looked at at 1280 and 375 px, dark and light; no horizontal scroll at 375. Not checked: a
   screen reader, keyboard order, or any browser but Chromium.
 
-## Open questions for the owner
+## Found while building the Run page
 
-1. **Hide the bug until the run ends?** The mockup shows version names but not what is wrong
-   with them, so the reveal is a reveal. A name like `double-earn` gives much of it away. An
-   option would be "pick one for me", hiding the name until the result. It costs one more
-   control and makes a repeat visit more interesting; it is not drawn.
-2. **Default version.** Preselecting a wrong one makes the first run show red within a minute.
-   Preselecting `correct` is the honest baseline but a first run that is all green teaches
-   nothing. The mockup preselects `double-earn`.
-3. **History** is not drawn yet; it is a table of runs with the version and the counts.
+- **The Run button sits below thirteen versions.** On a desktop screen the form is longer than the
+  window, so the button is below the fold and the lanes appear beside a form that has scrolled
+  away. The mockup showed five versions and "9 more". Not changed yet; the options are a scrolling
+  list of versions, or the button repeated at the top of the form.
+- **A run takes under two seconds locally**, so the running state goes past too quickly to see
+  against `correct` or `double-earn`. Watching it takes `slow-balance`, whose cases time out.
+- **"Points given back" was wrong when nothing had moved.** Against `slow-balance` every writing
+  case times out before moving a point, and the summary still said the points were given back.
+  It now says no points moved.
+
+## Decided by the owner, and still open
+
+1. **Hide the bug until the run ends?** Decided: no. Version names are shown, and the result says
+   what was wrong. A "pick one for me" option that hides the name remains an idea, not built.
+2. **Default version.** Decided: a wrong one is preselected (`double-earn`), so a first run shows a
+   red case within a minute.
+3. **History** is not drawn yet; it is a table of runs with the version and the counts. Still open.

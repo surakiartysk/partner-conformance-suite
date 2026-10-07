@@ -16,6 +16,7 @@ const render = (overrides: Partial<Props> = {}) =>
       onReveal={() => {}}
       revealing={false}
       onRefresh={() => {}}
+      onContinue={() => {}}
       refreshing={false}
       now={NOW}
       {...overrides}
@@ -34,6 +35,12 @@ describe('the Connection page', () => {
     const html = render()
     expect(html).toContain('>correct</option>')
     expect(html).toContain('>off-by-one</option>')
+  })
+
+  it('leads on to the Run page with one primary button', () => {
+    const html = render()
+    expect(html).toContain('>Continue to Run</button>')
+    expect(html.match(/class="primary"/g)).toHaveLength(1)
   })
 
   it('says how long the session has left', () => {

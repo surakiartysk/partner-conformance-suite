@@ -13,6 +13,7 @@ interface Props {
   onReveal: () => void
   revealing: boolean
   onRefresh: () => void
+  onContinue: () => void
   refreshing: boolean
   now: number
 }
@@ -105,6 +106,12 @@ export function Connection(props: Props) {
           {props.refreshing ? 'Reading…' : 'Read the balances again'}
         </button>
       </section>
+
+      <div className="actions">
+        <button type="button" className="primary" onClick={props.onContinue}>
+          Continue to Run
+        </button>
+      </div>
     </>
   )
 }

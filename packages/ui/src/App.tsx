@@ -3,6 +3,7 @@ import { ApiError, createClient, type SessionView } from './api'
 import { Connection } from './components/Connection'
 import { Home } from './components/Home'
 import { Layout } from './components/Layout'
+import { RunPage } from './components/RunPage'
 import { messageFor } from './messages'
 import { parseRoute, pathFor, type Route } from './route'
 
@@ -127,12 +128,22 @@ export function App() {
         onReveal={reveal}
         revealing={revealing}
         onRefresh={refresh}
+        onContinue={() => navigate({ page: 'run' })}
         refreshing={refreshing}
         now={now}
       />
     ) : (
       <>
         <h1>Connection</h1>
+        <p>{messageFor('no-session')}</p>
+      </>
+    )
+  } else if (route.page === 'run') {
+    page = session ? (
+      <RunPage client={client} session={session} />
+    ) : (
+      <>
+        <h1>Run</h1>
         <p>{messageFor('no-session')}</p>
       </>
     )

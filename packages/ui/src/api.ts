@@ -18,12 +18,52 @@ export interface SessionView {
   secret: { revealed: boolean }
 }
 
+export interface CaseInfo {
+  id: string
+  service: string
+  name: string
+  description: string
+  member: 'A' | 'B'
+  writes: boolean
+}
+
+export type CaseStatus = 'passed' | 'failed' | 'timed_out' | 'error'
+export type Lane = 'read' | 'A' | 'B'
+
+/** What happened to a member's points at the end of its lane. */
+export type Restore =
+  { status: 'nothing-owed' } | { status: 'restored' | 'not-restored'; target: number }
+
+export interface RunView {
+  id: string
+  version: string
+  services: string[]
+  createdAt: string
+  finishedAt: string | null
+  lanes: { lane: Lane; cases: string[]; position: number; done: boolean; restore: Restore | null }[]
+  results: { caseId: string; lane: Lane; status: CaseStatus; result: { durationMs: number } }[]
+}
+
+/** The answer to one `next`: the case just run, or that the lane is done. */
+export interface NextAnswer {
+  lane: Lane
+  done: boolean
+  position?: number
+  total?: number
+  result?: { caseId: string; status: CaseStatus; durationMs: number }
+  restore?: Restore | null
+}
+
 /** Why a call failed, in words the page can choose its own message for. */
 export type Failure =
   | 'no-session' // 401: no cookie, or it has expired
-  | 'rate-limited' // 429
+  | 'rate-limited' // 429 on starting a session
+  | 'run-limit' // 429 on starting a run
   | 'not-configured' // 503: the deployment lacks a secret
   | 'already-shown' // 410: the signing secret was shown once already
+  | 'member-busy' // 423: another run holds the member this lane needs
+  | 'lane-busy' // 409: another request is already running this lane
+  | 'not-found' // 404
   | 'unavailable' // 502 and other 5xx
   | 'network' // the request never got an answer
   | 'unexpected'
@@ -41,7 +81,10 @@ export class ApiError extends Error {
 
 function failureFor(status: number): Failure {
   if (status === 401) return 'no-session'
+  if (status === 404) return 'not-found'
+  if (status === 409) return 'lane-busy'
   if (status === 410) return 'already-shown'
+  if (status === 423) return 'member-busy'
   if (status === 429) return 'rate-limited'
   if (status === 503) return 'not-configured'
   if (status >= 500) return 'unavailable'
@@ -88,6 +131,34 @@ export function createClient(fetchImpl: Fetch = (input, init) => fetch(input, in
         throw error
       }
     },
+
+    /** What each case is about, in the order the server lists them. */
+    listCases: () => call<CaseInfo[]>('/cases'),
+
+    /** Starts a run. The page names a version and services; the server plans the cases. */
+    async createRun(version: string, services: string[]): Promise<RunView> {
+      try {
+        return await call<RunView>('/runs', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ version, services }),
+        })
+      } catch (error) {
+        // A run limit is not the same thing as a session limit, and says so.
+        if (error instanceof ApiError && error.failure === 'rate-limited') {
+          throw new ApiError('run-limit', error.status, error.retryAfter)
+        }
+        throw error
+      }
+    },
+
+    getRun: (id: string) => call<RunView>(`/runs/${encodeURIComponent(id)}`),
+
+    /** Runs the lane's next case — or, when its cases are done, gives the member's points back. */
+    next: (runId: string, lane: Lane) =>
+      call<NextAnswer>(`/runs/${encodeURIComponent(runId)}/lanes/${lane}/next`, {
+        method: 'POST',
+      }),
 
     /** The signing secret. The server shows it once; a second ask is `already-shown`. */
     async revealSecret(): Promise<string> {

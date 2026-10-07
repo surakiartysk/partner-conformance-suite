@@ -82,7 +82,10 @@ describe('the API client', () => {
     [502, 'unavailable'],
     [500, 'unavailable'],
     [400, 'unexpected'],
-    [404, 'unexpected'],
+    [418, 'unexpected'],
+    [404, 'not-found'],
+    [409, 'lane-busy'],
+    [423, 'member-busy'],
   ])('maps %i to %s', async (status, expected) => {
     const { client } = fake(() => json({}, { status }))
     expect((await failure(client.startSession())).failure).toBe(expected)
@@ -102,5 +105,50 @@ describe('the API client', () => {
   it('refuses a 200 that is not JSON rather than treating it as an answer', async () => {
     const { client } = fake(() => new Response('<!doctype html>', { status: 200 }))
     expect((await failure(client.startSession())).failure).toBe('unexpected')
+  })
+})
+
+describe('the API client, for runs', () => {
+  const answer = { id: 'run_1', lanes: [] }
+
+  it('lists the cases from /api/cases', async () => {
+    const { client, calls } = fake(() => json([{ id: 'earn/adds-points' }]))
+    expect(await client.listCases()).toEqual([{ id: 'earn/adds-points' }])
+    expect(calls[0]!.url).toBe('/api/cases')
+  })
+
+  it('starts a run by naming a version and services, and nothing else', async () => {
+    const { client, calls } = fake(() => json(answer, { status: 201 }))
+    await client.createRun('double-earn', ['earn', 'redeem'])
+    expect(calls[0]!.url).toBe('/api/runs')
+    expect(calls[0]!.init?.method).toBe('POST')
+    expect(JSON.parse(String(calls[0]!.init?.body))).toEqual({
+      version: 'double-earn',
+      services: ['earn', 'redeem'],
+    })
+    expect(new Headers(calls[0]!.init?.headers).get('content-type')).toBe('application/json')
+  })
+
+  it('says a run limit, not a session limit, when too many runs were started', async () => {
+    const { client } = fake(() => json({}, { status: 429, headers: { 'retry-after': '600' } }))
+    const error = await failure(client.createRun('correct', ['earn']))
+    expect([error.failure, error.retryAfter]).toEqual(['run-limit', 600])
+  })
+
+  it('reads a run by its id, and the id cannot change the path', async () => {
+    const { client, calls } = fake(() => json(answer))
+    await client.getRun('run_1')
+    await client.getRun('../session')
+    expect(calls[0]!.url).toBe('/api/runs/run_1')
+    expect(calls[1]!.url).toBe('/api/runs/..%2Fsession')
+  })
+
+  it('asks for the next case of a lane with a bare POST', async () => {
+    const { client, calls } = fake(() => json({ lane: 'A', done: false }))
+    await client.next('run_1', 'A')
+    expect(calls[0]!.url).toBe('/api/runs/run_1/lanes/A/next')
+    expect(calls[0]!.init?.method).toBe('POST')
+    // Which case, what is sent and where are the server's; there is nothing to send.
+    expect(calls[0]!.init?.body).toBeUndefined()
   })
 })

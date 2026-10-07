@@ -647,3 +647,39 @@ rather than shared, so a case renamed on the server shows its new name only
 after a reload. The list is the same for everyone and could be cached; it is
 sent `no-store` like every other answer, because one rule for the API is worth
 more than a cache for a few kilobytes.
+
+## 31. The page drives a run lane by lane, waits when the server says to, and stops when the visitor leaves
+
+A run is three lanes (decision 22) and the page asks the server for the next
+case of each until it says the lane is done. The three lanes are driven at the
+same time: a member's cases must run one at a time, but nothing makes the read-only
+cases wait for them. What the page owns is only the pace.
+
+When a member is held by another run the server answers `423` with `Retry-After`,
+and when another tab is already driving the lane it answers `409`. The page waits
+the time it was told (five seconds for a held member and two for a busy lane when
+it was not told) and asks again, up to eighty waits in a row, which outlasts the
+five minutes a member's lock can stay held. An answer in between starts the count
+again; any other failure stops that lane with its reason and leaves the others
+running.
+
+Leaving the page stops the asking, and an answer that was in flight is dropped.
+What the run had moved is written down before it moved (decision 24), so a later
+run or the sweep gives it back.
+
+The summary says "points given back" only when every member lane reported a
+restore that reached its target. A lane that stopped before it could report is
+`unknown`, a restore that did not reach its target is `not all`, and a run in
+which nothing was owed says no points moved, because "given back" would claim
+something that did not happen. This last case was found by running the page
+against `slow-balance`, where every writing case times out before it moves
+anything.
+
+**Cost.** The visitor's tab is the engine: closing it ends the run, and a reload
+loses the live view although the server still has the run (the page can rebuild
+its state from a run it is given, but nothing yet links to one). It is one
+request per case and one more per lane, with no push from the server. A lane held
+by another run can hold this one up for minutes. Reading a case's request and
+what came back is not built yet, so a red case in the summary can be named but
+not opened. Run against the local Workers a whole run takes under two seconds, so
+the running state can only be watched with `slow-balance`, whose cases time out.
