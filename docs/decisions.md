@@ -433,7 +433,7 @@ price is one decrypt for each request that is then refused with `410`.
 ## 22. A run is driven by the browser and decided by the server, one claim at a time
 
 A run is three lanes — the cases that move no balance, and each member's
-writing cases — and the browser calls `POST /runs/:id/lanes/:lane/next` until
+writing cases — and the browser calls `POST /api/runs/:id/lanes/:lane/next` until
 each says it is done. Each call runs one case. The browser names a run and a
 lane and nothing else: which case is next, what is sent and where, and the
 verdict are all the server's.
@@ -554,3 +554,21 @@ much the unbounded growth would have mattered was not measured: the rows are
 small, a few kilobytes a run by estimate, and D1's limits were not looked up
 for this, so this fixes a leak that was real and is not shown to have been
 urgent.
+
+## 27. Everything the suite answers lives under `/api`
+
+The page the visitor uses and the API are to be served by one Worker, from one
+origin. That is the only arrangement in which the session cookie's
+`SameSite=Lax` (decision 21) keeps other sites from driving a run: split across
+two sites it would have to become `SameSite=None`, with CORS and a CSRF defence
+of its own. Sharing an origin means the page's files and the API's routes share
+a path space, so the API takes `/api` and the page gets the rest. This is the
+first change of the UI stage, made on its own so that the move is a diff of
+paths and nothing else.
+
+**Cost.** Every route, test name, document and client has to say `/api`. Nothing
+outside the repository calls these routes yet, so nothing external broke, but
+that is true only because no UI or deployment exists. A request outside `/api`
+answers `404` from this Worker for now, and will fall through to the page once
+there is one. The page and the API are deployed together, so there is no preview
+of one without the other.

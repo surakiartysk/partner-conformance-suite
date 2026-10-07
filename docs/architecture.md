@@ -69,10 +69,10 @@ Standard Webhooks publishes ([decision 7](decisions.md#7-the-partners-verifier-i
 
 ## One run
 
-1. **Try it.** `POST /sessions` provisions a tenant, seals the signing secret
+1. **Try it.** `POST /api/sessions` provisions a tenant, seals the signing secret
    with AES-GCM, and sets an `HttpOnly` cookie whose token is stored only as a
    hash ([decision 21](decisions.md#21-a-session-is-a-cookie-nobody-stores-and-a-secret-nobody-stores-in-the-clear)).
-2. **Run.** `POST /runs` plans the chosen cases into up to three lanes: `read`
+2. **Run.** `POST /api/runs` plans the chosen cases into up to three lanes: `read`
    for cases that move no balance, `A` and `B` for each member's writing cases.
 3. **Next, per lane.** The browser calls `next` on each lane until it is done.
    Each call claims the lane, and in a member lane takes the member's lock and
