@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository has been made to fail by at least one row below:
-the 106 in `packages/partner`, the 19 in `packages/cases` and the 106 in `packages/api`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases` and the 107 in `packages/api`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -299,6 +299,7 @@ read its own.
 | 219 | The default request timeout raised from ten seconds to thirty                                                                              | the same                                                                                                                                                                                  | `expected 180 to be less than 120`                                                           |
 | 220 | A restore that moves a fixed amount instead of what the balance it reads says is owed                                                      | the sweep does not move points twice when the answer to a restore was lost                                                                                                                | `expected 900 to be 1000`                                                                    |
 | 221 | A restore deleted from the baselines even when its case did not pass                                                                       | the same                                                                                                                                                                                  | `expected +0 to be 1`                                                                        |
+| 222 | The secret decrypted after the showing is claimed, as it was                                                                               | does not use up the one showing when the secret cannot be decrypted                                                                                                                       | `expected 410 to be 200`                                                                     |
 
 Rows 187 and 188 were first run under other names. Row 187 was meant to write
 the baseline after the first case and instead removed it altogether; row 188

@@ -168,6 +168,22 @@ describe('POST /session/secret', () => {
     expect(session.secret.revealed).toBe(true)
   })
 
+  it('does not use up the one showing when the secret cannot be decrypted', async () => {
+    const { cookie } = await startSession()
+    // A key other than the one the session was sealed with.
+    const wrongKey = { SECRET_KEY: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=' }
+    const failed = await callApi(
+      '/session/secret',
+      { method: 'POST', headers: { cookie } },
+      wrongKey,
+    )
+    expect(failed.status).toBe(500)
+
+    const later = await callApi('/session/secret', { method: 'POST', headers: { cookie } })
+    expect(later.status).toBe(200)
+    expect((await later.json<{ secret: string }>()).secret).toMatch(/^whsec_/)
+  })
+
   it('shows it to only one of two requests that arrive together', async () => {
     const { cookie } = await startSession()
     const statuses = await Promise.all(

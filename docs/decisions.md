@@ -424,6 +424,12 @@ provider for every live session. Visitors behind one address — an office, a
 conference network — share five starts an hour. And a visitor who closes the
 dialog that showed the secret cannot see it again; they start a new session.
 
+The secret is decrypted before the showing is claimed, not after. Claimed first,
+a secret that cannot be decrypted (the key was changed under live sessions)
+answered `500` and used up the one showing, so the next request got `410` even
+with the right key: measured. Decrypted first, the failure costs nothing; the
+price is one decrypt for each request that is then refused with `410`.
+
 ## 22. A run is driven by the browser and decided by the server, one claim at a time
 
 A run is three lanes — the cases that move no balance, and each member's
