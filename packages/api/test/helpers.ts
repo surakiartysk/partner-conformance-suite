@@ -65,14 +65,14 @@ export const apiEnv = (overrides: Partial<Bindings> = {}): Bindings => ({
   ...overrides,
 })
 
-/** Calls the API Worker the way a browser would. */
+/** Calls the API Worker the way a browser would; `path` is below `/api`, where every route lives. */
 export async function callApi(
   path: string,
   init: RequestInit = {},
   overrides: Partial<Bindings> = {},
 ): Promise<Response> {
   return api.fetch(
-    new Request(`https://suite.example${path}`, init),
+    new Request(`https://suite.example/api${path}`, init),
     apiEnv(overrides),
     createExecutionContext(),
   )

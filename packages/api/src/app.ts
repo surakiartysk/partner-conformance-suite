@@ -3,7 +3,12 @@ import { createRun, getRun, listRuns, next } from './runs'
 import { getSession, requireSession, revealSecret, startSession } from './sessions'
 import type { Env } from './types'
 
-export const app = new Hono<Env>()
+/**
+ * Everything the suite answers is under `/api`. The page the visitor uses is
+ * served from the same origin (decision 27), and the two must not claim the
+ * same paths.
+ */
+export const app = new Hono<Env>().basePath('/api')
 
 app.post('/sessions', startSession)
 app.get('/session', requireSession, getSession)

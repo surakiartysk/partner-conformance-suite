@@ -1,8 +1,9 @@
-import { env } from 'cloudflare:test'
+import { createExecutionContext, env } from 'cloudflare:test'
 import { beforeAll, describe, expect, it } from 'vitest'
+import api from '../src/index'
 import { decrypt, sha256Hex } from '../src/secrets'
 import { SESSION_STARTS_ALLOWED } from '../src/sessions'
-import { callApi, cookieFrom, migrateAll, startSession, toPartner } from './helpers'
+import { apiEnv, callApi, cookieFrom, migrateAll, startSession, toPartner } from './helpers'
 
 beforeAll(migrateAll)
 
@@ -15,7 +16,42 @@ const start = (client: string, init: RequestInit = {}, overrides = {}) =>
 
 const client = () => `client-${crypto.randomUUID()}`
 
-describe('POST /sessions', () => {
+/**
+ * The page is served from the same origin as the API (decision 27), so the API
+ * owns `/api` and nothing else. The helpers add the prefix; this goes without.
+ */
+describe('the API path space', () => {
+  const bare = (path: string, method = 'POST') =>
+    api.fetch(
+      new Request(`https://suite.example${path}`, {
+        method,
+        headers: { 'cf-connecting-ip': `client-${crypto.randomUUID()}` },
+      }),
+      apiEnv(),
+      createExecutionContext(),
+    )
+
+  it('answers 404 to a route without the /api prefix, and starts nothing', async () => {
+    const before = await env.DB.prepare('SELECT COUNT(*) AS n FROM sessions').first<{ n: number }>()
+    for (const [method, path] of [
+      ['POST', '/sessions'],
+      ['GET', '/session'],
+      ['POST', '/session/secret'],
+      ['POST', '/runs'],
+      ['GET', '/runs'],
+    ] as const) {
+      expect((await bare(path, method)).status, `${method} ${path}`).toBe(404)
+    }
+    const after = await env.DB.prepare('SELECT COUNT(*) AS n FROM sessions').first<{ n: number }>()
+    expect(after!.n).toBe(before!.n)
+  })
+
+  it('serves the same route under /api', async () => {
+    expect((await bare('/api/sessions')).status).toBe(201)
+  })
+})
+
+describe('POST /api/sessions', () => {
   it('provisions a tenant with two members, and says which', async () => {
     const response = await start(client())
     expect(response.status).toBe(201)
@@ -118,7 +154,7 @@ describe('POST /sessions', () => {
   })
 })
 
-describe('GET /session', () => {
+describe('GET /api/session', () => {
   it('shows the session, with each member’s balance read from the partner', async () => {
     const { cookie } = await startSession()
     const response = await callApi('/session', { headers: { cookie } })
@@ -151,7 +187,7 @@ describe('GET /session', () => {
   })
 })
 
-describe('POST /session/secret', () => {
+describe('POST /api/session/secret', () => {
   it('shows the signing secret once, and never again', async () => {
     const { cookie } = await startSession()
     const first = await callApi('/session/secret', { method: 'POST', headers: { cookie } })

@@ -52,7 +52,7 @@ const sessionId = async (tenant: string) =>
     .bind(tenant)
     .first<{ id: string }>())!.id
 
-describe('POST /runs', () => {
+describe('POST /api/runs', () => {
   it('plans a read lane and a lane per member, from the cases and nothing else', async () => {
     const { run } = await newRun()
     const lanes = planLanes(CASES)
@@ -131,7 +131,7 @@ describe('a whole run against the correct partner', () => {
   })
 })
 
-describe('POST /runs/:id/lanes/:lane/next', () => {
+describe('POST /api/runs/:id/lanes/:lane/next', () => {
   it('does not call a run finished while one of its lanes is still going', async () => {
     const { cookie, run } = await newRun()
     await driveLane(cookie, run.id, 'read')
