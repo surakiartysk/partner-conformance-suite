@@ -16,3 +16,7 @@ migrations_dir = "migrations"
 #   PROVISION_TOKEN   guards POST /_provision. There is deliberately no default:
 #                     unset, provisioning answers 503 rather than accepting a
 #                     token anyone could read in this file.
+
+# Forgets expired tenants and old webhook-ids. See src/purge.ts.
+[triggers]
+crons = ["*/10 * * * *"]

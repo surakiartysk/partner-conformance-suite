@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository has been made to fail by at least one row below:
-the 98 in `packages/partner`, the 19 in `packages/cases` and the 103 in `packages/api`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases` and the 104 in `packages/api`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -286,6 +286,15 @@ read its own.
 | 206 | The sweep takes the most recently tried first                                                                                              | the same two                                                                                                                                                                              | `expected 1100 to be 1000` (both)                                                            |
 | 207 | The attempt time stamped as 0, so every debt always looks untried                                                                          | the same two                                                                                                                                                                              | `expected 1100 to be 1000` (both)                                                            |
 | 208 | Rows whose member a run holds are not stamped as attempted (only the ones it tried and failed to pay are)                                  | does not let rows another run still holds use up the batch either — and not the other, which is why there are two                                                                         | `expected 1100 to be 1000`                                                                   |
+| 209 | The purge deletes the tenants that have not expired, not the ones that have                                                                | purge: tenants — four of the five cases                                                                                                                                                   | `expected 1 to be +0`; `expected +0 to be 50`                                                |
+| 210 | A tenant is not removed in the second it expires (`<=` made `<`)                                                                           | removes a tenant in the very second it expires, as the partner stops answering it                                                                                                         | `expected 1 to be +0`                                                                        |
+| 211 | No cap on tenants removed in a run                                                                                                         | removes a bounded number a run, and the rest on the next                                                                                                                                  | `expected 53 to be 50`                                                                       |
+| 212 | A webhook-id seen exactly one memory window ago is forgotten (`<` made `<=`)                                                               | forgets an id older than the memory window and keeps one inside it, to the second                                                                                                         | `expected [ 'recent' ] to deeply equal [ 'exactly', 'recent' ]`                              |
+| 213 | The memory window not subtracted, so every id is forgotten                                                                                 | forgets an id older than the memory window… and still refuses a replay inside the window afterwards                                                                                       | `expected [] to deeply equal [ 'exactly', 'recent' ]`; `expected 200 to be 409`              |
+| 214 | No cap on webhook-ids removed in a run                                                                                                     | removes a bounded number a run (the ids)                                                                                                                                                  | `expected 5007 to be 5000`                                                                   |
+| 215 | The cron handler does not call the purge                                                                                                   | the scheduled handler runs the purge                                                                                                                                                      | `expected 1 to be +0`                                                                        |
+| 216 | The sweep never deletes `session_starts`                                                                                                   | forgets a client whose rate-limit window has passed, and keeps one still inside it                                                                                                        | `expected [ 'just-inside', 'past' ] to deeply equal [ 'just-inside' ]`                       |
+| 217 | The sweep deletes `session_starts` still inside their window                                                                               | the same                                                                                                                                                                                  | `expected [] to deeply equal [ 'just-inside' ]`                                              |
 
 Rows 187 and 188 were first run under other names. Row 187 was meant to write
 the baseline after the first case and instead removed it altogether; row 188
@@ -333,3 +342,14 @@ ignores-signature to fail it`.
   a one-in-four chance of holding no `+` or `/` at all, so with the replacement
   removed it would still have passed one run in four. It now checks fifty —
   row 174.
+- **"still refuses a replay inside the window afterwards".** Its first version
+  used an id seen in the same second as the purge, and the mutation that made
+  the purge forget every id (row 213) survived it: `seen_at < now` is false in
+  the same second. It now backdates the id by a minute, so the id is inside the
+  window and not hidden by the clock, and row 213 turns it red.
+- **Not caught.** The boundary of the `session_starts` cleanup (`<=` against
+  `<`) has no test: the cases sit a minute either side of the window, and
+  testing the exact second would depend on the clock not ticking between the
+  insert and the sweep. A wrong boundary there would keep or delete one row a
+  second early or late, and the rate limit's own statement resets such a row to
+  a count of one either way.

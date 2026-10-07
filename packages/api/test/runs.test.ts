@@ -8,6 +8,7 @@ import {
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import api from '../src/index'
 import { RUNS_ALLOWED } from '../src/runs'
+import { SESSION_START_WINDOW_SECONDS } from '../src/sessions'
 import { SWEEP_BATCH } from '../src/sweeper'
 import {
   apiEnv,
@@ -402,6 +403,22 @@ describe('the sweep', () => {
 
       expect((await balances(payable.cookie))[0]).toBe(1000)
     })
+  })
+
+  it('forgets a client whose rate-limit window has passed, and keeps one still inside it', async () => {
+    const at = Math.floor(Date.now() / 1000)
+    const insert = env.DB.prepare(
+      'INSERT INTO session_starts (client, window_start, attempts) VALUES (?, ?, 5)',
+    )
+    await env.DB.batch([
+      insert.bind('past', at - SESSION_START_WINDOW_SECONDS - 5),
+      insert.bind('just-inside', at - SESSION_START_WINDOW_SECONDS + 60),
+    ])
+    await runSweep()
+    const left = await env.DB.prepare(
+      "SELECT client FROM session_starts WHERE client IN ('past', 'just-inside')",
+    ).all<{ client: string }>()
+    expect(left.results.map((r) => r.client)).toEqual(['just-inside'])
   })
 
   it('deletes sessions that have ended, with their runs', async () => {

@@ -83,27 +83,29 @@ Standard Webhooks publishes ([decision 7](decisions.md#7-the-partners-verifier-i
 
 ## When something goes wrong
 
-| What happens                            | What the system does                                                                               |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Two tabs press `next` on the same lane  | The lane claim is a conditional `UPDATE`; one runs the case, the other gets `409`.                 |
-| A `next` dies mid-case                  | Its claim lapses after two minutes; the next call runs the same case again.                        |
-| A second run wants a member a run holds | `423` with `Retry-After`; the lock is the holder's until it ends the lane or the lease lapses.     |
-| The tab is closed mid-run               | The run stops. The member's lock lapses after five minutes; its baseline stays.                    |
-| A restore cannot reach the target       | The baseline stays, and the next holder of the member pays it.                                     |
-| Nobody comes back                       | The cron sweep restores owed members it can lock, twenty a sweep, least recently tried first.      |
-| The partner does not answer in time     | The case is `timed_out`, wherever the wait was — act, verify, or setup.                            |
-| The session ends                        | The sweep deletes it, with its runs, locks and baselines; its tenant has ended on the partner too. |
+| What happens                            | What the system does                                                                                 |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Two tabs press `next` on the same lane  | The lane claim is a conditional `UPDATE`; one runs the case, the other gets `409`.                   |
+| A `next` dies mid-case                  | Its claim lapses after two minutes; the next call runs the same case again.                          |
+| A second run wants a member a run holds | `423` with `Retry-After`; the lock is the holder's until it ends the lane or the lease lapses.       |
+| The tab is closed mid-run               | The run stops. The member's lock lapses after five minutes; its baseline stays.                      |
+| A restore cannot reach the target       | The baseline stays, and the next holder of the member pays it.                                       |
+| Nobody comes back                       | The cron sweep restores owed members it can lock, twenty a sweep, least recently tried first.        |
+| The partner does not answer in time     | The case is `timed_out`, wherever the wait was — act, verify, or setup.                              |
+| The session ends                        | The sweep deletes it, with its runs, locks and baselines; the partner's own cron removes its tenant. |
 
 ## Data
 
 **The suite's D1** — `sessions` (token hash, tenant, sealed secret, members),
-`session_starts` (the "try it" limit), `runs`, `run_lanes` (cases, position,
+`session_starts` (the "try it" limit, cleared by the sweep once its window has passed), `runs`, `run_lanes` (cases, position,
 claim, restore outcome), `run_results` (each case's full result), `member_locks`
 and `member_baselines`. Every read of a run is scoped to the session in SQL.
 
 **The partner's D1** — `tenants`, `members`, `transactions` (unique on
 reference, unique on what a reversal reverses) and `seen_messages` (webhook-ids,
-remembered for twice the timestamp tolerance).
+remembered for twice the timestamp tolerance). The partner has a cron of its own,
+every ten minutes: it deletes tenants that have expired, with everything under
+them, and ids older than the memory window ([decision 26](decisions.md#26-the-partner-forgets-what-has-expired-on-a-cron-of-its-own)).
 
 ## Not built yet
 

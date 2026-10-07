@@ -1,10 +1,12 @@
 import type { MemberSlot } from '@conformance/cases'
 import { acquire, release, restore } from './members'
 import { isPartnerVersion } from './partner'
+import { SESSION_START_WINDOW_SECONDS } from './sessions'
 import type { Bindings, Session } from './types'
 
 /**
- * The cron sweep: debts nobody came back for, and sessions that have ended.
+ * The cron sweep: debts nobody came back for, sessions that have ended, and
+ * rate-limit counters whose window has passed.
  *
  * A run that dies, or a visitor who closes the tab, leaves a baseline — points
  * owed back to a member — and no one to pay it. The sweep takes each such
@@ -24,6 +26,12 @@ export async function sweep(env: Bindings): Promise<{ restored: number; skipped:
   // Ended sessions take their runs, locks and baselines with them. Their
   // tenants have expired on the partner too, so there is nothing to restore.
   await env.DB.prepare('DELETE FROM sessions WHERE expires_at <= ?').bind(now()).run()
+
+  // A start counted in a window that has passed is one the rate limit would
+  // already reset to a count of one, so the row can go.
+  await env.DB.prepare('DELETE FROM session_starts WHERE window_start <= ?')
+    .bind(now() - SESSION_START_WINDOW_SECONDS)
+    .run()
 
   const owed = await env.DB.prepare(
     `SELECT b.slot, b.version, s.*
