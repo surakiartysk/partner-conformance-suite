@@ -631,3 +631,19 @@ bundle is about 150 kB, 49 kB compressed, almost all of it React. And the page
 was checked in one browser (Chromium, desktop and 375 and 320 px wide) and with
 tests that render it to a string; nothing yet drives it in a real browser on
 every change — that is the end-to-end stage.
+
+## 30. The page learns what a case is from the API, and nothing about how it is built
+
+A lane on the Run page names its cases, and a run reports only their ids. So
+`GET /api/cases` lists each case's id, service, name, description, member and
+whether it writes. The fields are picked one by one, not the case object
+passed through: a case definition holds the requests it sends, what it expects
+and how its requests are signed, and a field added to it later must not become
+public by accident. The list needs no session; it says nothing about anyone's
+run.
+
+**Cost.** The page's idea of a case is a second description of it, fetched
+rather than shared, so a case renamed on the server shows its new name only
+after a reload. The list is the same for everyone and could be cached; it is
+sent `no-store` like every other answer, because one rule for the API is worth
+more than a cache for a few kilobytes.

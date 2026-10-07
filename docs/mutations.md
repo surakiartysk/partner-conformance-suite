@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository but one has been made to fail by at least one row below (the exception is named under "The page"):
-the 106 in `packages/partner`, the 19 in `packages/cases`, the 110 in `packages/api` and the 53 in `packages/ui`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases`, the 114 in `packages/api` and the 53 in `packages/ui`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -373,6 +373,19 @@ makes it fail.
 | 275 | the Try it button renamed              | home.test.tsx: the Home page > offers to try it when there is no session                                                                   | `expected '<h1>Does a partner implement the API …' to contain '>Try it</button>'`              |
 | 276 | the page invites an address            | home.test.tsx: the Home page > says plainly that only the reference partner can be tested                                                  | `expected '<h1>Does a partner implement the API …' not to match /enter\|your own (URL\|endpoi` |
 | 277 | a wait named when none was given       | messages.test.ts: messageFor > does not name a wait it was not given                                                                       | `expected 'Too many sessions have been started f…' not to match /\d\|NaN\|undefined/`          |
+
+### The list of cases
+
+| #   | Mutation                          | Caught by                                                                                  | Failure                                                                                                    |
+| --- | --------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| 278 | The route not registered          | GET /api/cases: lists every case, in the order they are defined, without needing a session | `expected 404 to be 200`                                                                                   |
+| 279 | A case's arrange steps published  | GET /api/cases: says what each case is about; publishes nothing about how a case is built  | `expected { id: …, arrange: [ …(1) ] } to deeply equal { …}`                                               |
+| 280 | A case's act step published       | the same two                                                                               | the same                                                                                                   |
+| 281 | The list in reverse order         | GET /api/cases: lists every case, in the order they are defined                            | `expected [ 'reversal/unknown-transaction', …(19) ] to deeply equal [ 'security/valid-signature', …(19) ]` |
+| 282 | The description left out          | GET /api/cases: says what each case is about                                               | `expected { id: …} to deeply equal { …}`                                                                   |
+| 283 | `writes` always false             | GET /api/cases: says what each case is about                                               | `expected { …, writes: false } to deeply equal { …, writes: true }`                                        |
+| 284 | The list behind a session         | GET /api/cases: lists every case, in the order they are defined, without needing a session | `expected 401 to be 200`                                                                                   |
+| 285 | `X-Content-Type-Options` left off | GET /api/cases: carries the same security headers as every other answer                    | `expected null to be 'nosniff'`                                                                            |
 
 ## Tests that could not fail, found on the way
 
