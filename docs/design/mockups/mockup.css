@@ -562,3 +562,62 @@ pre.none {
   color: var(--t4);
   font-family: var(--font-ui);
 }
+
+.ok-note {
+  border: 1px solid var(--pass);
+  background: var(--pass-bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 12px 0 16px;
+}
+.ok-note p {
+  margin: 0;
+}
+.ok-note .eq {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+pre .ok {
+  background: transparent;
+  box-shadow: inset 3px 0 0 var(--pass);
+}
+.step.line > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px 12px;
+  background: none;
+}
+details.step {
+  padding: 0;
+  color: var(--t1);
+  font-size: 13px;
+}
+details.step > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  list-style: none;
+}
+details.step > summary::-webkit-details-marker {
+  display: none;
+}
+details.step > summary::before {
+  content: none;
+}
+details.step[open] > summary {
+  border-bottom: 1px solid var(--divider);
+}
+@media (max-width: 640px) {
+  .step.line > header,
+  details.step > summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .step.line > header .req,
+  details.step > summary .req {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

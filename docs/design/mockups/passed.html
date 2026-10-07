@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Result, a passed case open</title>
+    <link rel="stylesheet" href="mockup.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&family=JetBrains+Mono:wght@400..600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="bar-in">
+        <a class="brand" href="#">Partner conformance suite</a>
+        <nav class="nav" aria-label="Pages">
+          <a href="#">Connection</a>
+          <a href="#" aria-current="page">Run</a>
+          <a href="#">History</a>
+        </nav>
+        <div class="session">
+          <span>Session ends in 23 h 38 min</span>
+          <button
+            class="theme"
+            type="button"
+            onclick="
+              document.documentElement.dataset.theme =
+                document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
+            "
+          >
+            Light / dark
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="card verdict" aria-labelledby="verdict">
+        <div>
+          <div class="mono" style="color: var(--t4); font-size: 12px">
+            double-earn · 20 cases · 31 s
+          </div>
+          <h1 id="verdict" class="big bad" style="margin-top: 4px">1 case failed</h1>
+          <div class="counts">
+            <span class="st pass">✓ 19 passed</span>
+            <span class="st fail">✕ 1 failed</span>
+            <span class="st idle">0 timed out</span>
+          </div>
+          <p class="note">
+            <b>Points given back.</b> Member A and member B are both at 1,000 again.
+          </p>
+        </div>
+        <div class="actions">
+          <button class="btn primary" type="button">Run another version</button>
+          <button class="btn" type="button">Run again</button>
+        </div>
+      </section>
+
+      <div class="split">
+        <nav class="card list" style="padding: 0; overflow: hidden" aria-label="Cases">
+          <div class="grp">Failed · 1</div>
+          <a class="it" href="#">
+            <span class="nm"
+              >Earning twice with one reference adds the points once<small class="mono"
+                >earn/duplicate-reference</small
+              ></span
+            >
+            <span class="st fail">✕</span>
+          </a>
+          <div class="grp">Member A · 3 passed</div>
+          <a class="it" href="#"
+            ><span class="nm">Earning adds exactly the points earned</span
+            ><span class="st pass">✓</span></a
+          >
+          <a class="it" href="#"
+            ><span class="nm">Earning zero points is refused</span><span class="st pass">✓</span></a
+          >
+          <a class="it" href="#"
+            ><span class="nm">A body changed after signing is refused, and moves nothing</span
+            ><span class="st pass">✓</span></a
+          >
+          <div class="grp">Member B · 6 passed</div>
+          <a class="it" href="#"
+            ><span class="nm">Redeeming takes exactly the points redeemed</span
+            ><span class="st pass">✓</span></a
+          >
+          <a class="it" href="#"><span class="nm">…5 more</span><span class="st pass">✓</span></a>
+          <div class="grp">Read-only · 10 passed</div>
+          <a class="it" href="#"
+            ><span class="nm">A correctly signed request is accepted</span
+            ><span class="st pass">✓</span></a
+          >
+          <a class="it" href="#"><span class="nm">…9 more</span><span class="st pass">✓</span></a>
+        </nav>
+
+        <article class="card" aria-labelledby="case">
+          <div class="mono" style="color: var(--t4); font-size: 12px">
+            earn/adds-points · Member A
+          </div>
+          <h2 id="case" style="font-size: 20px; margin: 4px 0 0">
+            Earning adds exactly the points earned
+          </h2>
+          <p style="margin: 4px 0 12px; color: var(--t3)">
+            Earning 100 points raises the balance by 100, and the response says so.
+          </p>
+
+          <div class="ok-note" role="note">
+            <p style="font-weight: 700; margin-bottom: 4px">
+              <span class="st pass">✓ Passed</span> &nbsp;Everything this case checks matched
+            </p>
+            <p>
+              The earn answered <span class="eq">200</span> with the transaction as the spec shapes
+              it, and the balance read back as
+              <span class="eq">balance at start + 100 = 1,100</span>. Fields in an answer that the
+              case does not name are not checked.
+            </p>
+          </div>
+
+          <div class="step line">
+            <header>
+              <span><b>Start</b> — read the balance before anything moves</span>
+              <span class="req">GET /members/mbr_1b7e/balance → 200 · 21 ms</span>
+              <span class="st idle">Not judged</span>
+            </header>
+          </div>
+
+          <details class="step done" open>
+            <summary>
+              <span><b>Act · earn</b> — earn 100 points</span>
+              <span class="req">POST /points/earn → 200 · 40 ms</span>
+              <span class="st pass">✓ Matched</span>
+            </summary>
+            <div class="pane">
+              <h4>Request body</h4>
+              <pre><span class="ln">{ "memberId": "mbr_1b7e", "points": 100, "reference": "ref_5d90" }</span></pre>
+            </div>
+            <div class="two">
+              <div class="pane">
+                <h4>Expected</h4>
+                <pre><span class="ln ok">status 200</span><span class="ln">{</span><span class="ln ok">  "transactionId": <span style="color: var(--t4)">any non-empty string</span>,</span><span class="ln ok">  "type": "earn",</span><span class="ln ok">  "memberId": "mbr_1b7e",</span><span class="ln ok">  "points": 100,</span><span class="ln ok">  "balance": <span style="color: var(--t4)">balance at start + 100 = 1,100</span></span><span class="ln">}</span></pre>
+              </div>
+              <div class="pane">
+                <h4>Actual</h4>
+                <pre><span class="ln ok">status 200</span><span class="ln">{</span><span class="ln ok">  "transactionId": "txn_c3",</span><span class="ln ok">  "type": "earn",</span><span class="ln ok">  "memberId": "mbr_1b7e",</span><span class="ln ok">  "points": 100,</span><span class="ln ok">  "balance": 1100</span><span class="ln">}</span></pre>
+              </div>
+            </div>
+            <details>
+              <summary>Request and response headers (4 shown, 3 hidden)</summary>
+              <pre>
+request   webhook-id: msg_71aa…
+request   webhook-signature: v1,•••
+response  content-type: application/json</pre>
+            </details>
+          </details>
+
+          <details class="step done">
+            <summary>
+              <span><b>Verify · balance</b> — read the balance back</span>
+              <span class="req">GET /members/mbr_1b7e/balance → 200 · 22 ms</span>
+              <span class="st pass">✓ Matched</span>
+            </summary>
+          </details>
+        </article>
+      </div>
+
+      <section class="card reveal" style="margin-top: 16px" aria-labelledby="reveal">
+        <h2 id="reveal">What was wrong with <span class="mono">double-earn</span></h2>
+        <p class="sub" style="margin: 0">
+          This version of the partner is correct except for one behaviour.
+        </p>
+        <dl>
+          <dt>The bug</dt>
+          <dd>
+            It ignores <span class="mono">reference</span> on an earn, so a repeated earn adds the
+            points again.
+          </dd>
+          <dt>Caught by</dt>
+          <dd>
+            <span class="mono">earn/duplicate-reference</span> — the only case that sends the same
+            earn twice.
+          </dd>
+          <dt>Why only one</dt>
+          <dd>
+            The other 19 never repeat an earn, so a partner with this bug passes them. A suite is
+            only as good as the mistakes it has a case for.
+          </dd>
+        </dl>
+      </section>
+    </main>
+  </body>
+</html>
