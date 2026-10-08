@@ -111,6 +111,13 @@ describe('the API client', () => {
 describe('the API client, for runs', () => {
   const answer = { id: 'run_1', lanes: [] }
 
+  it('lists the session’s runs from /api/runs with a bare GET', async () => {
+    const { client, calls } = fake(() => json([{ id: 'run_1' }]))
+    expect(await client.listRuns()).toEqual([{ id: 'run_1' }])
+    expect(calls[0]!.url).toBe('/api/runs')
+    expect(calls[0]!.init?.method).toBeUndefined()
+  })
+
   it('lists the cases from /api/cases', async () => {
     const { client, calls } = fake(() => json([{ id: 'earn/adds-points' }]))
     expect(await client.listCases()).toEqual([{ id: 'earn/adds-points' }])

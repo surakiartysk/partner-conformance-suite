@@ -97,6 +97,18 @@ export interface RunView {
   results: { caseId: string; lane: Lane; status: CaseStatus; result: CaseResult }[]
 }
 
+/** One run in the session's history: what it planned and how it has gone. */
+export interface RunListItem {
+  id: string
+  version: string
+  services: string[]
+  createdAt: string
+  finishedAt: string | null
+  /** The cases it planned. */
+  total: number
+  counts: { passed: number; failed: number; timedOut: number; error: number }
+}
+
 /** What is wrong with one version of the partner, once a run is over. */
 export interface VersionInfo {
   name: string
@@ -195,6 +207,9 @@ export function createClient(fetchImpl: Fetch = (input, init) => fetch(input, in
 
     /** What each case is about, in the order the server lists them. */
     listCases: () => call<CaseInfo[]>('/cases'),
+
+    /** The session's runs, newest first. */
+    listRuns: () => call<RunListItem[]>('/runs'),
 
     /** What was wrong with each version, for the result page to say. */
     listVersions: () => call<VersionInfo[]>('/versions'),

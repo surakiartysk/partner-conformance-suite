@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository but one has been made to fail by at least one row below (the exception is named under "The page"):
-the 106 in `packages/partner`, the 19 in `packages/cases`, the 127 in `packages/api` and the 243 in `packages/ui`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases`, the 127 in `packages/api` and the 262 in `packages/ui`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -698,6 +698,42 @@ the change before any of the rows below were taken.
 | 519 | Another run's results counted                  | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'correct', total: 4, …(1` |
 | 520 | Nothing planned counted when a lane is missing | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
 | 521 | The list of runs open to anyone                | runs.test.ts: POST /api/runs/:id/lanes/:lane/next > answers 404 for another session’s run, and for a lane the run does not have | `expected 500 to be 401 // Object.is equality`                                               |
+
+### The history page
+
+27 breaks in the History page, how long ago is said, the route and the header entry. One survived the first pass
+(a timeout drawn as a failure: the test read the words and not the look) and is closed. The run was
+done with nothing else editing the source, after the clash recorded under "The list of runs".
+
+| #   | Mutation                                     | Caught by                                                                                                                   | Failure                                                                                      |
+| --- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 522 | Time ago says seconds as a minute            | format.test.ts: ago > says just now for under a minute                                                                      | `expected '0 min ago' to be 'just now' // Object.is equality`                                |
+| 523 | Minutes rounded up                           | format.test.ts: ago > says just now for under a minute                                                                      | `expected '1 min ago' to be 'just now' // Object.is equality`                                |
+| 524 | The hour boundary off by one                 | format.test.ts: ago > says minutes, hours and days in the largest unit that fits, rounded down                              | `expected '60 min ago' to be '1 h ago' // Object.is equality`                                |
+| 525 | The day boundary off by one                  | format.test.ts: ago > says minutes, hours and days in the largest unit that fits, rounded down                              | `expected '24 h ago' to be '1 d ago' // Object.is equality`                                  |
+| 526 | Days given as hours                          | format.test.ts: ago > says minutes, hours and days in the largest unit that fits, rounded down                              | `expected '24 d ago' to be '1 d ago' // Object.is equality`                                  |
+| 527 | A time ahead of the clock given a number     | format.test.ts: ago > says just now for a time ahead of the clock, and for one it cannot read                               | `expected '-5 min ago' to be 'just now' // Object.is equality`                               |
+| 528 | The history address not read                 | route.test.ts: routes > reads each page the page has                                                                        | `expected { page: 'not-found' } to deeply equal { page: 'history' }`                         |
+| 529 | History not in the header                    | layout.test.tsx: the page chrome > marks the page you are on as the current one, and only that one                          | `expected [] to deeply equal [ '/history' ]`                                                 |
+| 530 | The version not shown                        | history.test.tsx: the history > lists each run with its version, how long ago it was, its services and its size             | `expected '<ul class="runs"><li><a href="/runs/r…' to contain 'double-earn'`                 |
+| 531 | The age not shown                            | history.test.tsx: the history > lists each run with its version, how long ago it was, its services and its size             | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '5 min ago'`                   |
+| 532 | The services not shown                       | history.test.tsx: the history > lists each run with its version, how long ago it was, its services and its size             | `expected '<ul class="runs"><li><a href="/runs/r…' to contain 'earn · 4 cases'`              |
+| 533 | The size of a run not shown                  | history.test.tsx: the history > lists each run with its version, how long ago it was, its services and its size             | `expected '<ul class="runs"><li><a href="/runs/r…' to contain 'earn · 4 cases'`              |
+| 534 | Case never singular                          | history.test.tsx: the history > says case, not cases, for one                                                               | `expected '<ul class="runs"><li><a href="/runs/r…' to contain 'earn · 1 case<'`              |
+| 535 | Every run linked to the same result          | history.test.tsx: the history > links each run to its result                                                                | `expected '<ul class="runs"><li><a href="/runs/r…' to contain 'href="/runs/run_a"'`          |
+| 536 | The list reordered                           | history.test.tsx: the history > keeps the order it was given, which is newest first                                         | `expected 440 to be less than 103`                                                           |
+| 537 | A run called all passed that did not pass    | history.test.tsx: the history > names what did not pass, each kind apart                                                    | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '✓ 10 passed'`                 |
+| 538 | A run still going called all passed          | history.test.tsx: the history > says a run that is not over has not finished, and how far it got, and never calls it a pass | `expected '<ul class="runs"><li><a href="/runs/r…' not to contain 'All 4 passed'`            |
+| 539 | A run with nothing planned called all passed | history.test.tsx: the history > does not call a run with nothing planned a pass                                             | `expected '<ul class="runs"><li><a href="/runs/r…' not to contain 'All 0 passed'`            |
+| 540 | A run not over not said to be                | history.test.tsx: the history > says a run that is not over has not finished, and how far it got, and never calls it a pass | `expected '<ul class="runs"><li><a href="/runs/r…' to contain 'Not finished · 2 of 4'`       |
+| 541 | How far an unfinished run got not said       | history.test.tsx: the history > says a run that is not over has not finished, and how far it got, and never calls it a pass | `expected '<ul class="runs"><li><a href="/runs/r…' to contain 'Not finished · 2 of 4'`       |
+| 542 | Failures left out                            | history.test.tsx: the history > names what did not pass, each kind apart                                                    | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '✕ 2 failed'`                  |
+| 543 | Errors left out                              | history.test.tsx: the history > names what did not pass, each kind apart                                                    | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '! 1 error'`                   |
+| 544 | Passes left out                              | history.test.tsx: the history > names what did not pass, each kind apart                                                    | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '✓ 10 passed'`                 |
+| 545 | No invitation when there are no runs         | history.test.tsx: the history > invites a run when there are none, and lists nothing                                        | `expected '<ul class="runs"></ul>' to contain 'No runs yet'`                                 |
+| 546 | The invitation goes nowhere                  | history.test.tsx: the History page > goes to Run from the empty state                                                       | `expected [] to deeply equal [ { page: 'run' } ]`                                            |
+| 547 | A load failure not shown                     | history.test.tsx: the History page > waits for the runs, then lists them                                                    | `TypeError: Cannot read properties of null (reading 'length')`                               |
+| 548 | Timeouts counted as failures                 | history.test.tsx: the history > names what did not pass, each kind apart                                                    | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '<span class="st warn">! 3 ti` |
 
 ## Tests that could not fail, found on the way
 

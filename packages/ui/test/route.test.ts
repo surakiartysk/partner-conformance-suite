@@ -6,6 +6,7 @@ describe('routes', () => {
     expect(parseRoute('/')).toEqual({ page: 'home' })
     expect(parseRoute('/connection')).toEqual({ page: 'connection' })
     expect(parseRoute('/run')).toEqual({ page: 'run' })
+    expect(parseRoute('/history')).toEqual({ page: 'history' })
   })
 
   it('reads the result of a run, and of one case of it', () => {
@@ -56,6 +57,7 @@ describe('routes', () => {
       { page: 'home' },
       { page: 'connection' },
       { page: 'run' },
+      { page: 'history' },
       { page: 'result', runId: 'run_1' },
       { page: 'result', runId: 'run_1', caseId: 'earn/adds-points' },
     ] as const) {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError, createClient, type SessionView } from './api'
 import { Connection } from './components/Connection'
 import { Home } from './components/Home'
+import { HistoryPage } from './components/HistoryPage'
 import { Layout } from './components/Layout'
 import { ResultPage } from './components/ResultPage'
 import { RunPage } from './components/RunPage'
@@ -145,6 +146,15 @@ export function App() {
     ) : (
       <>
         <h1>Run</h1>
+        <p>{messageFor('no-session')}</p>
+      </>
+    )
+  } else if (route.page === 'history') {
+    page = session ? (
+      <HistoryPage client={client} now={now} onNavigate={navigate} />
+    ) : (
+      <>
+        <h1>History</h1>
         <p>{messageFor('no-session')}</p>
       </>
     )
