@@ -772,11 +772,53 @@ end-to-end test on a touch screen measured 40 px. The stylesheet test now checks
 | 567 | Low contrast text in dark mode                    | journey: no serious accessibility violations on any page, in dark mode                                    | `/ in dark mode`                                                 |
 | 568 | A run that passed everything not said to          | journey: the right version passes everything, and says so                                                 | `expect(locator).toBeVisible() failed`                           |
 | 569 | The address is said not to be one you can open    | connection: says the address is public, since the deployed partner is reachable at it                     | `to contain 'public one too'`                                    |
+| 570 | Cases and services both named is allowed          | runs: refuses cases that are none, unknown, repeated or not a list, and naming both ways                  | `expected 201 to be 400`                                         |
+| 571 | A case named twice is allowed                     | runs: refuses cases that are none, unknown, repeated or not a list, and naming both ways                  | `expected 201 to be 400`                                         |
+| 572 | A case that does not exist is allowed             | runs: refuses cases that are none, unknown, repeated or not a list, and naming both ways                  | `D1_ERROR: No SQL statements detected.`                          |
+| 573 | An empty list of cases is allowed                 | runs: refuses cases that are none, unknown, repeated or not a list, and naming both ways                  | `D1_ERROR: No SQL statements detected.`                          |
+| 574 | Cases that are not a list are allowed             | runs: refuses cases that are none, unknown, repeated or not a list, and naming both ways                  | `expected 500 to be 400`                                         |
+| 575 | Cases planned in the order they were named        | runs: plans the cases named in the order they are defined, whatever order they were named in              | `expected [ [ 'A', [ …(3) ] ], [ 'read', …(1) ] ] to deeply eq…` |
+| 576 | A run of chosen cases says every service          | runs: plans the cases named, and only those                                                               | `expected [ 'earn', 'member', 'redeem', …(2) ] to deeply equal…` |
+| 577 | The names of the cases ignored                    | runs: plans the cases named, and only those                                                               | `expected [ 'earn/adds-points', …(19) ] to deeply equal [ 'red…` |
+| 578 | A case ticked is never added                      | run-form: toggles one case on and off, and keeps the list order whatever order they were chosen in        | `expected [ 'r/1' ] to deeply equal [ 's/1', 'r/1' ]`            |
+| 579 | A case unticked stays                             | run-form: toggles one case on and off, and keeps the list order whatever order they were chosen in        | `expected [ 's/1', 'e/1' ] to deeply equal [ 'e/1' ]`            |
+| 580 | The chosen cases in the order they were chosen    | run-form: toggles one case on and off, and keeps the list order whatever order they were chosen in        | `expected [ 'r/1', 's/1' ] to deeply equal [ 's/1', 'r/1' ]`     |
+| 581 | A group turned on replaces what was chosen        | run-form: turns a group on without touching the rest, and off the same way                                | `expected [ 'e/1', 'e/2' ] to deeply equal [ 'e/1', 'e/2', 'r/…` |
+| 582 | A group turned off leaves it chosen               | run-form: turns a group on without touching the rest, and off the same way                                | `expected [ 's/1', 'e/1', 'e/2' ] to deeply equal [ 's/1' ]`     |
+| 583 | Part of a group read as all of it                 | run-form: says whether a group is all chosen, some, or none                                               | `expected 'all' to be 'some'`                                    |
+| 584 | All and none of a group read the other way        | run-form: says whether a group is all chosen, some, or none                                               | `expected 'none' to be 'all'`                                    |
+| 585 | Services gathered by the last group, not their o… | run-form: hold the cases of each service, services in the order they first appear                         | `expected [ [ 'security', …(1) ] ] to deeply equal [ [ 'securi…` |
+| 586 | The Run button not held back when nothing is cho… | run-components: cannot be submitted with no case chosen, and says why                                     | `expected '<form class="card stack"><fieldset><l…' to match /<…` |
+| 587 | A group box always turns the group on             | run-page: starts a run with the chosen version and cases, and shows each lane to the end                  | `expected true to be false`                                      |
+| 588 | Part of a group not shown as part                 | run-page: unticking one case of a group leaves the others, and the group shows it is partly chosen        | `expected false to be true`                                      |
+| 589 | No reason given when nothing is chosen            | run-components: cannot be submitted with no case chosen, and says why                                     | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 590 | The count says everything is chosen               | run-components: counts the cases chosen, of all of them                                                   | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 591 | The button counts every case                      | run-components: puts the number of cases chosen on the button, and says case when there is one            | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 592 | All stays available when all are chosen           | run-components: has All and None, each unavailable when it would change nothing                           | `expected '<form class="card stack"><fieldset><l…' to match /<…` |
+| 593 | None stays available when none are chosen         | run-components: has All and None, each unavailable when it would change nothing                           | `expected '<form class="card stack"><fieldset><l…' to match /<…` |
+| 594 | The page starts a run of every case               | run-page: starts a run with the chosen version and cases, and shows each lane to the end                  | `expected [ 'security/valid-signature', …(2) ] to deeply equal…` |
+| 595 | None puts everything back                         | run-page: runs exactly the cases ticked, one case alone included                                          | `Unable to find an accessible element with the role "button" a…` |
+| 596 | The client sends the cases as services            | api: starts a run by naming a version and cases, and nothing else                                         | `expected { version: 'double-earn', …(1) } to deeply equal { v…` |
+| 597 | None puts everything back                         | journey: one case can be picked, and only that case is run                                                | `expect(locator).toBeDisabled() failed`                          |
+| 598 | The page starts a run of every case               | journey: one case can be picked, and only that case is run                                                | `expect(locator).toHaveCount(expected) failed`                   |
+| 599 | The server ignores the cases named                | journey: one case can be picked, and only that case is run                                                | `expect(locator).toHaveCount(expected) failed`                   |
+| 600 | Part of a group not shown as part                 | journey: one case can be picked, and only that case is run                                                | `expect(received).toBe(expected)`                                |
+| 601 | Case rows not made 44 px for a finger             | journey: on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press | `a row is too small to press`                                    |
+| 602 | Ticking a case does not choose it                 | journey: one case can be picked, and only that case is run                                                | `locator.check: Clicking the checkbox did not change its state`  |
 
 ## Tests that could not fail, found on the way
 
 Running the mutations is what found these. Each one passed whatever the code
 did.
+
+- **"refuses cases that are … not a list" (choosing cases).** It first sent
+  `cases: 'earn/adds-points'`, a string, which was refused anyway because its
+  letters repeat and a set of them is shorter than the string. Taking the
+  list check out left it green. It now also sends `'abc'` and `{}`, which only
+  that check can refuse — row 574.
+- **The All and None buttons.** Nothing looked at whether either was disabled
+  when it would change nothing, so taking the condition out of both left the
+  suite green. A test now renders all, none and some chosen — rows 592 and 593.
 
 - **"refuses a timestamp that is not plain seconds".** It sent `' 1614265330'`
   and friends with the vector's original signature. The timestamp is part of

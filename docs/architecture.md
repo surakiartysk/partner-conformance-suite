@@ -58,7 +58,7 @@ Standard Webhooks publishes ([decision 7](decisions.md#7-the-partners-verifier-i
 ## The three connections
 
 1. **Browser → API.** The browser presses buttons and names things: a version
-   from a closed list, a set of services, a run id, a lane. Where requests go,
+   from a closed list, a set of cases, a run id, a lane. Where requests go,
    what they carry, and whether the answer passes are decided by the server.
 2. **API → partner.** The only connection between the two sides: HTTPS,
    signed, through a service binding. The partner's base URL is built from the

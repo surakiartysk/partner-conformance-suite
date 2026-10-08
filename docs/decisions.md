@@ -845,3 +845,23 @@ last one made, so one break shows one failure and a second is only seen after th
 run in one browser: Firefox and Safari are not tried, and a screen reader is not driven (axe checks what
 a machine can; it is not the same). The first CI run of this job is the first time it has run anywhere but
 this machine.
+
+## 39. A run is of cases chosen one by one or by group, and a service is only a way to choose them
+
+The page named services to run; a visitor who wanted one case, or one case from each of two services,
+could not say so. The Run form now lists every case under its service. A box on the service takes all of
+its cases on or off and shows, neither on nor off, when only some are chosen; each case has its own box;
+All and None sit above the list; the button says how many cases it will run and cannot be pressed with none.
+The page sends case ids, and `POST /api/runs` takes either `cases` or `services`, never both: two answers to
+one question, and no rule to say which wins. It plans the cases in the order they are defined, whatever
+order they were named in, so the lanes are the same for the same cases. A list that is empty, repeats a
+case, names one that does not exist, or is not a list is refused. The run's services are those of the cases
+chosen, so the history still says what a run touched, and no migration was needed: the lanes already record
+the case ids.
+
+**Cost.** The form is long: twenty cases under five services where five chips were, and the button stays at
+the foot of the window so it can be reached (decision 29). `services` is still accepted by the API though the
+page no longer sends it, which is two ways to ask for the same thing; it was kept because removing it would
+rewrite the API's tests for no gain to a visitor. A case can be chosen without the case it would be compared
+with: each case arranges its own state, so nothing is lost, but a visitor choosing one case of a pair sees
+only that one. The three checks that were first missing are in `docs/mutations.md`.
