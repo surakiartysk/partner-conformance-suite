@@ -37,6 +37,11 @@ export function RunForm(props: Props) {
     >
       <fieldset>
         <legend>Partner version</legend>
+        <p className="note">
+          The partner is the service the suite tests: a points API that earns, redeems and reverses
+          points. A version is a copy of it. <span className="mono">correct</span> follows the spec;
+          every other one is wrong in one way, and the result says how.
+        </p>
         {props.versions.map((name) => (
           <label className="opt" key={name}>
             <input
@@ -55,11 +60,6 @@ export function RunForm(props: Props) {
             </span>
           </label>
         ))}
-        <p className="note">
-          The partner is the service the suite tests: a points API that earns, redeems and reverses
-          points. A version is a copy of it. <span className="mono">correct</span> follows the spec;
-          every other one is wrong in one way, and the result says how.
-        </p>
       </fieldset>
 
       <fieldset>

@@ -374,6 +374,8 @@ legend {
 .fold {
   padding: 0 14px;
   flex: none;
+  font-size: 22px;
+  line-height: 1;
 }
 .chips {
   display: flex;
