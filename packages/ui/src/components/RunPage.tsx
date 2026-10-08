@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, type CaseInfo, type Client, type RunView, type SessionView } from '../api'
+import type { Route } from '../route'
 import { driveRun } from '../driver'
 import { messageFor } from '../messages'
 import { applyEvent, counts, initialProgress, isOver, type Progress } from '../progress'
@@ -13,7 +14,15 @@ type Phase = 'idle' | 'starting' | 'running' | 'over'
 const problemOf = (error: unknown) =>
   error instanceof ApiError ? messageFor(error.failure, error.retryAfter) : messageFor('unexpected')
 
-export function RunPage({ client, session }: { client: Client; session: SessionView }) {
+export function RunPage({
+  client,
+  session,
+  onNavigate,
+}: {
+  client: Client
+  session: SessionView
+  onNavigate: (to: Exclude<Route, { page: 'not-found' }>) => void
+}) {
   const [cases, setCases] = useState<CaseInfo[] | null>(null)
   const [loadProblem, setLoadProblem] = useState<string | null>(null)
 
@@ -24,6 +33,7 @@ export function RunPage({ client, session }: { client: Client; session: SessionV
   const [phase, setPhase] = useState<Phase>('idle')
   const [problem, setProblem] = useState<string | null>(null)
   const [ranVersion, setRanVersion] = useState(version)
+  const [runId, setRunId] = useState('')
   const [progress, setProgress] = useState<Progress | null>(null)
   const controller = useRef<AbortController | null>(null)
 
@@ -60,6 +70,7 @@ export function RunPage({ client, session }: { client: Client; session: SessionV
     const abort = new AbortController()
     controller.current = abort
     setRanVersion(run.version)
+    setRunId(run.id)
     setProgress(initialProgress(run))
     setPhase('running')
     await driveRun(client, run, {
@@ -112,6 +123,8 @@ export function RunPage({ client, session }: { client: Client; session: SessionV
                 progress={progress}
                 cases={byId}
                 version={ranVersion}
+                runId={runId}
+                onNavigate={onNavigate}
                 onRunAgain={() => {
                   setPhase('idle')
                   setProgress(null)

@@ -134,7 +134,14 @@ describe('the progress of a run', () => {
     const resumed = initialProgress({
       ...run,
       lanes: [{ lane: 'A', cases: ['a/1', 'a/2'], position: 1, done: false, restore: null }],
-      results: [{ caseId: 'a/1', lane: 'A', status: 'passed', result: { durationMs: 9 } }],
+      results: [
+        {
+          caseId: 'a/1',
+          lane: 'A',
+          status: 'passed',
+          result: { caseId: 'a/1', status: 'passed', steps: [], durationMs: 9 },
+        },
+      ],
     })
     expect(statuses(resumed, 'A')).toEqual(['passed', 'running'])
   })

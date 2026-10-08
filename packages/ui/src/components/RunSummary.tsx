@@ -1,25 +1,21 @@
 import type { CaseInfo } from '../api'
-import { counts, pointsGivenBack, rows, type Progress } from '../progress'
+import type { Route } from '../route'
+import { PageLink } from './Layout'
+import { givenBackText } from '../given-back'
+import { counts, rows, type Progress } from '../progress'
 import { Status } from './Status'
-
-const GIVEN_BACK = {
-  all: 'Points given back. Both members are at their starting balances.',
-  'not-all':
-    'Some points could not be given back yet. They are written down, and a later run or the sweep every ten minutes will give them back.',
-  unknown:
-    'A lane stopped before it could give its points back. They are written down, and a later run or the sweep every ten minutes will give them back.',
-  'none-moved': 'No points moved.',
-} as const
 
 interface Props {
   progress: Progress
   cases: Map<string, CaseInfo>
   version: string
+  runId: string
   onRunAgain: () => void
+  onNavigate: (to: Exclude<Route, { page: 'not-found' }>) => void
 }
 
-/** The verdict first, then what did not pass. Reading a case's request and answer is not built yet. */
-export function RunSummary({ progress, cases, version, onRunAgain }: Props) {
+/** The verdict first, then what did not pass, each case a link to its result. */
+export function RunSummary({ progress, cases, version, runId, onRunAgain, onNavigate }: Props) {
   const c = counts(progress)
   const notPassed = c.total - c.passed
   const unfinished = c.total - c.finished
@@ -45,7 +41,7 @@ export function RunSummary({ progress, cases, version, onRunAgain }: Props) {
         {c.error > 0 ? <span className="st err">! {c.error} error</span> : null}
         {unfinished > 0 ? <span className="st idle">{unfinished} not run</span> : null}
       </div>
-      <p className="note">{GIVEN_BACK[pointsGivenBack(progress)]}</p>
+      <p className="note">{givenBackText(progress)}</p>
       {trouble.length > 0 ? (
         <table>
           <thead>
@@ -58,7 +54,12 @@ export function RunSummary({ progress, cases, version, onRunAgain }: Props) {
             {trouble.map((row) => (
               <tr key={row.caseId}>
                 <td>
-                  {cases.get(row.caseId)?.name ?? row.caseId}
+                  <PageLink
+                    to={{ page: 'result', runId, caseId: row.caseId }}
+                    onNavigate={onNavigate}
+                  >
+                    {cases.get(row.caseId)?.name ?? row.caseId}
+                  </PageLink>
                   <br />
                   <span className="mono note">{row.caseId}</span>
                 </td>
@@ -71,7 +72,14 @@ export function RunSummary({ progress, cases, version, onRunAgain }: Props) {
         </table>
       ) : null}
       <div className="actions">
-        <button type="button" className="primary" onClick={onRunAgain}>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => onNavigate({ page: 'result', runId })}
+        >
+          Open the result
+        </button>
+        <button type="button" onClick={onRunAgain}>
           Run again
         </button>
       </div>

@@ -55,7 +55,11 @@ export function Layout({ route, hasSession, onNavigate, children }: Props) {
                 key={link.page}
                 to={{ page: link.page }}
                 onNavigate={onNavigate}
-                className={route.page === link.page ? 'nav-link current' : 'nav-link'}
+                className={
+                  route.page === link.page || (link.page === 'run' && route.page === 'result')
+                    ? 'nav-link current'
+                    : 'nav-link'
+                }
               >
                 {link.label}
               </PageLink>

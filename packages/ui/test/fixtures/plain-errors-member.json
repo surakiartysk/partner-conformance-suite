@@ -1,0 +1,153 @@
+{
+  "id": "run_6a2c7fe62bad4b448ff4",
+  "version": "plain-errors",
+  "services": ["member"],
+  "createdAt": "2026-10-08T04:08:15.000Z",
+  "finishedAt": "2026-10-08T04:08:15.000Z",
+  "lanes": [
+    {
+      "lane": "read",
+      "cases": ["member/known", "member/unknown", "member/balance"],
+      "position": 3,
+      "done": true,
+      "restore": null
+    }
+  ],
+  "results": [
+    {
+      "caseId": "member/balance",
+      "lane": "read",
+      "status": "passed",
+      "result": {
+        "caseId": "member/balance",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "act",
+            "name": "request",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_ba2d84fa0f28410f9bdc",
+                "webhook-timestamp": "1791432495",
+                "webhook-signature": "v1,Js1pajn3yaZDAGPNYW/xsEeS4VKPg7YpPEcm5xsHbVw="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 2,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1000 },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": "‹any integer›" }
+            }
+          }
+        ],
+        "durationMs": 2
+      }
+    },
+    {
+      "caseId": "member/known",
+      "lane": "read",
+      "status": "passed",
+      "result": {
+        "caseId": "member/known",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "act",
+            "name": "request",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c",
+              "headers": {
+                "webhook-id": "msg_336512952c60460397d0",
+                "webhook-timestamp": "1791432495",
+                "webhook-signature": "v1,g6XJwjYUKfyCoXiiIknemHTjUlbMRQ8RyyaKk0m+/ww="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 6,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "id": "mbr_e462617e9f364c3c", "name": "Member A", "tier": "standard" },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": {
+                "id": "mbr_e462617e9f364c3c",
+                "name": "‹any non-empty string›",
+                "tier": "‹one of \"standard\", \"silver\", \"gold\"›"
+              }
+            }
+          }
+        ],
+        "durationMs": 6
+      }
+    },
+    {
+      "caseId": "member/unknown",
+      "lane": "read",
+      "status": "failed",
+      "result": {
+        "caseId": "member/unknown",
+        "status": "failed",
+        "steps": [
+          {
+            "phase": "act",
+            "name": "request",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_unknown_47ffb9e4ec4748f2b029",
+              "headers": {
+                "webhook-id": "msg_1e7b0df3a9a14c819724",
+                "webhook-timestamp": "1791432495",
+                "webhook-signature": "v1,XlQXGRY9MQ0hD+7/jYw82a5Gpi6HwBnQEQSci0G1YRE="
+              },
+              "body": ""
+            },
+            "mismatches": [
+              {
+                "path": "header content-type",
+                "expected": "media type application/problem+json",
+                "actual": "text/plain; charset=UTF-8"
+              },
+              { "path": "$", "expected": "an object", "actual": "Member not found" }
+            ],
+            "outcome": "mismatch",
+            "durationMs": 2,
+            "response": {
+              "status": 404,
+              "headers": { "content-type": "text/plain; charset=UTF-8" },
+              "body": "Member not found",
+              "json": false,
+              "truncated": false
+            },
+            "expected": {
+              "status": 404,
+              "headers": { "content-type": "‹media type application/problem+json›" },
+              "body": {
+                "type": "https://points-partner.example/problems/member-not-found",
+                "status": 404
+              }
+            }
+          }
+        ],
+        "durationMs": 2
+      }
+    }
+  ]
+}

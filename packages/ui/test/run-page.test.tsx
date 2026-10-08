@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiError, type CaseInfo, type Client, type NextAnswer, type RunView } from '../src/api'
 import { RunPage } from '../src/components/RunPage'
+import type { Route } from '../src/route'
 import { session } from './fixtures'
 
 afterEach(cleanup)
@@ -90,11 +91,16 @@ function fakeClient(
   }
 }
 
-const renderPage = (client: Client, versions = ['correct', 'double-earn', 'off-by-one']) =>
+const renderPage = (
+  client: Client,
+  versions = ['correct', 'double-earn', 'off-by-one'],
+  onNavigate: (to: Route) => void = () => {},
+) =>
   render(
     <RunPage
       client={client}
       session={session({ partner: { tenant: 't', versions, baseUrls: {} } })}
+      onNavigate={onNavigate}
     />,
   )
 
@@ -215,6 +221,20 @@ describe('the Run page', () => {
       await new Promise((r) => setTimeout(r, 0))
     }
     expect(spy.asked.length).toBe(before) // the answers in flight are dropped, and nothing is asked again
+  })
+
+  it('opens the result of the run that was just made, and of a case that did not pass', async () => {
+    const user = userEvent.setup()
+    const { client } = fakeClient({ failing: ['earn/duplicate-reference'] })
+    const went: Route[] = []
+    renderPage(client, undefined, (to) => went.push(to))
+    await user.click(await screen.findByRole('button', { name: 'Run 3 cases' }))
+    await user.click(await screen.findByRole('button', { name: 'Open the result' }))
+    await user.click(screen.getByRole('link', { name: 'Earning twice adds the points once' }))
+    expect(went).toEqual([
+      { page: 'result', runId: 'run_1' },
+      { page: 'result', runId: 'run_1', caseId: 'earn/duplicate-reference' },
+    ])
   })
 
   it('names each case in its lane, with its id', async () => {

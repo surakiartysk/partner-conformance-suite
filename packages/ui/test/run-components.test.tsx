@@ -202,7 +202,14 @@ describe('the lanes', () => {
 describe('the summary', () => {
   const render = (p: Progress) =>
     renderToStaticMarkup(
-      <RunSummary progress={p} cases={cases} version="double-earn" onRunAgain={() => {}} />,
+      <RunSummary
+        progress={p}
+        cases={cases}
+        version="double-earn"
+        runId="run_1"
+        onRunAgain={() => {}}
+        onNavigate={() => {}}
+      />,
     )
 
   it('says all passed when they did, and lists nothing that did not pass', () => {
@@ -256,9 +263,16 @@ describe('the summary', () => {
     expect(html).toContain('2 not run')
   })
 
-  it('offers to run again, as the one primary button', () => {
+  it('offers to open the result, as the one primary button, and to run again', () => {
     const html = render(finishAll(['passed', 'passed']))
+    expect(html).toContain('>Open the result</button>')
     expect(html).toContain('>Run again</button>')
     expect(html.match(/class="primary"/g)).toHaveLength(1)
+  })
+
+  it('links each case that did not pass to its result', () => {
+    const html = render(finishAll(['passed', 'failed']))
+    expect(html).toContain('href="/runs/run_1/cases/a/2"')
+    expect(html).not.toContain('href="/runs/run_1/cases/a/1"')
   })
 })

@@ -703,3 +703,37 @@ thing noticing if one is forgotten: it will fail, but only when someone runs it.
 bug is text a person wrote in a table cell, shown as it is; it carries no markup,
 and the page renders it as text. Nothing here says the other cases pass for the
 right reason, only that the table says they pass.
+
+## 33. The result page shows what the server recorded, in the case's own words, and no more
+
+Opening a run shows one verdict, the cases with what did not pass first, and one
+case at a time: what did not match as a sentence for each field, then its steps in
+the order they ran, each with the request that was sent and what came back. A
+step that was judged shows **Expected** and **Actual** side by side with the lines
+that disagreed marked; the setup steps (the starting balance read and the arrange
+step) are only held to answering, with a status as their expectation, and sit in
+one closed section. A sentence names its step, because the act and the verify can
+disagree about the same field in the same words.
+
+Expected is the case's wording and not a copy of the answer: `balance at start +
+100 = 1,200`, `any non-empty string`. A matcher is shown as words in a different
+face, so a reader can tell data from description. The first case shown is the
+first that did not pass in the order the run planned them. On a phone the case
+comes before the list of the others, because the evidence is what the reader came
+for.
+
+Everything a partner wrote (a body, a header, the text of a failure) is rendered as
+text, and a test hands each part of the page markup to prove it. The result is read
+from the run the server recorded; the page adds nothing it did not record, and it
+says "not part of this run" for a case the version's table names that the run did
+not plan.
+
+**Cost.** A JSON answer is shown laid out from what was parsed, so its key order,
+spacing and number formats are the page's and not the partner's bytes; a body that
+is not JSON, or was cut at 64 KB, is shown as text and the cut is said. Request
+headers are shown whole, and `webhook-signature` is among them: it is an HMAC of
+that message and not the secret, and hiding it would hide what a partner's developer
+needs to reproduce the request, but the choice is the server's allowlist and not the
+page's. A result can be opened only with the session that made the run, which lasts
+a day, and nothing lists past runs yet. The 20 cases are 20 links in one list, and
+on a phone that list is a long scroll below the evidence.
