@@ -225,6 +225,11 @@ test('on a phone nothing scrolls sideways, and the Run button is on the screen a
     .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height))
   expect(heights.length).toBeGreaterThan(40)
   expect(Math.min(...heights), 'a row is too small to press').toBeGreaterThanOrEqual(44)
+  const widths = await small
+    .locator('.fold')
+    .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().width))
+  expect(widths).toHaveLength(5)
+  expect(Math.min(...widths), 'a fold button is too narrow to press').toBeGreaterThanOrEqual(44)
   await phone.close()
 })
 
