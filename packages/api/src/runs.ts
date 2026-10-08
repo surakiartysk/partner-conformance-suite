@@ -162,18 +162,55 @@ export async function getRun(c: Context<Env>): Promise<Response> {
   return c.json(await runView(c, run))
 }
 
+/**
+ * The session's runs, newest first, each with how many cases it planned and how
+ * they ended so far. Three reads, every one scoped to the session in SQL: a run
+ * is never found by its id alone (decision 22).
+ */
 export async function listRuns(c: Context<Env>): Promise<Response> {
+  const sessionId = c.var.session.id
   const runs = await c.env.DB.prepare(
-    'SELECT id, version, created_at, finished_at FROM runs WHERE session_id = ? ORDER BY created_at DESC',
+    'SELECT id, version, services, created_at, finished_at FROM runs WHERE session_id = ? ORDER BY created_at DESC, rowid DESC',
   )
-    .bind(c.var.session.id)
-    .all<{ id: string; version: string; created_at: number; finished_at: number | null }>()
+    .bind(sessionId)
+    .all<Pick<RunRow, 'id' | 'version' | 'services' | 'created_at' | 'finished_at'>>()
+  const lanes = await c.env.DB.prepare(
+    `SELECT l.run_id, l.case_ids FROM run_lanes l JOIN runs r ON r.id = l.run_id WHERE r.session_id = ?`,
+  )
+    .bind(sessionId)
+    .all<{ run_id: string; case_ids: string }>()
+  const ended = await c.env.DB.prepare(
+    `SELECT x.run_id, x.status, COUNT(*) AS n
+       FROM run_results x JOIN runs r ON r.id = x.run_id
+      WHERE r.session_id = ? GROUP BY x.run_id, x.status`,
+  )
+    .bind(sessionId)
+    .all<{ run_id: string; status: string; n: number }>()
+
+  const planned = new Map<string, number>()
+  for (const lane of lanes.results) {
+    planned.set(
+      lane.run_id,
+      (planned.get(lane.run_id) ?? 0) + (JSON.parse(lane.case_ids) as string[]).length,
+    )
+  }
+  const count = (id: string, status: string) =>
+    ended.results.find((e) => e.run_id === id && e.status === status)?.n ?? 0
+
   return c.json(
     runs.results.map((run) => ({
       id: run.id,
       version: run.version,
+      services: JSON.parse(run.services) as string[],
       createdAt: new Date(run.created_at * 1000).toISOString(),
-      finished: run.finished_at !== null,
+      finishedAt: run.finished_at ? new Date(run.finished_at * 1000).toISOString() : null,
+      total: planned.get(run.id) ?? 0,
+      counts: {
+        passed: count(run.id, 'passed'),
+        failed: count(run.id, 'failed'),
+        timedOut: count(run.id, 'timed_out'),
+        error: count(run.id, 'error'),
+      },
     })),
   )
 }

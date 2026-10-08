@@ -240,6 +240,114 @@ describe('POST /api/runs/:id/lanes/:lane/next', () => {
   })
 })
 
+type Listed = {
+  id: string
+  version: string
+  services: string[]
+  createdAt: string
+  finishedAt: string | null
+  total: number
+  counts: { passed: number; failed: number; timedOut: number; error: number }
+}
+
+const listRuns = async (cookie: string) =>
+  (await callApi('/runs', { headers: { cookie } })).json<Listed[]>()
+
+async function runToTheEnd(cookie: string, version: string, services: string[]) {
+  const run = await (await createRun(cookie, { version, services })).json<RunView>()
+  for (const lane of run.lanes) await driveLane(cookie, run.id, lane.lane)
+  return run
+}
+
+describe('GET /api/runs', () => {
+  it('lists the runs of the session, newest first, each with what it planned and how it ended', async () => {
+    const { cookie } = await startSession()
+    const first = await runToTheEnd(cookie, 'correct', ['earn'])
+    const second = await runToTheEnd(cookie, 'double-earn', ['earn'])
+
+    const listed = await listRuns(cookie)
+    expect(listed.map((r) => r.id)).toEqual([second.id, first.id])
+    expect(listed[0]).toMatchObject({
+      version: 'double-earn',
+      services: ['earn'],
+      total: 4,
+      counts: { passed: 3, failed: 1, timedOut: 0, error: 0 },
+    })
+    expect(listed[1]).toMatchObject({
+      version: 'correct',
+      total: 4,
+      counts: { passed: 4, failed: 0, timedOut: 0, error: 0 },
+    })
+    for (const run of listed) {
+      expect(Date.parse(run.createdAt)).not.toBeNaN()
+      expect(Date.parse(run.finishedAt!)).not.toBeNaN()
+    }
+  })
+
+  it('says a run that is still going has not finished, and counts what has ended so far', async () => {
+    const { cookie } = await startSession()
+    const run = await (
+      await createRun(cookie, { version: 'correct', services: ['earn'] })
+    ).json<RunView>()
+    await driveLane(cookie, run.id, 'read') // the other lane is left alone
+    const [listed] = await listRuns(cookie)
+    expect(listed!.finishedAt).toBeNull()
+    expect(listed!.total).toBe(4)
+    expect(listed!.counts.passed).toBe(1)
+  })
+
+  it('counts a run nothing has been asked of as planned and not ended', async () => {
+    const { cookie } = await startSession()
+    await createRun(cookie, { version: 'correct', services: ['earn'] })
+    const [listed] = await listRuns(cookie)
+    expect(listed).toMatchObject({
+      total: 4,
+      counts: { passed: 0, failed: 0, timedOut: 0, error: 0 },
+      finishedAt: null,
+    })
+  })
+
+  it('counts a timeout and an error each on their own, apart from a failure', async () => {
+    const { cookie } = await startSession()
+    const run = await (
+      await createRun(cookie, { version: 'correct', services: ['earn'] })
+    ).json<RunView>()
+    const insert = env.DB.prepare(
+      'INSERT INTO run_results (run_id, case_id, lane, status, result, finished_at) VALUES (?, ?, ?, ?, ?, 1)',
+    )
+    await env.DB.batch(
+      (['timed_out', 'timed_out', 'error', 'failed'] as const).map((status, i) =>
+        insert.bind(run.id, `x/${i}`, 'A', status, '{}'),
+      ),
+    )
+    const [listed] = await listRuns(cookie)
+    expect(listed!.counts).toEqual({ passed: 0, failed: 1, timedOut: 2, error: 1 })
+  })
+
+  it('lists only the runs of the session asking', async () => {
+    const mine = await startSession()
+    const theirs = await startSession()
+    await runToTheEnd(mine.cookie, 'correct', ['earn'])
+    expect(await listRuns(theirs.cookie)).toEqual([])
+    const second = await runToTheEnd(theirs.cookie, 'off-by-one', ['earn'])
+    expect((await listRuns(theirs.cookie)).map((r) => r.id)).toEqual([second.id])
+    expect(await listRuns(mine.cookie)).toHaveLength(1)
+  })
+
+  it('does not count another session’s results in a run that has the same case ids', async () => {
+    const a = await startSession()
+    const b = await startSession()
+    await runToTheEnd(a.cookie, 'double-earn', ['earn'])
+    await runToTheEnd(b.cookie, 'correct', ['earn'])
+    expect((await listRuns(a.cookie))[0]!.counts.failed).toBe(1)
+    expect((await listRuns(b.cookie))[0]!.counts.failed).toBe(0)
+  })
+
+  it('needs a session', async () => {
+    expect((await callApi('/runs')).status).toBe(401)
+  })
+})
+
 describe('giving points back', () => {
   it('keeps the debt when a restore cannot reach it, and pays it on a later run', async () => {
     const { cookie } = await startSession()

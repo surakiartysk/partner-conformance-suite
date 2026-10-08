@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository but one has been made to fail by at least one row below (the exception is named under "The page"):
-the 106 in `packages/partner`, the 19 in `packages/cases`, the 120 in `packages/api` and the 243 in `packages/ui`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases`, the 127 in `packages/api` and the 243 in `packages/ui`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -671,6 +671,33 @@ so is checked as text, not as a rendered size.
 | 505 | A sign-in word on the page                        | home.test.tsx: the Home page > says there is no sign-up, and what a visitor gets                                            | `expected '<div class="entry"><div class="mark" …' to contain 'No sign-up.'`                   |
 | 506 | The controls small for a finger                   | page-security.test.ts: the stylesheet > makes the controls at least 44 px tall for a finger                                 | `expected '/*\n * The dashboard\'s palette and t…' to match /@media \(pointer: coarse\)\s*\`   |
 | 507 | The page invites an address                       | home.test.tsx: the Home page > says there is no sign-up, and what a visitor gets                                            | `expected '<div class="entry"><div class="mark" …' to contain 'No sign-up.'`                   |
+
+### The list of runs
+
+14 breaks in `GET /api/runs`, which now says for each run what it planned and how it ended.
+Two caveats. The tie-break (runs created in the same second) is only caught when two runs do land in
+the same second, which on a slower machine they might not; it was caught here. And one run of these
+went wrong in a way that is worth recording: two batches of mutations were running at once, each
+editing `runs.ts`, and one restored the file to the other's mutation. It was found because the next
+batch refused to start with a baseline that was not green, and the file was rebuilt from `HEAD` plus
+the change before any of the rows below were taken.
+
+| #   | Mutation                                       | Caught by                                                                                                                       | Failure                                                                                      |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 508 | The runs of every session listed               | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected [] to deeply equal [ 'run_a96fa229e509440fb0a7', …(1) ]`                           |
+| 509 | The lanes of every session read                | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
+| 510 | The results of every session counted           | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
+| 511 | Oldest first                                   | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected [ 'run_88bf7cfd6baa4ed69bb1', …(1) ] to deeply equal [ 'run_4d9e26e999634deca6d9'` |
+| 512 | Runs from one second in the wrong order        | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected [ 'run_015e4ffdb22d4b079192', …(1) ] to deeply equal [ 'run_b9150d9b924a47938ae5'` |
+| 513 | Only the last lane's cases counted as planned  | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
+| 514 | Failures counted as passes                     | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
+| 515 | Timeouts counted as errors                     | runs.test.ts: GET /api/runs > counts a timeout and an error each on their own, apart from a failure                             | `expected { passed: +0, failed: 1, …(2) } to deeply equal { passed: +0, failed: 1, …(2) }`   |
+| 516 | Errors counted as failures                     | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
+| 517 | A run never finished                           | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected NaN not to be NaN`                                                                 |
+| 518 | The services left out                          | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
+| 519 | Another run's results counted                  | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'correct', total: 4, …(1` |
+| 520 | Nothing planned counted when a lane is missing | runs.test.ts: GET /api/runs > lists the runs of the session, newest first, each with what it planned and how it ended           | `expected { Object (id, version, ...) } to match object { version: 'double-earn', …(3) }`    |
+| 521 | The list of runs open to anyone                | runs.test.ts: POST /api/runs/:id/lanes/:lane/next > answers 404 for another session’s run, and for a lane the run does not have | `expected 500 to be 401 // Object.is equality`                                               |
 
 ## Tests that could not fail, found on the way
 

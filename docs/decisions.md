@@ -782,3 +782,19 @@ now, and a test fails if one appears.
 the cookie is gone: the secret shown once and the runs of that session cannot be recovered. A
 session ends a day after it starts, and a visitor who loses it starts again. The controls are 44 px
 tall on a touch screen and 40 px elsewhere, which is two sizes to keep in step.
+
+## 36. A list of runs says how each one ended, and is counted by the server
+
+`GET /api/runs` returned each run's id, version and whether it had finished. A history
+page needs more, and counting in the browser would mean fetching every run in full, with
+every step of every case, to add up statuses. The list now carries what each run planned
+(the cases in its lanes), the services chosen, when it started and ended, and how many cases
+passed, failed, timed out or ended in error so far. Three reads, each scoped to the session in
+SQL; none looks a run up by its id alone (decision 22). Newest first, with the row id as the
+tie-break so two runs in one second keep their order.
+
+**Cost.** Three queries where there was one, and an aggregate that reads every result of the
+session's runs. A session has at most twenty runs an hour for a day, a few hundred rows, so it
+is cheap here; it is not a design for a long history. The counts are of the results recorded
+so far, so a run in progress shows a part, and one a visitor abandoned stays at the part it
+reached. `finished` (a boolean) became `finishedAt`: nothing read it.
