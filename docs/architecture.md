@@ -109,11 +109,10 @@ them, and ids older than the memory window ([decision 26](decisions.md#26-the-pa
 
 ## Not built yet
 
-- **The history of runs.** Home, Connection, Run and the result of a run exist:
-  a visitor can start a session, run a version, and open any case to read the
-  request, the answer and what was expected. Nothing lists the runs of a session,
-  so a result can be reached only from the run that has just ended or by its
-  address. Stage 5.
+- **End-to-end tests and a deployment.** Everything above is reachable in a
+  browser and nothing drives one on every change, so what the unit tests cannot see
+  (a layout, a policy refusing a font) is found by looking. Nothing is deployed.
+  Stage 6.
 - **Testing a partner of your own.** The design has a self-hosted mode in which
   a partner enters its own base URL, behind a guard against server-side request
   forgery. The deployed suite only ever tests the reference partner; nothing

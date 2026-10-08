@@ -17,6 +17,7 @@ describe('the page chrome', () => {
   it('marks the page you are on as the current one, and only that one', () => {
     expect(current(render({ page: 'connection' }))).toEqual(['/connection'])
     expect(current(render({ page: 'run' }))).toEqual(['/run'])
+    expect(current(render({ page: 'history' }))).toEqual(['/history'])
     expect(current(render({ page: 'home' }))).toEqual(['/'])
   })
 
@@ -35,8 +36,10 @@ describe('the page chrome', () => {
     const without = render({ page: 'home' }, false)
     expect(without).not.toContain('href="/connection"')
     expect(without).not.toContain('href="/run"')
+    expect(without).not.toContain('href="/history"')
     const withSession = render({ page: 'home' }, true)
     expect(withSession).toContain('href="/connection"')
     expect(withSession).toContain('href="/run"')
+    expect(withSession).toContain('href="/history"')
   })
 })

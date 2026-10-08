@@ -22,7 +22,7 @@ the suite put the points back.
 - **Connection** (built): where the partner is and the one-time secret.
 - **Run**: choose a partner version and services, press Run, watch three lanes.
 - **Result**: one verdict, then the evidence for every case that did not pass.
-- **History**: this session's runs, to compare versions.
+- **History**: this session's runs, each a link to its result.
 
 ## Principles, carried from the dashboard and kept
 
@@ -134,4 +134,4 @@ the suite put the points back.
    what was wrong. A "pick one for me" option that hides the name remains an idea, not built.
 2. **Default version.** Decided: a wrong one is preselected (`double-earn`), so a first run shows a
    red case within a minute.
-3. **History** is not drawn yet; it is a table of runs with the version and the counts. Still open.
+3. **History.** Built without a mockup, as a list of cards rather than a table (decision 37).

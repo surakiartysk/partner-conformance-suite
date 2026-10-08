@@ -12,6 +12,7 @@ const LINKS = [
   { page: 'home', label: 'Home' },
   { page: 'connection', label: 'Connection' },
   { page: 'run', label: 'Run' },
+  { page: 'history', label: 'History' },
 ] as const
 
 /** A link that navigates in the page, and still works as a link when opened in a new tab. */

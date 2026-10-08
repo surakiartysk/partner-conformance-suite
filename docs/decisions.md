@@ -782,3 +782,37 @@ now, and a test fails if one appears.
 the cookie is gone: the secret shown once and the runs of that session cannot be recovered. A
 session ends a day after it starts, and a visitor who loses it starts again. The controls are 44 px
 tall on a touch screen and 40 px elsewhere, which is two sizes to keep in step.
+
+## 36. A list of runs says how each one ended, and is counted by the server
+
+`GET /api/runs` returned each run's id, version and whether it had finished. A history
+page needs more, and counting in the browser would mean fetching every run in full, with
+every step of every case, to add up statuses. The list now carries what each run planned
+(the cases in its lanes), the services chosen, when it started and ended, and how many cases
+passed, failed, timed out or ended in error so far. Three reads, each scoped to the session in
+SQL; none looks a run up by its id alone (decision 22). Newest first, with the row id as the
+tie-break so two runs in one second keep their order.
+
+**Cost.** Three queries where there was one, and an aggregate that reads every result of the
+session's runs. A session has at most twenty runs an hour for a day, a few hundred rows, so it
+is cheap here; it is not a design for a long history. The counts are of the results recorded
+so far, so a run in progress shows a part, and one a visitor abandoned stays at the part it
+reached. `finished` (a boolean) became `finishedAt`: nothing read it.
+
+## 37. The history is a list of links, newest first, drawn without a mockup
+
+The runs of a session are listed newest first, each a link to its result: the version, how
+long ago, what ended how, the services and the size. What did not pass is named kind by
+kind and drawn the way it is everywhere else, so a timeout is amber and a failure red. A
+run that is not over says so and how far it got, and is never called a pass; a run that
+planned nothing is not called one either. With no runs there is an invitation to run.
+
+This page was built from the pattern of the others and was not mocked first. The brief had
+left it open (it said "a table of runs"), and a list of cards reads better on a phone than
+a table of four columns would, so it is not a table.
+
+**Cost.** There is no comparing of versions here, which is what a history is for: two runs
+are two links. Runs are listed only for the session that made them, and a session lasts a
+day, so this is the history of an afternoon, not a record. "How long ago" is rounded down
+and goes stale until the page is read again. A run a visitor abandoned stays "not finished"
+at the part it reached until the session ends.

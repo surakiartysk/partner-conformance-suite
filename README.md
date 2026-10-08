@@ -46,10 +46,10 @@ Built in stages. Done so far:
   balances, a Run page (choose a version of the partner and the services, press
   Run, watch the three lanes), and the result of a run: the verdict, each case that
   did not pass with what did not match, the request that was sent and what came
-  back beside what was expected, and what was wrong with the version. The history of
-  runs is not built yet.
+  back beside what was expected, and what was wrong with the version; and the
+  history of the session's runs.
 
-Next: the history of runs.
+Next: end-to-end tests in a real browser, and deployment.
 
 ## Layout
 

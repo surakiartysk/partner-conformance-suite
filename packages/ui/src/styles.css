@@ -764,3 +764,35 @@ details.setup .step {
     margin-bottom: 8px;
   }
 }
+
+/* ── the history of runs ─────────────────────────────────────────────────── */
+.runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.run-row {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  min-height: 44px;
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--t1);
+  text-decoration: none;
+}
+.run-row:hover {
+  background: var(--hover);
+}
+.run-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.run-row .counts {
+  margin: 0;
+}
