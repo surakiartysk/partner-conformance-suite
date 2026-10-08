@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository but one has been made to fail by at least one row below (the exception is named under "The page"):
-the 106 in `packages/partner`, the 19 in `packages/cases`, the 114 in `packages/api` and the 137 in `packages/ui`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases`, the 120 in `packages/api` and the 137 in `packages/ui`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -496,6 +496,21 @@ nothing) is true of an empty list. The explicit return stays for the reader and 
 | 373 | Fonts allowed from another origin               | page-security.test.ts: the page headers > allow scripts and styles from the page itself and nothing inline                                  | `expected '{"default-src":["\'none\'"],"script-s…' not to match /unsafe-\|\*\|https?:/`      |
 | 374 | A run with no member lane called given back     | progress.test.ts: pointsGivenBack > says none moved when the run had no member lane                                                         | `expected 'all' to be 'none-moved' // Object.is equality`                                    |
 | 375 | A finished lane forgets its restore             | progress.test.ts: the progress of a run > shows no case running once the lane is done                                                       | `expected null to deeply equal { status: 'restored', target: 1000 }`                         |
+
+### The versions
+
+| #   | Mutation                                 | Caught by                                                                                                      | Failure                                                                                                            |
+| --- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 376 | A bug described in other words           | the version data: says what the document says for each version, in both directions                             | `expected { …, bug: 'checks the signature but ignores the clock' } to deeply equal { …}`                           |
+| 377 | A case the version must fail left out    | the same                                                                                                       | the same                                                                                                           |
+| 378 | A case that does not exist named         | the same; names only cases that exist                                                                          | the same                                                                                                           |
+| 379 | `slow-balance`'s status read as `failed` | the same                                                                                                       | the same                                                                                                           |
+| 380 | An extra entry among the versions        | the version data: names every version the partner serves, once, in the order the API lists them                | `expected [ 'correct', 'overdraws-placeholder', …(12) ] to deeply equal [ 'correct', 'ignores-signature', …(11) ]` |
+| 381 | The right version given a bug            | the version data: says what the document says…; has a status for exactly the versions that must fail something | `expected 'nothing' to be 'none'`                                                                                  |
+| 382 | A version left out of the data           | the version data: names every version the partner serves…; says what the document says…                        | `expected [ …(12) ] to deeply equal [ …(13) ]`                                                                     |
+| 383 | The route not registered                 | GET /api/versions: serves the data without needing a session                                                   | `expected 404 to be 200`                                                                                           |
+| 384 | The list behind a session                | the same                                                                                                       | `expected 401 to be 200`                                                                                           |
+| 385 | `Cache-Control` left off                 | GET /api/versions: carries the same security headers as every other answer                                     | `expected null to be 'no-store'`                                                                                   |
 
 ## Tests that could not fail, found on the way
 
