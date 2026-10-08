@@ -230,8 +230,6 @@ test('when a run ends it is said, for someone who cannot see the page', async ()
   await page.goto('/run')
   const status = page.locator('.sr-only[role="status"]')
   await expect(status).toHaveText('')
-  const said = (await status.boundingBox())!
-  expect(said.width, 'what is only said is not drawn').toBeLessThanOrEqual(1)
   await page.getByRole('button', { name: 'None' }).click()
   await page.getByRole('button', { name: 'Show the earn cases' }).click()
   await page
@@ -241,6 +239,9 @@ test('when a run ends it is said, for someone who cannot see the page', async ()
   await expect(status).toHaveText(/^1 of 1 case did not pass\. Points given back\./, {
     timeout: 60_000,
   })
+  // Said, and not drawn: once it has words in it, it is still no wider than a pixel.
+  const said = (await status.boundingBox())!
+  expect(said.width, 'what is only said is not drawn').toBeLessThanOrEqual(1)
 })
 
 test('on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press', async ({
