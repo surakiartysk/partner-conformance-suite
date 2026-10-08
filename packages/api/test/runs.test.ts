@@ -38,11 +38,16 @@ type RunView = {
     restore: { status: string } | null
   }[]
   results: { caseId: string; status: string }[]
+  services: string[]
 }
 
-async function newRun(version = 'correct', services?: string[]) {
+async function newRun(version = 'correct', services?: string[], cases?: string[]) {
   const { cookie, body: session } = await startSession()
-  const response = await createRun(cookie, { version, ...(services ? { services } : {}) })
+  const response = await createRun(cookie, {
+    version,
+    ...(services ? { services } : {}),
+    ...(cases ? { cases } : {}),
+  })
   expect(response.status).toBe(201)
   return { cookie, session, run: await response.json<RunView>() }
 }
@@ -67,6 +72,60 @@ describe('POST /api/runs', () => {
     const { run } = await newRun('correct', ['earn'])
     expect(run.lanes.map((l) => l.lane)).toEqual(['A', 'read'])
     expect(run.lanes.flatMap((l) => l.cases).every((id) => id.startsWith('earn/'))).toBe(true)
+  })
+
+  it('plans the cases named, and only those', async () => {
+    const some = [
+      CASES.find((c) => c.service === 'redeem')!,
+      CASES.find((c) => c.service === 'security')!,
+    ]
+    const { run } = await newRun(
+      'correct',
+      undefined,
+      some.map((c) => c.id),
+    )
+    expect(run.lanes.flatMap((l) => l.cases).sort()).toEqual(some.map((c) => c.id).sort())
+    expect(run.services.sort()).toEqual(['redeem', 'security'])
+  })
+
+  it('plans one case alone, in the one lane it belongs to', async () => {
+    const one = CASES.find((c) => c.member === 'A' && c.writes)!
+    const { run } = await newRun('correct', undefined, [one.id])
+    expect(run.lanes.map((l) => [l.lane, l.cases])).toEqual([['A', [one.id]]])
+  })
+
+  it('plans the cases named in the order they are defined, whatever order they were named in', async () => {
+    const named = CASES.filter((c) => c.service === 'earn').map((c) => c.id)
+    expect(named.length).toBeGreaterThan(1)
+    const { run } = await newRun('correct', undefined, [...named].reverse())
+    const planned = run.lanes.flatMap((l) => l.cases)
+    const lanes = planLanes(CASES.filter((c) => named.includes(c.id)))
+    expect(run.lanes.map((l) => [l.lane, l.cases])).toEqual(
+      [
+        ['A', lanes.members.A.map((c) => c.id)],
+        ['B', lanes.members.B.map((c) => c.id)],
+        ['read', lanes.readOnly.map((c) => c.id)],
+      ].filter(([, ids]) => (ids as string[]).length > 0),
+    )
+    expect(planned.sort()).toEqual([...named].sort())
+  })
+
+  it('refuses cases that are none, unknown, repeated or not a list, and naming both ways', async () => {
+    const { cookie } = await startSession()
+    const id = CASES[0]!.id
+    const refused = async (extra: Record<string, unknown>) =>
+      (await createRun(cookie, { version: 'correct', ...extra })).status
+    expect(await refused({ cases: [] })).toBe(400)
+    expect(await refused({ cases: ['earn/nothing-like-it'] })).toBe(400)
+    expect(await refused({ cases: [id, id] })).toBe(400)
+    expect(await refused({ cases: id })).toBe(400)
+    // Not a list either, and not caught by the checks after it: a string of letters
+    // that do not repeat has nothing wrong with it as a set, and an object has no length.
+    expect(await refused({ cases: 'abc' })).toBe(400)
+    expect(await refused({ cases: {} })).toBe(400)
+    expect(await refused({ cases: [id, 7] })).toBe(400)
+    expect(await refused({ cases: [id], services: ['earn'] })).toBe(400)
+    expect(await refused({ cases: [id] })).toBe(201)
   })
 
   it('refuses a version not on the list — including ones shaped like paths and URLs', async () => {

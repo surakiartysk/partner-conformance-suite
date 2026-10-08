@@ -66,6 +66,22 @@ describe('Status', () => {
   })
 })
 
+const pick = (id: string, service: string, name: string): CaseInfo => ({
+  id,
+  service,
+  name,
+  description: '',
+  member: 'A',
+  writes: false,
+})
+const groups = [
+  { service: 'security', cases: [pick('s/1', 'security', 'Signed is accepted')] },
+  {
+    service: 'earn',
+    cases: [pick('e/1', 'earn', 'Earning adds'), pick('e/2', 'earn', 'Earning twice adds once')],
+  },
+]
+
 describe('the Run form', () => {
   type Props = Parameters<typeof RunForm>[0]
   const render = (o: Partial<Props> = {}) =>
@@ -74,10 +90,12 @@ describe('the Run form', () => {
         versions={['correct', 'double-earn']}
         version="double-earn"
         onVersion={() => {}}
-        services={['security', 'earn']}
-        allServices={['security', 'earn', 'redeem']}
-        onToggleService={() => {}}
-        caseCount={14}
+        groups={groups}
+        selected={['s/1', 'e/1']}
+        onToggleCase={() => {}}
+        onToggleGroup={() => {}}
+        onAll={() => {}}
+        onNone={() => {}}
         onSubmit={() => {}}
         busy={false}
         problem={null}
@@ -99,28 +117,47 @@ describe('the Run form', () => {
     expect(html).not.toContain('ignores')
   })
 
-  it('shows each service as a checkbox, the chosen ones checked', () => {
+  it('shows each service as a group and each case under it, the chosen ones checked', () => {
     const html = render()
-    expect(html.match(/type="checkbox"/g)).toHaveLength(3)
+    // two groups and three cases
+    expect(html.match(/type="checkbox"/g)).toHaveLength(5)
+    expect(html).toContain('Earning twice adds once')
+    expect(html).toContain('>e/2<')
     expect(html.match(/type="checkbox" checked/g)).toHaveLength(2)
   })
 
-  it('puts the number of cases on the button, and says case when there is one', () => {
-    expect(render({ caseCount: 14 })).toContain('Run 14 cases')
-    expect(render({ caseCount: 1 })).toContain('Run 1 case<')
+  it('counts the cases chosen, of all of them', () => {
+    expect(render()).toContain('2 of 3 chosen')
   })
 
-  it('cannot be submitted with no service chosen, and says why', () => {
-    const html = render({ services: [], caseCount: 0 })
+  it('puts the number of cases chosen on the button, and says case when there is one', () => {
+    expect(render({ selected: ['s/1', 'e/1'] })).toContain('Run 2 cases')
+    expect(render({ selected: ['e/2'] })).toContain('Run 1 case<')
+  })
+
+  it('has All and None, each unavailable when it would change nothing', () => {
+    const everything = render({ selected: ['s/1', 'e/1', 'e/2'] })
+    expect(everything).toMatch(/<button type="button" disabled=""[^>]*>All</)
+    expect(everything).toMatch(/<button type="button"(?! disabled)[^>]*>None</)
+    const nothing = render({ selected: [] })
+    expect(nothing).toMatch(/<button type="button" disabled=""[^>]*>None</)
+    expect(nothing).toMatch(/<button type="button"(?! disabled)[^>]*>All</)
+    const some = render({ selected: ['e/1'] })
+    expect(some).toMatch(/<button type="button"(?! disabled)[^>]*>All</)
+    expect(some).toMatch(/<button type="button"(?! disabled)[^>]*>None</)
+  })
+
+  it('cannot be submitted with no case chosen, and says why', () => {
+    const html = render({ selected: [] })
     expect(html).toMatch(/<button[^>]*disabled[^>]*>Run 0 cases/)
-    expect(html).toContain('Choose at least one service')
+    expect(html).toContain('Choose at least one case')
   })
 
   it('locks every control while a run is going', () => {
     const html = render({ busy: true })
     expect(html).toMatch(/<button[^>]*disabled[^>]*>Running…/)
     expect(html.match(/type="radio"[^>]*disabled/g)).toHaveLength(2)
-    expect(html.match(/type="checkbox"[^>]*disabled/g)).toHaveLength(3)
+    expect(html.match(/type="checkbox"[^>]*disabled/g)).toHaveLength(5)
   })
 
   it('says why starting failed, as an alert', () => {
@@ -130,7 +167,7 @@ describe('the Run form', () => {
   it('keeps the submit button and the reason it failed together at the foot of the form', () => {
     const html = render({ problem: 'Too many runs.' })
     expect(html).toMatch(
-      /<div class="form-actions"><button type="submit"[^>]*>Run 14 cases<\/button><p role="alert"[^>]*>Too many runs\.<\/p><\/div><\/form>/,
+      /<div class="form-actions"><button type="submit"[^>]*>Run 2 cases<\/button><p role="alert"[^>]*>Too many runs\.<\/p><\/div><\/form>/,
     )
   })
 

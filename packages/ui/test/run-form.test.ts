@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 import type { CaseInfo } from '../src/api'
 import {
   canSubmit,
-  casesFor,
+  chooseCases,
   defaultVersion,
+  groupCases,
+  groupState,
   orderVersions,
-  servicesOf,
-  toggleService,
+  toggleCase,
 } from '../src/run-form'
 
 const c = (id: string, service: string): CaseInfo => ({
@@ -19,22 +20,44 @@ const c = (id: string, service: string): CaseInfo => ({
 })
 const cases = [c('s/1', 'security'), c('e/1', 'earn'), c('e/2', 'earn'), c('r/1', 'redeem')]
 
-describe('services', () => {
-  it('are the services the cases name, once each, in the order they first appear', () => {
-    expect(servicesOf(cases)).toEqual(['security', 'earn', 'redeem'])
+const ids = cases.map((x) => x.id)
+
+describe('groups', () => {
+  it('hold the cases of each service, services in the order they first appear', () => {
+    expect(groupCases(cases).map((g) => [g.service, g.cases.map((x) => x.id)])).toEqual([
+      ['security', ['s/1']],
+      ['earn', ['e/1', 'e/2']],
+      ['redeem', ['r/1']],
+    ])
   })
 
-  it('choose the cases a run would plan', () => {
-    expect(casesFor(cases, ['earn']).map((x) => x.id)).toEqual(['e/1', 'e/2'])
-    expect(casesFor(cases, ['earn', 'security']).map((x) => x.id)).toEqual(['s/1', 'e/1', 'e/2'])
-    expect(casesFor(cases, [])).toEqual([])
+  it('gather a service whose cases are not listed together', () => {
+    const apart = [c('e/1', 'earn'), c('s/1', 'security'), c('e/2', 'earn')]
+    expect(groupCases(apart).map((g) => g.cases.map((x) => x.id))).toEqual([
+      ['e/1', 'e/2'],
+      ['s/1'],
+    ])
+  })
+})
+
+describe('choosing cases', () => {
+  it('toggles one case on and off, and keeps the list order whatever order they were chosen in', () => {
+    expect(toggleCase(['r/1'], ids, 's/1')).toEqual(['s/1', 'r/1'])
+    expect(toggleCase(['s/1', 'e/1'], ids, 's/1')).toEqual(['e/1'])
+    expect(toggleCase(['e/1'], ids, 'e/1')).toEqual([])
   })
 
-  it('toggle on and off, and stay in the cases order whatever order they were chosen in', () => {
-    const all = ['security', 'earn', 'redeem']
-    expect(toggleService(['earn'], all, 'security')).toEqual(['security', 'earn'])
-    expect(toggleService(['security', 'earn'], all, 'security')).toEqual(['earn'])
-    expect(toggleService(['earn'], all, 'earn')).toEqual([])
+  it('turns a group on without touching the rest, and off the same way', () => {
+    expect(chooseCases(['r/1'], ids, ['e/1', 'e/2'], true)).toEqual(['e/1', 'e/2', 'r/1'])
+    expect(chooseCases(['e/1', 'r/1'], ids, ['e/1', 'e/2'], true)).toEqual(['e/1', 'e/2', 'r/1'])
+    expect(chooseCases(['s/1', 'e/1', 'e/2'], ids, ['e/1', 'e/2'], false)).toEqual(['s/1'])
+  })
+
+  it('says whether a group is all chosen, some, or none', () => {
+    expect(groupState(['e/1', 'e/2'], ['e/1', 'e/2'])).toBe('all')
+    expect(groupState(['e/1'], ['e/1', 'e/2'])).toBe('some')
+    expect(groupState(['s/1'], ['e/1', 'e/2'])).toBe('none')
+    expect(groupState([], ['e/1'])).toBe('none')
   })
 })
 
@@ -62,10 +85,10 @@ describe('versions', () => {
 })
 
 describe('canSubmit', () => {
-  it('needs a service chosen and no run going', () => {
-    expect(canSubmit(['earn'], false)).toBe(true)
-    expect(canSubmit([], false)).toBe(false)
-    expect(canSubmit(['earn'], true)).toBe(false)
-    expect(canSubmit([], true)).toBe(false)
+  it('needs a case chosen and no run going', () => {
+    expect(canSubmit(1, false)).toBe(true)
+    expect(canSubmit(0, false)).toBe(false)
+    expect(canSubmit(1, true)).toBe(false)
+    expect(canSubmit(0, true)).toBe(false)
   })
 })

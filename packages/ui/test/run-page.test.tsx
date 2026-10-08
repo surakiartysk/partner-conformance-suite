@@ -23,8 +23,9 @@ const CASES = [
   caseInfo('earn/duplicate-reference', 'earn', 'Earning twice adds the points once'),
 ]
 
-function runView(services: string[], version: string): RunView {
-  const chosen = CASES.filter((c) => services.includes(c.service))
+function runView(ids: string[], version: string): RunView {
+  const chosen = CASES.filter((c) => ids.includes(c.id))
+  const services = [...new Set(chosen.map((c) => c.service))]
   const read = chosen.filter((c) => !c.writes).map((c) => c.id)
   const a = chosen.filter((c) => c.writes).map((c) => c.id)
   return {
@@ -53,16 +54,16 @@ function fakeClient(
     hold?: boolean
   } = {},
 ) {
-  const created: { version: string; services: string[] }[] = []
+  const created: { version: string; cases: string[] }[] = []
   const asked: string[] = []
   const queues = new Map<string, string[]>()
   const waiters: (() => void)[] = []
   const client = {
     listCases: async () => CASES,
-    createRun: async (version: string, services: string[]) => {
-      created.push({ version, services })
+    createRun: async (version: string, cases: string[]) => {
+      created.push({ version, cases })
       if (options.failCreate) throw options.failCreate
-      const run = runView(services, version)
+      const run = runView(cases, version)
       for (const lane of run.lanes) queues.set(lane.lane, [...lane.cases])
       return run
     },
@@ -125,20 +126,76 @@ describe('the Run page', () => {
     expect(screen.queryByRole('radio')).toBeNull()
   })
 
-  it('starts a run with the chosen version and services, and shows each lane to the end', async () => {
+  it('starts a run with the chosen version and cases, and shows each lane to the end', async () => {
     const user = userEvent.setup()
     const { client, created } = fakeClient({ failing: ['earn/duplicate-reference'] })
     renderPage(client)
     await user.click(await screen.findByRole('radio', { name: /off-by-one/ }))
-    await user.click(screen.getByRole('checkbox', { name: 'security' })) // off
+    await user.click(screen.getByRole('checkbox', { name: /^security/ })) // the whole group, off
     await user.click(screen.getByRole('button', { name: 'Run 2 cases' }))
 
     await waitFor(() => expect(screen.getByText('1 of 2 cases did not pass')).toBeTruthy())
-    expect(created).toEqual([{ version: 'off-by-one', services: ['earn'] }])
+    expect(created).toEqual([
+      { version: 'off-by-one', cases: ['earn/adds-points', 'earn/duplicate-reference'] },
+    ])
     expect(screen.getByText('✕ 1 failed')).toBeTruthy()
     expect(
       screen.getByText('Points given back. Both members are at their starting balances.'),
     ).toBeTruthy()
+  })
+
+  describe('choosing cases', () => {
+    const box = (name: RegExp) => screen.getByRole('checkbox', { name }) as HTMLInputElement
+
+    it('runs exactly the cases ticked, one case alone included', async () => {
+      const user = userEvent.setup()
+      const { client, created } = fakeClient()
+      renderPage(client)
+      await user.click(await screen.findByRole('button', { name: 'None' }))
+      await user.click(box(/Earning twice adds the points once/))
+      await user.click(screen.getByRole('button', { name: 'Run 1 case' }))
+      await waitFor(() => expect(created).toHaveLength(1))
+      expect(created[0]!.cases).toEqual(['earn/duplicate-reference'])
+    })
+
+    it('unticking one case of a group leaves the others, and the group shows it is partly chosen', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient()
+      renderPage(client)
+      await user.click(await screen.findByRole('checkbox', { name: /Earning adds exactly/ }))
+      expect(box(/Earning adds exactly/).checked).toBe(false)
+      expect(box(/Earning twice adds/).checked).toBe(true)
+      const group = box(/^earn/)
+      expect(group.checked).toBe(false)
+      expect(group.indeterminate).toBe(true)
+      expect(screen.getByRole('button', { name: 'Run 2 cases' })).toBeTruthy()
+    })
+
+    it('turns a whole group on from partly chosen, and off from all chosen', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient()
+      renderPage(client)
+      await user.click(await screen.findByRole('checkbox', { name: /Earning adds exactly/ }))
+      await user.click(box(/^earn/)) // some → all
+      expect(box(/Earning adds exactly/).checked).toBe(true)
+      expect(box(/^earn/).checked).toBe(true)
+      expect(box(/^earn/).indeterminate).toBe(false)
+      await user.click(box(/^earn/)) // all → none
+      expect(box(/Earning adds exactly/).checked).toBe(false)
+      expect(box(/Earning twice adds/).checked).toBe(false)
+      expect(box(/A correctly signed/).checked).toBe(true) // another group, untouched
+    })
+
+    it('has All and None, which say how many are chosen', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient()
+      renderPage(client)
+      expect(await screen.findByText('3 of 3 chosen')).toBeTruthy()
+      await user.click(screen.getByRole('button', { name: 'None' }))
+      expect(screen.getByText('0 of 3 chosen')).toBeTruthy()
+      await user.click(screen.getByRole('button', { name: 'All' }))
+      expect(screen.getByText('3 of 3 chosen')).toBeTruthy()
+    })
   })
 
   it('locks the form while the run goes, and frees it when it is over', async () => {
@@ -178,14 +235,12 @@ describe('the Run page', () => {
     ).toBe(false)
   })
 
-  it('cannot start with no service chosen', async () => {
+  it('cannot start with no case chosen', async () => {
     const user = userEvent.setup()
     const { client, created } = fakeClient()
     renderPage(client)
-    for (const name of ['security', 'earn']) {
-      await user.click(await screen.findByRole('checkbox', { name }))
-    }
-    expect(screen.getByText('Choose at least one service.')).toBeTruthy()
+    await user.click(await screen.findByRole('button', { name: 'None' }))
+    expect(screen.getByText('Choose at least one case.')).toBeTruthy()
     const button = screen.getByRole('button', { name: 'Run 0 cases' }) as HTMLButtonElement
     expect(button.disabled).toBe(true)
     await user.click(button)

@@ -43,7 +43,7 @@ Built in stages. Done so far:
 - **The page** — [`packages/ui`](packages/ui), served by the same Worker as
   the API: a home page that is one card and one button (no sign-in) and starts a session, a Connection page with the
   partner's address, the signing secret (shown once) and the test members'
-  balances, a Run page (choose a version of the partner and the services, press
+  balances, a Run page (choose a version of the partner and the cases, by group or one by one, press
   Run, watch the three lanes), and the result of a run: the verdict, each case that
   did not pass with what did not match, the request that was sent and what came
   back beside what was expected, and what was wrong with the version; and the

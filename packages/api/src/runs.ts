@@ -63,7 +63,7 @@ async function findRun(c: Context<Env>, id: string): Promise<RunRow | null> {
 }
 
 export async function createRun(c: Context<Env>): Promise<Response> {
-  let body: { version?: unknown; services?: unknown }
+  let body: { version?: unknown; services?: unknown; cases?: unknown }
   try {
     body = await c.req.json()
   } catch {
@@ -72,15 +72,39 @@ export async function createRun(c: Context<Env>): Promise<Response> {
   const { version } = body
   if (!isPartnerVersion(version)) return c.json({ error: 'unknown partner version' }, 400)
 
-  const services = body.services ?? SERVICES
-  if (
-    !Array.isArray(services) ||
-    services.length === 0 ||
-    !services.every((s) => SERVICES.includes(s as Service))
-  ) {
-    return c.json({ error: `services must be some of: ${SERVICES.join(', ')}` }, 400)
+  // What to run is named either by service or by case, never both: two answers
+  // to one question, and no rule to say which wins.
+  if (body.cases !== undefined && body.services !== undefined) {
+    return c.json({ error: 'name services or cases, not both' }, 400)
   }
-  const chosen = CASES.filter((definition) => services.includes(definition.service))
+
+  let chosen: CaseDefinition[]
+  let services: string[]
+  if (body.cases !== undefined) {
+    const ids = body.cases
+    if (
+      !Array.isArray(ids) ||
+      ids.length === 0 ||
+      new Set(ids).size !== ids.length ||
+      !ids.every((id) => CASES.some((definition) => definition.id === id))
+    ) {
+      return c.json({ error: 'cases must be some of the case ids, each once' }, 400)
+    }
+    // In the order the cases are defined, whatever order they were named in.
+    chosen = CASES.filter((definition) => ids.includes(definition.id))
+    services = SERVICES.filter((s) => chosen.some((definition) => definition.service === s))
+  } else {
+    const named = body.services ?? SERVICES
+    if (
+      !Array.isArray(named) ||
+      named.length === 0 ||
+      !named.every((s) => SERVICES.includes(s as Service))
+    ) {
+      return c.json({ error: `services must be some of: ${SERVICES.join(', ')}` }, 400)
+    }
+    services = named
+    chosen = CASES.filter((definition) => services.includes(definition.service))
+  }
   const lanes = planLanes(chosen)
   const plan: [Lane, CaseDefinition[]][] = [
     ['read', lanes.readOnly],

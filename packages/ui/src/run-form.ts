@@ -4,14 +4,21 @@ import type { CaseInfo } from './api'
  * What the Run form chooses from, and what it chooses by default.
  */
 
-/** Services in the order the cases first name them. */
-export function servicesOf(cases: CaseInfo[]): string[] {
-  return [...new Set(cases.map((c) => c.service))]
+/** The cases of one service, in the order the server lists them. */
+export interface Group {
+  service: string
+  cases: CaseInfo[]
 }
 
-/** The cases a run of these services would plan. */
-export function casesFor(cases: CaseInfo[], services: string[]): CaseInfo[] {
-  return cases.filter((c) => services.includes(c.service))
+/** The cases by service, services in the order the cases first name them. */
+export function groupCases(cases: CaseInfo[]): Group[] {
+  const groups: Group[] = []
+  for (const c of cases) {
+    const group = groups.find((g) => g.service === c.service)
+    if (group) group.cases.push(c)
+    else groups.push({ service: c.service, cases: [c] })
+  }
+  return groups
 }
 
 /**
@@ -30,16 +37,37 @@ export function orderVersions(versions: string[]): string[] {
   return [...versions.filter((v) => v === 'correct'), ...versions.filter((v) => v !== 'correct')]
 }
 
-export function toggleService(selected: string[], all: string[], service: string): string[] {
-  const next = selected.includes(service)
-    ? selected.filter((s) => s !== service)
-    : [...selected, service]
-  // Kept in the order the cases name them, whatever order they were chosen in.
-  return all.filter((s) => next.includes(s))
+/** Every id in `all` that is in `selected`: the order the cases are listed in, whatever order they were chosen in. */
+const inListOrder = (all: string[], selected: Iterable<string>) => {
+  const chosen = new Set(selected)
+  return all.filter((id) => chosen.has(id))
+}
+
+export function toggleCase(selected: string[], all: string[], id: string): string[] {
+  return inListOrder(
+    all,
+    selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id],
+  )
+}
+
+/** All of a group's cases on or off, leaving the rest as they were. */
+export function chooseCases(
+  selected: string[],
+  all: string[],
+  ids: string[],
+  on: boolean,
+): string[] {
+  return inListOrder(all, on ? [...selected, ...ids] : selected.filter((s) => !ids.includes(s)))
+}
+
+/** How much of a group is chosen: all of it, some of it, none of it. */
+export function groupState(selected: string[], ids: string[]): 'all' | 'some' | 'none' {
+  const n = ids.filter((id) => selected.includes(id)).length
+  return n === 0 ? 'none' : n === ids.length ? 'all' : 'some'
 }
 
 /**
  * Whether the form may be submitted: something chosen to run, and no run going.
  * One rule for the button and for the Enter key, which submits without it.
  */
-export const canSubmit = (services: string[], busy: boolean) => services.length > 0 && !busy
+export const canSubmit = (chosen: number, busy: boolean) => chosen > 0 && !busy

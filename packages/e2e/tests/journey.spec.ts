@@ -151,6 +151,30 @@ test('a page that does not exist says so', async () => {
   await expect(page.getByRole('heading', { name: 'Not found' })).toBeVisible()
 })
 
+test('one case can be picked, and only that case is run', async () => {
+  await page.getByRole('link', { name: 'Run', exact: true }).click()
+  await page.getByRole('button', { name: 'None' }).click()
+  await expect(page.getByText('0 of 20 chosen')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Run 0 cases' })).toBeDisabled()
+
+  await page
+    .getByRole('checkbox', { name: /Earning twice with one reference adds the points once/ })
+    .check()
+  await expect(page.getByText('1 of 20 chosen')).toBeVisible()
+  // Its group is partly chosen, which the box shows as neither on nor off.
+  const group = page.getByRole('checkbox', { name: /^earn\b/ })
+  expect(await group.evaluate((box: HTMLInputElement) => box.indeterminate)).toBe(true)
+
+  await page.getByRole('button', { name: 'Run 1 case' }).click()
+  await expect(page.getByRole('button', { name: 'Open the result' })).toBeVisible({
+    timeout: 60_000,
+  })
+  await expect(page.getByText('✕ 1 failed')).toBeVisible()
+  await expect(page.getByText(/Passed/)).toHaveCount(0)
+  await expect(page.getByText(/Failed/).first()).toBeVisible()
+  await expect(page.getByText('Points given back.')).toBeVisible()
+})
+
 test('on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press', async ({
   browser,
 }) => {
@@ -187,6 +211,12 @@ test('on a phone nothing scrolls sideways, and the Run button is on the screen a
   const box = (await button.boundingBox())!
   expect(box.y + box.height, 'the button is below the fold').toBeLessThanOrEqual(812)
   expect(box.height).toBeGreaterThanOrEqual(44)
+  // And every row a finger has to hit: versions, groups and cases alike.
+  const heights = await small
+    .locator('.opt')
+    .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height))
+  expect(heights.length).toBeGreaterThan(30)
+  expect(Math.min(...heights), 'a row is too small to press').toBeGreaterThanOrEqual(44)
   await phone.close()
 })
 
