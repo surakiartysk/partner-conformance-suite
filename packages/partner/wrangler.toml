@@ -2,6 +2,11 @@ name = "points-partner"
 main = "src/index.ts"
 compatibility_date = "2024-12-18"
 
+# Reached at its workers.dev address only. Preview URLs would be a second way in
+# to the same Worker, one per version, so they stay off.
+workers_dev = true
+preview_urls = false
+
 # The reference partner keeps its own database. It stands in for a partner's
 # system, so it shares nothing with the provider's side — not a database, not
 # a secret, not a line of code.

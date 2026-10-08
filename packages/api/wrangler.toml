@@ -2,6 +2,11 @@ name = "conformance-api"
 main = "src/index.ts"
 compatibility_date = "2024-12-18"
 
+# Reached at its workers.dev address only. Preview URLs would be a second way in
+# to the same Worker, one per version, so they stay off.
+workers_dev = true
+preview_urls = false
+
 [[d1_databases]]
 binding = "DB"
 database_name = "conformance-api"
