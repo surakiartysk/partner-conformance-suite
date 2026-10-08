@@ -27,7 +27,7 @@ describe('the Home page', () => {
 
   it('offers to try it, as the one primary button, when there is no session', () => {
     const html = render()
-    expect(html).toContain('>Try it →</button>')
+    expect(html).toContain('>Try it</button>')
     expect(html.match(/class="primary"/g)).toHaveLength(1)
     expect(html).not.toContain('Your session ends')
   })
@@ -47,7 +47,7 @@ describe('the Home page', () => {
   it('says how long the session has left, and leads on to Run, when there is one', () => {
     const html = render({ session: session() })
     expect(html).toContain('Your session ends in 24 h 0 min')
-    expect(html).toContain('>Continue to Run →</button>')
+    expect(html).toContain('>Continue to Run</button>')
     expect(html.match(/class="primary"/g)).toHaveLength(1)
     expect(html).not.toContain('>Try it')
   })

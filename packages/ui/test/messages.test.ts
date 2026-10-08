@@ -23,6 +23,13 @@ describe('messageFor', () => {
     expect(new Set(messages).size).toBe(ALL.length)
   })
 
+  it('says what to do next when the server answers with something unreadable, not only that it did', () => {
+    expect(messageFor('unexpected')).toBe(
+      'Something went wrong on the server. Try again, or start a new session.',
+    )
+    expect(messageFor('unexpected')).not.toContain('does not understand')
+  })
+
   it('rounds a wait up to whole minutes, so it never says too soon', () => {
     expect(messageFor('rate-limited', 3600)).toContain('60 min')
     expect(messageFor('rate-limited', 61)).toContain('2 min')

@@ -9,6 +9,7 @@ import {
   jsonLines,
   mismatchPaths,
   runSeconds,
+  shortProblemTypes,
   show,
   splitSteps,
   whatDidNotMatch,
@@ -16,6 +17,38 @@ import {
 import { CORRECT, DOUBLE_EARN, PLAIN_ERRORS, SLOW_BALANCE } from './fixtures-runs'
 
 const result = (run: RunView, id: string) => run.results.find((r) => r.caseId === id)!.result
+
+describe('problem types in a sentence', () => {
+  const base = 'https://points-partner.example/problems/'
+
+  it('are their last part, so a list of them is not a wall of addresses', () => {
+    expect(
+      describeMismatch({
+        path: '$.type',
+        expected: `one of "${base}missing-signature", "${base}invalid-signature", "${base}stale-timestamp"`,
+        actual: 'earn',
+      }),
+    ).toBe(
+      'type should be one of "missing-signature", "invalid-signature", "stale-timestamp"; the partner answered "earn".',
+    )
+  })
+
+  it('shorten whatever host the address has, and only a problem type', () => {
+    expect(shortProblemTypes('"https://other.test/problems/x-y"')).toBe('"x-y"')
+    expect(shortProblemTypes('"https://other.test/docs/x"')).toBe('"https://other.test/docs/x"')
+    expect(shortProblemTypes('https://points-partner.example/problems/x')).toBe(
+      'https://points-partner.example/problems/x',
+    )
+    expect(shortProblemTypes('plain words')).toBe('plain words')
+  })
+
+  it('stay whole in the lines of the body, which are data and not a sentence', () => {
+    const lines = jsonLines({ type: `${base}missing-signature` }, new Set())
+    expect(lines.map((l) => l.head + l.value + l.tail).join('')).toContain(
+      `${base}missing-signature`,
+    )
+  })
+})
 
 describe('describing a mismatch', () => {
   const m = (over: Partial<Mismatch>): Mismatch => ({ path: '$.balance', expected: 'x', ...over })

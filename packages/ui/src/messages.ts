@@ -34,6 +34,6 @@ export function messageFor(failure: Failure, retryAfterSeconds?: number): string
     case 'network':
       return 'The server could not be reached. Check the connection and try again.'
     case 'unexpected':
-      return 'The server answered with something this page does not understand.'
+      return 'Something went wrong on the server. Try again, or start a new session.'
   }
 }

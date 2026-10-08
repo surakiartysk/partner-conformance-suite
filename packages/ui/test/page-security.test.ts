@@ -136,8 +136,36 @@ describe('the stylesheet', () => {
     expect(offenders).toEqual([])
   })
 
+  /**
+   * The review of the page found text at 12 and 13 px nearly everywhere and body text at
+   * 14. The sizes are a short list, and the text people read is the 15 px one.
+   */
+  it('sets the text people read at 15 px, and no size outside the scale', () => {
+    const text = css()
+    expect(text).toMatch(/body\s*\{[^}]*font:\s*400 15px/)
+    const sizes = new Set([...text.matchAll(/font-size:\s*(\d+)px/g)].map((m) => Number(m[1])))
+    const scale = new Set([12, 13, 15, 16, 22, 28])
+    expect([...sizes].filter((size) => !scale.has(size))).toEqual([])
+  })
+
+  /**
+   * Spacing moves in 4 px steps, with 2 and 6 for the small things. The odd values that are
+   * left (5, 7 and 11) are the padding a checked option gives up to its thicker border, so
+   * the option keeps its size.
+   */
+  it('spaces things in the steps of the scale, and nothing else', () => {
+    const allowed = new Set([0, 1, 2, 4, 5, 6, 7, 8, 10, 11, 12, 16, 20, 24, 28, 32, 64])
+    const off: string[] = []
+    for (const rule of css().matchAll(/(?:padding|margin|gap)[\w-]*:\s*([^;]+);/g)) {
+      for (const px of rule[1]!.matchAll(/(-?\d+)px/g)) {
+        if (!allowed.has(Math.abs(Number(px[1])))) off.push(rule[0])
+      }
+    }
+    expect(off).toEqual([])
+  })
+
   it('keeps the button of the form at the foot of the window', () => {
-    expect(css()).toMatch(/\.form-actions\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0/)
+    expect(css()).toMatch(/\.run-bar\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0/)
   })
 
   it('makes the controls at least 44 px tall for a finger, and says so after the rule it overrides', () => {
@@ -147,7 +175,9 @@ describe('the stylesheet', () => {
     // At equal specificity the later rule wins, so the rule for fingers must come after
     // every rule that sets a smaller minimum on the same controls. A real browser found
     // it above them, where it did nothing.
-    const base = [...text.matchAll(/(^|\n)(button|select|\.chip)\s*\{[^}]*min-height:\s*(\d+)px/g)]
+    const base = [
+      ...text.matchAll(/(^|\n)(button|select|\.vopt|\.crow)\s*\{[^}]*min-height:\s*(\d+)px/g),
+    ]
     expect(base.length).toBeGreaterThan(0)
     for (const rule of base) {
       expect(coarse, `after the ${rule[2]} rule that sets ${rule[3]}px`).toBeGreaterThan(

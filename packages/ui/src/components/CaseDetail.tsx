@@ -61,7 +61,8 @@ export function CaseDetail({ info, caseId, lane, result }: Props) {
       {setup.length > 0 ? (
         <details className="setup">
           <summary>
-            Setup · {setup.length} {setup.length === 1 ? 'step' : 'steps'}, only held to answering
+            Setup · {setup.length} {setup.length === 1 ? 'step' : 'steps'}, only checked that the
+            partner answers
           </summary>
           {setup.map((step, i) => (
             <StepView step={step} key={i} />

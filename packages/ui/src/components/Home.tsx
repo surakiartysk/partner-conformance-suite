@@ -42,7 +42,7 @@ export function Home({ session, starting, problem, onStart, onNavigate, now }: P
           <>
             <p className="note">Your session ends in {timeLeft(session.expiresAt, now)}.</p>
             <button type="button" className="primary" onClick={() => onNavigate({ page: 'run' })}>
-              Continue to Run →
+              Continue to Run
             </button>
             <button type="button" onClick={onStart} disabled={starting}>
               {starting ? 'Starting…' : 'Start a new session instead'}
@@ -59,7 +59,7 @@ export function Home({ session, starting, problem, onStart, onNavigate, now }: P
         ) : (
           <>
             <button type="button" className="primary" onClick={onStart} disabled={starting}>
-              {starting ? 'Starting…' : 'Try it →'}
+              {starting ? 'Starting…' : 'Try it'}
             </button>
             <p className="note">
               No sign-up. You get a reference partner of your own for 24 hours, with two test

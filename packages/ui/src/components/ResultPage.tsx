@@ -94,7 +94,7 @@ export function ResultPage({ client, runId, caseId, onNavigate }: Props) {
         </div>
         <div className="actions">
           <button type="button" className="primary" onClick={() => onNavigate({ page: 'run' })}>
-            Run another version
+            Run again
           </button>
         </div>
       </section>

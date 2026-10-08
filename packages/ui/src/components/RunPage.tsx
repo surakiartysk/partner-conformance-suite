@@ -3,7 +3,15 @@ import { ApiError, type CaseInfo, type Client, type RunView, type SessionView } 
 import type { Route } from '../route'
 import { driveRun } from '../driver'
 import { messageFor } from '../messages'
-import { applyEvent, counts, initialProgress, isOver, type Progress } from '../progress'
+import {
+  applyEvent,
+  counts,
+  initialProgress,
+  isOver,
+  verdictText,
+  type Progress,
+} from '../progress'
+import { givenBackText } from '../given-back'
 import { chooseCases, defaultVersion, groupCases, orderVersions, toggleCase } from '../run-form'
 import { Lanes } from './Lanes'
 import { RunForm } from './RunForm'
@@ -99,83 +107,99 @@ export function RunPage({
       </>
     )
   }
-  if (!cases) return <p className="note">Loading…</p>
+  if (!cases)
+    return (
+      <>
+        <h1>Run</h1>
+        <p className="note">Loading…</p>
+      </>
+    )
 
   const running = phase === 'starting' || phase === 'running'
   const live = progress && phase !== 'idle'
   const c = progress ? counts(progress) : null
 
+  // Said once when a run begins and once when it ends, not on every case: a screen
+  // reader announcing twenty progress counts is noise.
+  const announcement =
+    phase === 'over' && progress && isOver(progress)
+      ? `${verdictText(counts(progress))}. ${givenBackText(progress)}`
+      : phase === 'running' && progress
+        ? `Running ${counts(progress).total} ${counts(progress).total === 1 ? 'case' : 'cases'} against ${ranVersion}`
+        : ''
+
+  const aside =
+    live && progress ? (
+      <section className="card" aria-labelledby="live" ref={livePanel}>
+        {phase === 'over' && isOver(progress) ? (
+          <RunSummary
+            progress={progress}
+            cases={byId}
+            version={ranVersion}
+            runId={runId}
+            onNavigate={onNavigate}
+            onRunAgain={() => {
+              setPhase('idle')
+              setProgress(null)
+            }}
+          />
+        ) : (
+          <>
+            <div className="live-head">
+              <h2 id="live">
+                Running <span className="mono">{ranVersion}</span>
+              </h2>
+              <span className="mono note">
+                {c?.finished} of {c?.total} done
+              </span>
+            </div>
+            <p className="note">
+              Read-only cases run together. Each member&apos;s cases run one at a time, because two
+              cases moving one balance at once would corrupt each other&apos;s expectations.
+            </p>
+          </>
+        )}
+        <Lanes progress={progress} cases={byId} />
+        {phase === 'running' ? (
+          <p className="note">
+            Leaving this page stops the run. The points it moved are written down first and given
+            back by a later run or the sweep that runs every ten minutes.
+          </p>
+        ) : null}
+      </section>
+    ) : undefined
+
   return (
     <>
       <h1>Run</h1>
-      <p className="lede">
-        Pick a partner and what to check. Each case is a signed request from the suite, and the
-        verdict is decided on the server.
-      </p>
-      <div className="grid">
-        <RunForm
-          versions={versions}
-          version={version}
-          onVersion={setVersion}
-          groups={groups}
-          selected={chosen}
-          onToggleCase={(id) => setPicked(toggleCase(chosen, allIds, id))}
-          onToggleGroup={(service, on) =>
-            setPicked(
-              chooseCases(
-                chosen,
-                allIds,
-                (groups.find((g) => g.service === service)?.cases ?? []).map((c) => c.id),
-                on,
-              ),
-            )
-          }
-          onAll={() => setPicked(allIds)}
-          onNone={() => setPicked([])}
-          onSubmit={start}
-          busy={running}
-          problem={problem}
-        />
-        {live && progress ? (
-          <section className="card" aria-labelledby="live" ref={livePanel}>
-            {phase === 'over' && isOver(progress) ? (
-              <RunSummary
-                progress={progress}
-                cases={byId}
-                version={ranVersion}
-                runId={runId}
-                onNavigate={onNavigate}
-                onRunAgain={() => {
-                  setPhase('idle')
-                  setProgress(null)
-                }}
-              />
-            ) : (
-              <>
-                <div className="live-head">
-                  <h2 id="live">
-                    Running <span className="mono">{ranVersion}</span>
-                  </h2>
-                  <span className="mono note">
-                    {c?.finished} of {c?.total} done
-                  </span>
-                </div>
-                <p className="note">
-                  Read-only cases run together. Each member&apos;s cases run one at a time, because
-                  two cases moving one balance at once would corrupt each other&apos;s expectations.
-                </p>
-              </>
-            )}
-            <Lanes progress={progress} cases={byId} />
-            {phase === 'running' ? (
-              <p className="note">
-                Leaving this page stops the run. The points it moved are written down first and
-                given back by a later run or the sweep that runs every ten minutes.
-              </p>
-            ) : null}
-          </section>
-        ) : null}
+      <p className="lede">Choose a version of the partner to test, and the cases to run.</p>
+      <div role="status" className="sr-only">
+        {announcement}
       </div>
+      <RunForm
+        versions={versions}
+        version={version}
+        onVersion={setVersion}
+        groups={groups}
+        selected={chosen}
+        onToggleCase={(id) => setPicked(toggleCase(chosen, allIds, id))}
+        onToggleGroup={(service, on) =>
+          setPicked(
+            chooseCases(
+              chosen,
+              allIds,
+              (groups.find((g) => g.service === service)?.cases ?? []).map((c) => c.id),
+              on,
+            ),
+          )
+        }
+        onAll={() => setPicked(allIds)}
+        onNone={() => setPicked([])}
+        onSubmit={start}
+        busy={running}
+        problem={problem}
+        aside={aside}
+      />
     </>
   )
 }

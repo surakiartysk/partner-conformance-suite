@@ -105,7 +105,7 @@ describe('the result page', () => {
     const user = userEvent.setup()
     const went: Route[] = []
     show(DOUBLE_EARN, undefined, (to) => went.push(to))
-    await user.click(await screen.findByRole('button', { name: 'Run another version' }))
+    await user.click(await screen.findByRole('button', { name: 'Run again' }))
     expect(went).toEqual([{ page: 'run' }])
   })
 

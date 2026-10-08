@@ -39,7 +39,7 @@ test.afterAll(async () => {
 test('the way in leads to a session and its connection', async () => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Partner conformance suite' })).toBeVisible()
-  await page.getByRole('button', { name: 'Try it →' }).click()
+  await page.getByRole('button', { name: 'Try it' }).click()
   await expect(page).toHaveURL(/\/connection$/)
   await expect(page.getByRole('heading', { name: 'Connection' })).toBeVisible()
 })
@@ -69,8 +69,18 @@ test('a version that is wrong in one way is found, and the run ends', async () =
   })
   await expect(page.getByRole('heading', { name: '1 of 20 cases did not pass' })).toBeVisible()
   await expect(page.getByText('✓ 19 passed')).toBeVisible()
+  // Every status is whole, inside its lane: three lanes side by side once cut them off.
+  const clipped = await page.locator('.lane .row .st').evaluateAll((badges) =>
+    badges
+      .filter((badge) => {
+        const lane = badge.closest('.lane')!.getBoundingClientRect()
+        return badge.getBoundingClientRect().right > lane.right - 1
+      })
+      .map((badge) => badge.textContent),
+  )
+  expect(clipped, 'statuses cut off at the edge of their lane').toEqual([])
   await expect(page.getByText('✕ 1 failed')).toBeVisible()
-  await expect(page.getByText('Points given back.')).toBeVisible()
+  await expect(page.locator('.note', { hasText: 'Points given back.' })).toBeVisible()
 })
 
 test('the result shows what did not match, with the request and the answer beside what was expected', async () => {
@@ -109,13 +119,15 @@ test('the result shows what did not match, with the request and the answer besid
 })
 
 test('the right version passes everything, and says so', async () => {
-  await page.getByRole('button', { name: 'Run another version' }).click()
-  await page.getByRole('radio', { name: /^correct/ }).check()
+  await page.getByRole('button', { name: 'Run again' }).click()
+  // The radio itself is drawn as nothing; what a visitor presses is its label.
+  await page.locator('label.vopt', { hasText: /^correct/ }).click()
+  await expect(page.getByRole('radio', { name: /^correct/ })).toBeChecked()
   await page.getByRole('button', { name: 'Run 20 cases' }).click()
   await expect(page.getByRole('heading', { name: 'All 20 cases passed' })).toBeVisible({
     timeout: 60_000,
   })
-  await expect(page.getByText('Points given back.')).toBeVisible()
+  await expect(page.locator('.note', { hasText: 'Points given back.' })).toBeVisible()
 })
 
 test('the history lists both runs, newest first, and opens one', async () => {
@@ -179,7 +191,57 @@ test('one case can be picked, and only that case is run', async () => {
   await expect(page.getByText('✕ 1 failed')).toBeVisible()
   await expect(page.getByText(/Passed/)).toHaveCount(0)
   await expect(page.getByText(/Failed/).first()).toBeVisible()
-  await expect(page.getByText('Points given back.')).toBeVisible()
+  await expect(page.locator('.note', { hasText: 'Points given back.' })).toBeVisible()
+})
+
+test('before a run both choices are on the screen side by side, and the run bar is within reach', async () => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/run')
+  const versions = (await page.getByRole('heading', { name: 'Partner version' }).boundingBox())!
+  const cases = (await page.getByRole('heading', { name: 'Cases' }).boundingBox())!
+  expect(cases.x, 'the cases sit to the right of the versions').toBeGreaterThan(versions.x + 300)
+  expect(Math.abs(cases.y - versions.y), 'and level with them').toBeLessThan(8)
+  const bar = (await page.locator('.run-bar').boundingBox())!
+  expect(bar.y + bar.height, 'the run bar is on the screen without scrolling').toBeLessThanOrEqual(
+    800,
+  )
+  const tall = await page
+    .locator('.vgrid .vopt')
+    .evaluateAll((chips) =>
+      chips.filter((c) => c.getBoundingClientRect().height > 46).map((c) => c.textContent),
+    )
+  expect(tall, 'version names that wrap onto a second line').toEqual([])
+  const form = (await page.locator('form.run-form').boundingBox())!
+  expect(form.height, 'the whole form is shorter than it was').toBeLessThan(800)
+})
+
+test('each page has its own title, and moving to it puts the focus on its heading', async () => {
+  await page.goto('/run')
+  await expect(page).toHaveTitle('Run · Partner conformance suite')
+  await page.getByRole('link', { name: 'History' }).click()
+  await expect(page).toHaveTitle('History · Partner conformance suite')
+  await expect(page.getByRole('heading', { name: 'History', level: 1 })).toBeFocused()
+  await page.getByRole('link', { name: 'Connection' }).click()
+  await expect(page).toHaveTitle('Connection · Partner conformance suite')
+  await expect(page.getByRole('heading', { name: 'Connection', level: 1 })).toBeFocused()
+})
+
+test('when a run ends it is said, for someone who cannot see the page', async () => {
+  await page.goto('/run')
+  const status = page.locator('.sr-only[role="status"]')
+  await expect(status).toHaveText('')
+  await page.getByRole('button', { name: 'None' }).click()
+  await page.getByRole('button', { name: 'Show the earn cases' }).click()
+  await page
+    .getByRole('checkbox', { name: /Earning twice with one reference adds the points once/ })
+    .check()
+  await page.getByRole('button', { name: 'Run 1 case' }).click()
+  await expect(status).toHaveText(/^1 of 1 case did not pass\. Points given back\./, {
+    timeout: 60_000,
+  })
+  // Said, and not drawn: once it has words in it, it is still no wider than a pixel.
+  const said = (await status.boundingBox())!
+  expect(said.width, 'what is only said is not drawn').toBeLessThanOrEqual(1)
 })
 
 test('on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press', async ({
@@ -221,7 +283,7 @@ test('on a phone nothing scrolls sideways, and the Run button is on the screen a
   // And everything a finger has to hit: versions, groups, cases and the buttons that fold them.
   for (const fold of await small.locator('.fold').all()) await fold.click()
   const heights = await small
-    .locator('.opt, .fold')
+    .locator('.vopt, .gname, .crow, .fold')
     .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height))
   expect(heights.length).toBeGreaterThan(40)
   expect(Math.min(...heights), 'a row is too small to press').toBeGreaterThanOrEqual(44)
@@ -241,6 +303,13 @@ test('with a mouse the controls are 40 px, and a narrow window does not make the
   await page.setViewportSize({ width: 1280, height: 800 })
 })
 
+/** Every group of cases unfolded, so what is checked is the whole form and not only its folded face. */
+async function openEveryGroup() {
+  // Pressing one changes which are still closed, so the first of those is pressed until none is.
+  const closed = page.locator('.fold[aria-expanded="false"]')
+  while ((await closed.count()) > 0) await closed.first().click()
+}
+
 for (const scheme of ['light', 'dark'] as const) {
   test(`no serious accessibility violations on any page, in ${scheme} mode`, async () => {
     await page.emulateMedia({ colorScheme: scheme })
@@ -255,6 +324,7 @@ for (const scheme of ['light', 'dark'] as const) {
     for (const path of pages) {
       await page.goto(path)
       await expect(page.locator('h1').first()).toBeVisible()
+      if (path === '/run') await openEveryGroup()
       const { violations } = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze()

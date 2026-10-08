@@ -25,7 +25,7 @@ test('a sixth session from one address is refused, and the page says so', async 
   expect(statuses.filter((s) => s === 201).length).toBeLessThanOrEqual(5)
 
   await page.goto('/')
-  await page.getByRole('button', { name: 'Try it →' }).click()
+  await page.getByRole('button', { name: 'Try it' }).click()
   const alert = page.getByRole('alert')
   await expect(alert).toContainText('Too many sessions have been started from this address')
   await expect(alert).toContainText('60 min')

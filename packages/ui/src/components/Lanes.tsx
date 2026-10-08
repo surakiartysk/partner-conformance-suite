@@ -27,7 +27,7 @@ function LaneCard({ lane, cases }: { lane: LaneProgress; cases: Map<string, Case
       <progress value={done} max={list.length} aria-label={`${TITLE[lane.lane]} progress`} />
       {list.map((row) => (
         <div className={row.status === 'running' ? 'row now' : 'row'} key={row.caseId}>
-          <span>
+          <span className="lane-title">
             {cases.get(row.caseId)?.name ?? row.caseId}
             <br />
             <span className="id mono note">{row.caseId}</span>

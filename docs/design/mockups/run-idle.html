@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Run, before a run</title>
+    <link rel="stylesheet" href="mockup.css" />
+    <style>
+      body {
+        font-size: 15px;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 860px) {
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+      .note {
+        color: var(--t4);
+        font-size: 13px;
+        margin: 0 0 16px;
+        line-height: 1.5;
+      }
+      .vopt {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+      .vopt input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .vopt:hover {
+        background: var(--hover);
+      }
+      .vopt:has(input:checked) {
+        border: 2px solid var(--primary);
+        padding: 7px 11px;
+        background: var(--hover);
+        font-weight: 600;
+      }
+      .vopt:has(input:focus-visible) {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+      .vcorrect {
+        font-size: 14px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+        justify-content: center;
+      }
+      .vcorrect small {
+        color: var(--t4);
+        font-size: 13px;
+        font-weight: 400;
+      }
+      .vlabel {
+        color: var(--t4);
+        font-size: 13px;
+        margin: 16px 0 8px;
+      }
+      .vgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .chead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .chead h2 {
+        margin: 0;
+      }
+      .tools {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tools button,
+      .fold {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        min-height: 40px;
+        padding: 4px 14px;
+        cursor: pointer;
+      }
+      .tools button:hover:not(:disabled),
+      .fold:hover {
+        background: var(--hover);
+      }
+      .tools button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .tools .count {
+        color: var(--t4);
+        font-size: 13px;
+        margin-left: 4px;
+      }
+      .cgroup {
+        border-top: 1px solid var(--divider);
+        padding: 4px 0 8px;
+      }
+      .cgroup:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .ghead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .gname {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-height: 44px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .gtext {
+        display: flex;
+        align-items: baseline;
+      }
+      .gname small {
+        color: var(--t4);
+        font-size: 13px;
+        font-weight: 400;
+        margin-left: 10px;
+      }
+      .gname .mono {
+        font-size: 13px;
+      }
+      .fold {
+        width: 44px;
+        min-height: 44px;
+        padding: 0;
+        font-size: 18px;
+        line-height: 1;
+      }
+      .clist {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 16px;
+        padding-left: 28px;
+      }
+      @media (max-width: 860px) {
+        .clist {
+          grid-template-columns: 1fr;
+          padding-left: 0;
+        }
+      }
+      .cgroup.closed .clist {
+        display: none;
+      }
+      .crow {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 6px 4px;
+        min-height: 40px;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+      .crow:hover {
+        background: var(--hover);
+      }
+      .crow .mono {
+        font-size: 12px;
+      }
+      input[type='checkbox'],
+      input[type='radio'] {
+        accent-color: var(--primary);
+        margin: 2px 0 0;
+        flex: none;
+      }
+      .runbar {
+        position: sticky;
+        bottom: 0;
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+      .runbar p {
+        margin: 0;
+        color: var(--t3);
+      }
+      .runbar .mono {
+        color: var(--t1);
+        font-size: 13px;
+      }
+      .go {
+        background: var(--primary);
+        color: var(--on-primary);
+        border: 0;
+        border-radius: 6px;
+        min-height: 44px;
+        padding: 8px 20px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .go:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .problem {
+        color: var(--danger-text);
+        font-size: 13px;
+        margin: 8px 0 0;
+      }
+      @media (max-width: 520px) {
+        .card {
+          padding: 14px;
+        }
+        .vgrid {
+          gap: 6px;
+        }
+        .vopt {
+          font-size: 12px;
+          padding: 6px 8px;
+          min-height: 44px;
+        }
+        .vopt:has(input:checked) {
+          padding: 5px 7px;
+        }
+        .runbar {
+          flex-wrap: nowrap;
+          padding: 10px 12px;
+        }
+        .runbar .long {
+          display: none;
+        }
+        .runbar p {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .go {
+          flex: none;
+        }
+      }
+      .legend-note {
+        margin: 24px 0 0;
+        color: var(--t4);
+        font-size: 13px;
+        max-width: 70ch;
+      }
+    </style>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&family=JetBrains+Mono:wght@400..600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="bar-in">
+        <a class="brand" href="#">Partner conformance suite</a>
+        <nav class="nav" aria-label="Pages">
+          <a href="#">Connection</a>
+          <a href="#" aria-current="page">Run</a>
+          <a href="#">History</a>
+        </nav>
+        <div class="session">
+          <span>Session ends in 23 h 41 min</span>
+          <button
+            class="theme"
+            type="button"
+            onclick="
+              document.documentElement.dataset.theme =
+                document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
+            "
+          >
+            Light / dark
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <h1>Run</h1>
+      <p class="sub">Choose a version of the partner to test, and the cases to run.</p>
+
+      <form class="split" onsubmit="return false">
+        <section class="card" aria-labelledby="v">
+          <h2 id="v">Partner version</h2>
+          <p class="note">
+            The partner is the points API under test. Each version is a copy of it:
+            <span class="mono">correct</span> follows the spec, the others are each wrong in one
+            way.
+          </p>
+          <div role="radiogroup" aria-labelledby="v">
+            <label class="vopt vcorrect">
+              <input type="radio" name="version" value="correct" />
+              <span class="mono">correct</span>
+              <small>Follows the spec. Everything should pass.</small>
+            </label>
+            <p class="vlabel">Wrong in one way, and the result says how</p>
+            <div class="vgrid">
+              <label class="vopt"
+                ><input type="radio" name="version" value="ignores-signature" /><span class="mono"
+                  >ignores-signature</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="accepts-stale" /><span class="mono"
+                  >accepts-stale</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="no-replay-guard" /><span class="mono"
+                  >no-replay-guard</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="double-earn" checked /><span class="mono"
+                  >double-earn</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="double-redeem" /><span class="mono"
+                  >double-redeem</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="off-by-one" /><span class="mono"
+                  >off-by-one</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="unvalidated-points" /><span class="mono"
+                  >unvalidated-points</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="missing-tier" /><span class="mono"
+                  >missing-tier</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="overdraws" /><span class="mono"
+                  >overdraws</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="double-reversal" /><span class="mono"
+                  >double-reversal</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="plain-errors" /><span class="mono"
+                  >plain-errors</span
+                ></label
+              ><label class="vopt"
+                ><input type="radio" name="version" value="slow-balance" /><span class="mono"
+                  >slow-balance</span
+                ></label
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="c">
+          <div class="chead">
+            <h2 id="c">Cases</h2>
+            <div class="tools">
+              <button type="button" id="all">All</button>
+              <button type="button" id="none">None</button>
+              <span class="count mono"
+                ><span id="count"></span> of <span id="total"></span> chosen</span
+              >
+            </div>
+          </div>
+          <div class="cgroup" data-service="security">
+            <div class="ghead">
+              <label class="gname"
+                ><input type="checkbox" class="gbox" /><span class="gtext"
+                  ><span class="mono">security</span><small class="gcount"></small></span
+              ></label>
+              <button
+                type="button"
+                class="fold"
+                aria-expanded="true"
+                aria-controls="cases-security"
+                aria-label="Hide the security cases"
+              >
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+            <div class="clist" id="cases-security">
+              <label class="crow" title="security/valid-signature"
+                ><input
+                  type="checkbox"
+                  data-group="security"
+                  value="security/valid-signature"
+                  checked
+                /><span>A correctly signed request is accepted</span></label
+              ><label class="crow" title="security/missing-signature"
+                ><input
+                  type="checkbox"
+                  data-group="security"
+                  value="security/missing-signature"
+                  checked
+                /><span>A request with no signature is refused</span></label
+              ><label class="crow" title="security/wrong-signature"
+                ><input
+                  type="checkbox"
+                  data-group="security"
+                  value="security/wrong-signature"
+                  checked
+                /><span>A request signed with another secret is refused</span></label
+              ><label class="crow" title="security/stale-timestamp"
+                ><input
+                  type="checkbox"
+                  data-group="security"
+                  value="security/stale-timestamp"
+                  checked
+                /><span>A request signed six minutes ago is refused</span></label
+              ><label class="crow" title="security/tampered-body"
+                ><input
+                  type="checkbox"
+                  data-group="security"
+                  value="security/tampered-body"
+                  checked
+                /><span>A body changed after signing is refused, and moves nothing</span></label
+              ><label class="crow" title="security/replayed-request"
+                ><input
+                  type="checkbox"
+                  data-group="security"
+                  value="security/replayed-request"
+                  checked
+                /><span>A request sent twice is refused the second time</span></label
+              >
+            </div>
+          </div>
+          <div class="cgroup" data-service="member">
+            <div class="ghead">
+              <label class="gname"
+                ><input type="checkbox" class="gbox" /><span class="gtext"
+                  ><span class="mono">member</span><small class="gcount"></small></span
+              ></label>
+              <button
+                type="button"
+                class="fold"
+                aria-expanded="true"
+                aria-controls="cases-member"
+                aria-label="Hide the member cases"
+              >
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+            <div class="clist" id="cases-member">
+              <label class="crow" title="member/known"
+                ><input type="checkbox" data-group="member" value="member/known" checked /><span
+                  >A member is returned in the shape the spec gives</span
+                ></label
+              ><label class="crow" title="member/unknown"
+                ><input type="checkbox" data-group="member" value="member/unknown" checked /><span
+                  >An unknown member is a 404 problem</span
+                ></label
+              ><label class="crow" title="member/balance"
+                ><input type="checkbox" data-group="member" value="member/balance" checked /><span
+                  >A member’s balance is readable</span
+                ></label
+              >
+            </div>
+          </div>
+          <div class="cgroup" data-service="earn">
+            <div class="ghead">
+              <label class="gname"
+                ><input type="checkbox" class="gbox" /><span class="gtext"
+                  ><span class="mono">earn</span><small class="gcount"></small></span
+              ></label>
+              <button
+                type="button"
+                class="fold"
+                aria-expanded="true"
+                aria-controls="cases-earn"
+                aria-label="Hide the earn cases"
+              >
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+            <div class="clist" id="cases-earn">
+              <label class="crow" title="earn/adds-points"
+                ><input type="checkbox" data-group="earn" value="earn/adds-points" checked /><span
+                  >Earning adds exactly the points earned</span
+                ></label
+              ><label class="crow" title="earn/duplicate-reference"
+                ><input
+                  type="checkbox"
+                  data-group="earn"
+                  value="earn/duplicate-reference"
+                  checked
+                /><span>Earning twice with one reference adds the points once</span></label
+              ><label class="crow" title="earn/invalid-points"
+                ><input type="checkbox" data-group="earn" value="earn/invalid-points" /><span
+                  >Earning zero points is refused</span
+                ></label
+              ><label class="crow" title="earn/unknown-member"
+                ><input
+                  type="checkbox"
+                  data-group="earn"
+                  value="earn/unknown-member"
+                  checked
+                /><span>Earning for an unknown member is a 404</span></label
+              >
+            </div>
+          </div>
+          <div class="cgroup" data-service="redeem">
+            <div class="ghead">
+              <label class="gname"
+                ><input type="checkbox" class="gbox" /><span class="gtext"
+                  ><span class="mono">redeem</span><small class="gcount"></small></span
+              ></label>
+              <button
+                type="button"
+                class="fold"
+                aria-expanded="true"
+                aria-controls="cases-redeem"
+                aria-label="Hide the redeem cases"
+              >
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+            <div class="clist" id="cases-redeem">
+              <label class="crow" title="redeem/takes-points"
+                ><input
+                  type="checkbox"
+                  data-group="redeem"
+                  value="redeem/takes-points"
+                  checked
+                /><span>Redeeming takes exactly the points redeemed</span></label
+              ><label class="crow" title="redeem/over-balance"
+                ><input
+                  type="checkbox"
+                  data-group="redeem"
+                  value="redeem/over-balance"
+                  checked
+                /><span>Redeeming one point more than the balance is refused</span></label
+              ><label class="crow" title="redeem/duplicate-reference"
+                ><input
+                  type="checkbox"
+                  data-group="redeem"
+                  value="redeem/duplicate-reference"
+                  checked
+                /><span>Redeeming twice with one reference takes the points once</span></label
+              ><label class="crow" title="redeem/negative-points"
+                ><input
+                  type="checkbox"
+                  data-group="redeem"
+                  value="redeem/negative-points"
+                  checked
+                /><span>Redeeming a negative number of points is refused</span></label
+              >
+            </div>
+          </div>
+          <div class="cgroup" data-service="reversal">
+            <div class="ghead">
+              <label class="gname"
+                ><input type="checkbox" class="gbox" /><span class="gtext"
+                  ><span class="mono">reversal</span><small class="gcount"></small></span
+              ></label>
+              <button
+                type="button"
+                class="fold"
+                aria-expanded="true"
+                aria-controls="cases-reversal"
+                aria-label="Hide the reversal cases"
+              >
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+            <div class="clist" id="cases-reversal">
+              <label class="crow" title="reversal/undoes-earn"
+                ><input
+                  type="checkbox"
+                  data-group="reversal"
+                  value="reversal/undoes-earn"
+                  checked
+                /><span>Reversing an earn takes its points back</span></label
+              ><label class="crow" title="reversal/twice"
+                ><input type="checkbox" data-group="reversal" value="reversal/twice" checked /><span
+                  >A transaction can be reversed only once</span
+                ></label
+              ><label class="crow" title="reversal/unknown-transaction"
+                ><input
+                  type="checkbox"
+                  data-group="reversal"
+                  value="reversal/unknown-transaction"
+                  checked
+                /><span>Reversing a transaction that does not exist is a 404</span></label
+              >
+            </div>
+          </div>
+          <p class="problem" id="none-msg" hidden>Choose at least one case.</p>
+        </section>
+
+        <div class="runbar" style="grid-column: 1 / -1" role="region" aria-label="Run">
+          <p>
+            <span class="long">Will run <span id="rn"></span><span id="rw"></span> against </span
+            ><span class="mono" id="rv"></span>
+          </p>
+          <button type="submit" class="go" id="go"></button>
+        </div>
+      </form>
+
+      <p class="legend-note">
+        Mockup of the page before a run. The groups start folded at every width (add
+        <code>?open</code> to the address to see them open). After <strong>Run</strong> the
+        right-hand card becomes the lanes, as in run.html, and the version card stays on the left,
+        locked.
+      </p>
+    </main>
+    <script>
+      const $ = (s, r = document) => r.querySelector(s)
+      const $$ = (s, r = document) => [...r.querySelectorAll(s)]
+      function update() {
+        const all = $$('.crow input'),
+          on = all.filter((i) => i.checked)
+        $('#count').textContent = on.length
+        $('#total').textContent = all.length
+        $('#all').disabled = on.length === all.length
+        $('#none').disabled = on.length === 0
+        $$('.cgroup').forEach((g) => {
+          const boxes = $$('.crow input', g),
+            n = boxes.filter((b) => b.checked).length
+          const gb = $('.gbox', g)
+          gb.checked = n === boxes.length
+          gb.indeterminate = n > 0 && n < boxes.length
+          $('.gcount', g).textContent = n + ' of ' + boxes.length
+        })
+        const v = $('input[name=version]:checked')
+        $('#rv').textContent = v ? v.value : 'a version'
+        $('#rn').textContent = on.length + (on.length === 1 ? ' case' : ' cases')
+        $('#rw').textContent = ''
+        $('#go').textContent = 'Run ' + on.length + (on.length === 1 ? ' case' : ' cases')
+        $('#go').disabled = on.length === 0 || !v
+        $('#none-msg').hidden = on.length !== 0
+      }
+      $$('.cgroup').forEach((g) => {
+        const fold = $('.fold', g),
+          name = $('.gname .mono', g).textContent
+        const set = (open) => {
+          g.classList.toggle('closed', !open)
+          fold.setAttribute('aria-expanded', open)
+          fold.setAttribute('aria-label', (open ? 'Hide' : 'Show') + ' the ' + name + ' cases')
+          $('span', fold).textContent = open ? '▾' : '▸'
+        }
+        set(location.search.includes('open'))
+        fold.onclick = () => set(g.classList.contains('closed'))
+        $('.gbox', g).onchange = (e) => {
+          $$('.crow input', g).forEach((b) => (b.checked = e.target.checked))
+          update()
+        }
+      })
+      $$('.crow input').forEach((b) => (b.onchange = update))
+      $$('input[name=version]').forEach((r) => (r.onchange = update))
+      $('#all').onclick = () => {
+        $$('.crow input').forEach((b) => (b.checked = true))
+        update()
+      }
+      $('#none').onclick = () => {
+        $$('.crow input').forEach((b) => (b.checked = false))
+        update()
+      }
+      update()
+    </script>
+  </body>
+</html>

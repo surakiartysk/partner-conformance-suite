@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { pathFor, type Route } from '../route'
 
 interface Props {
@@ -42,7 +42,47 @@ export function PageLink({
   )
 }
 
+const SITE = 'Partner conformance suite'
+
+/** What the tab and a screen reader call the page: its name first, then the site's. */
+export function titleFor(route: Route): string {
+  switch (route.page) {
+    case 'home':
+      return SITE
+    case 'connection':
+      return `Connection · ${SITE}`
+    case 'run':
+      return `Run · ${SITE}`
+    case 'history':
+      return `History · ${SITE}`
+    case 'result':
+      return `Result · ${SITE}`
+    default:
+      return `Not found · ${SITE}`
+  }
+}
+
 export function Layout({ route, hasSession, onNavigate, children }: Props) {
+  const main = useRef<HTMLElement | null>(null)
+  const first = useRef(true)
+  const where = JSON.stringify(route)
+
+  useEffect(() => {
+    document.title = titleFor(route)
+    // The first page is the one the browser loaded and read out. Every later one
+    // is drawn in place: nothing moves the reader there unless the page does, so the
+    // focus goes to its heading, or to the page itself while there is none.
+    if (first.current) {
+      first.current = false
+      return
+    }
+    const target = main.current?.querySelector('h1') ?? main.current
+    if (target instanceof HTMLElement) {
+      target.tabIndex = -1
+      target.focus({ preventScroll: true })
+    }
+  }, [where])
+
   return (
     <>
       <header className="bar">
@@ -68,7 +108,9 @@ export function Layout({ route, hasSession, onNavigate, children }: Props) {
           </nav>
         </div>
       </header>
-      <main className="page">{children}</main>
+      <main className="page" ref={main}>
+        {children}
+      </main>
       <footer className="foot">
         The deployed suite only ever tests its own reference partner. It never takes an address from
         you.

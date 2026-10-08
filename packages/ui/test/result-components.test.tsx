@@ -34,9 +34,9 @@ describe('a case that did not match', () => {
     expect(html).toContain('balance should be balance at start + 100 = 1,')
   })
 
-  it('keeps the setup in one closed section, only held to answering', () => {
+  it('keeps the setup in one closed section, only checked that the partner answers', () => {
     expect(html).toMatch(
-      /<details class="setup"><summary>Setup · 2 steps, only held to answering<\/summary>/,
+      /<details class="setup"><summary>Setup · 2 steps, only checked that the partner answers<\/summary>/,
     )
     expect(html).not.toMatch(/<details class="setup" open/)
   })
@@ -67,8 +67,8 @@ describe('a case that passed', () => {
 
   it('counts the setup steps, not the judged ones: this case reads the balance and nothing else', () => {
     const passed = detail(DOUBLE_EARN, 'earn/adds-points')
-    expect(passed).toContain('Setup · 1 step, only held to answering')
-    expect(html).toContain('Setup · 2 steps, only held to answering')
+    expect(passed).toContain('Setup · 1 step, only checked that the partner answers')
+    expect(html).toContain('Setup · 2 steps, only checked that the partner answers')
   })
 
   it('still shows the steps, so a pass can be compared with a failure', () => {

@@ -884,3 +884,31 @@ partner is.
 open its group, and the page has no "open all". Whether a group is open is forgotten when the visitor leaves
 the Run page. The fold button needed a width of its own on a touch screen: measured, it was 36.5 px, and the
 end-to-end run now measures it.
+
+## 41. The Run page is two cards and a bar, and says where it is
+
+Seen in a browser, the Run page was long and half empty: one card held thirteen versions, a paragraph and the
+cases, 1,223 px tall at 1,024 px wide, and the column beside it stayed blank until a run began. The review that
+followed (design critique, accessibility, copy, the stylesheet) measured it, and the page was drawn again
+([`docs/design/mockups/run-idle.html`](design/mockups/run-idle.html)).
+
+It is a card for the partner version, a card for the cases, and a bar under both. `correct` stands on its own and
+the twelve wrong versions are a two-column grid under a line saying they are wrong in one way; the cases are the
+folded groups of decision 40; the bar says what will run and against which version, and holds the button, which
+stays at the foot of the window. Once a run begins the lanes take the cases' place and the version card stays. At
+1,280 px the page is 917 px tall (it was 1,522 at 1,024); on a phone it is 1,343 px (it was 1,643). A case's id is no longer drawn on its row, only shown on hover, because a second line on every row
+was most of the length; the result page still shows ids.
+
+Said with it, because they were found with it: each page has its own title and the focus moves to its heading
+when the page changes; the end of a run, and not each case, is announced to a screen reader; the base type is
+15 px and the sizes are a scale of 12, 13, 15, 16, 22 and 28; spacing moves in the steps of the stylesheet; a
+status beside a long title in a lane was cut off, and no longer is; a problem type in a sentence is its last
+part; the dead `.chip` rule is gone and `.opt`, which served three things, is three classes; the copy says one
+thing for one action (Run again, Try it, Continue to Run), the server-error message says what to do, and the
+setup steps say what they are held to.
+
+**Cost.** The groups are folded at every width, so on a laptop the cases card is five lines with room under it,
+which is better than empty but is not full. A visitor who wants a case by name still opens its group. The
+announcement repeats a sentence that is also on the page, so a test that finds that sentence by its text finds it
+twice and must look at the visible one. Everything here was checked in Chrome and, for the page as it stood before
+this change, in Safari on an iPhone simulator; not in Firefox, and not with a screen reader.
