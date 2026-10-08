@@ -49,7 +49,9 @@ Built in stages. Done so far:
   back beside what was expected, and what was wrong with the version; and the
   history of the session's runs.
 
-Next: end-to-end tests in a real browser, and deployment.
+The page is also driven in a real browser by `packages/e2e`, in a CI job of its own.
+
+Next: deployment.
 
 ## Layout
 
@@ -75,6 +77,7 @@ pnpm verify                  # format, lint (code and spec), types, leak check, 
 pnpm db:migrate              # the local databases of both Workers
 pnpm dev                     # the API, the reference partner and the built page on :8787
 pnpm dev:ui                  # optional: the page with hot reload on :5173, proxying /api to :8787
+pnpm e2e                     # the page in Chrome against the real Workers, on a fresh database (port 8791)
 ```
 
 `pnpm dev` serves whatever is in `packages/ui/dist`, so build the page first

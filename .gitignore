@@ -21,3 +21,8 @@ build/
 # The leak checker's word list — local only, never published.
 # See the note at the top of scripts/check-leak.mjs.
 .leakwords.json
+
+# End-to-end tests: the database they start from, and their reports.
+packages/e2e/.state/
+packages/e2e/test-results/
+packages/e2e/playwright-report/

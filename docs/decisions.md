@@ -816,3 +816,26 @@ are two links. Runs are listed only for the session that made them, and a sessio
 day, so this is the history of an afternoon, not a record. "How long ago" is rounded down
 and goes stale until the page is read again. A run a visitor abandoned stays "not finished"
 at the part it reached until the session ends.
+
+## 38. The page is driven in a real browser against the real stack, in its own job
+
+What the unit tests could not see was found, one at a time, by looking: a list laid out as single
+letters, a policy refusing fonts, a button below the fold, and a rule for touch screens that never
+applied. `packages/e2e` drives the page in Chrome through a visitor's path (a session, the connection and
+the secret shown once, a run against a version that is wrong, the result and its evidence, the right
+version, the history, a case by its address and after a reload, a phone and a mouse, the limit on
+starting sessions) against the API Worker, the reference partner and the built page, started the way a
+visitor meets them. It also runs axe over every page in light and dark and fails on a serious or critical
+violation, and fails on anything the browser put in its console.
+
+It uses the Chrome that is installed (`channel: 'chrome'`) and downloads nothing; the runners GitHub gives
+have it. The database starts empty each time, because a session start is limited to five an hour for one
+address. It is a separate CI job from `pnpm verify`, so a slow browser does not hold up the quick check
+and one failing does not hide the other.
+
+**Cost.** About thirty seconds of the stack starting and the tests running, a second CI job, and a
+Chrome on the machine. The tests stop at their first failure, because each depends on the session the
+last one made, so one break shows one failure and a second is only seen after the first is fixed. They
+run in one browser: Firefox and Safari are not tried, and a screen reader is not driven (axe checks what
+a machine can; it is not the same). The first CI run of this job is the first time it has run anywhere but
+this machine.
