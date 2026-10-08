@@ -771,6 +771,7 @@ end-to-end test on a touch screen measured 40 px. The stylesheet test now checks
 | 566 | The controls 42 px with a mouse                   | journey: with a mouse the controls are 40 px, and a narrow window does not make them 44                   | `expect(received).toBe(expected) // Object.is equality`          |
 | 567 | Low contrast text in dark mode                    | journey: no serious accessibility violations on any page, in dark mode                                    | `/ in dark mode`                                                 |
 | 568 | A run that passed everything not said to          | journey: the right version passes everything, and says so                                                 | `expect(locator).toBeVisible() failed`                           |
+| 569 | The address is said not to be one you can open    | connection: says the address is public, since the deployed partner is reachable at it                     | `to contain 'public one too'`                                    |
 
 ## Tests that could not fail, found on the way
 

@@ -597,6 +597,12 @@ route a visitor could call. The Connection page has to say so, or it suggests
 something the deployment does not do. `no-store` also means the browser never
 reuses a session read, so the page asks again each time.
 
+**Amended at the first deployment.** That held while `PARTNER_ORIGIN` was a
+name that resolves nowhere. The deployed one is the partner's own public
+address, which is what a visitor ought to be shown, so the page now says the
+address is public too and that the signing secret is what a request needs. The
+suite's requests still go through the binding.
+
 ## 29. The page is plain: no router library, nothing from another origin, nothing inline
 
 The page is React and Vite, served by the API Worker as static assets
