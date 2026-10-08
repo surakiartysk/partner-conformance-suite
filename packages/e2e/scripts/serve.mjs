@@ -48,6 +48,8 @@ run([
   state,
 ])
 
+const PARTNER_ORIGIN = 'https://points-partner.example'
+
 const server = spawn(
   'pnpm',
   [
@@ -61,6 +63,10 @@ const server = spawn(
     port,
     '--persist-to',
     state,
+    // The address the page shows is part of what is tested, so it is fixed here
+    // and does not follow the origin the deployment is configured with.
+    '--var',
+    `PARTNER_ORIGIN:${PARTNER_ORIGIN}`,
   ],
   { cwd: root, stdio: 'inherit' },
 )

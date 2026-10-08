@@ -18,8 +18,9 @@ service = "points-partner"
 
 [vars]
 # Shown to the visitor as the partner's base URL, and used to build the URL of
-# each request. The service binding decides where the request actually goes.
-PARTNER_ORIGIN = "https://points-partner.example"
+# each request. The service binding decides where the request actually goes, so
+# this is the partner's public address, which a visitor can reach too.
+PARTNER_ORIGIN = "https://points-partner.surakiart-ysk.workers.dev"
 
 # Secrets — `wrangler secret put` for a deployment, `.dev.vars` locally. None
 # has a default: unset, the endpoints that need one answer 503.
