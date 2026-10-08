@@ -1,4 +1,5 @@
-import { canSubmit, groupState, type Group } from '../run-form'
+import { useState } from 'react'
+import { canSubmit, groupState, toggleOpen, type Group } from '../run-form'
 
 interface Props {
   versions: string[]
@@ -15,11 +16,17 @@ interface Props {
   /** Why the form cannot be submitted right now, if it cannot. */
   busy: boolean
   problem: string | null
+  /** Whether the groups start open. They start folded: twenty cases are a long form. */
+  defaultOpen?: boolean
 }
 
 export function RunForm(props: Props) {
   const chosen = props.selected.length
   const total = props.groups.reduce((n, g) => n + g.cases.length, 0)
+  // Folding only hides what is chosen; it never changes it, so it stays with the form.
+  const [open, setOpen] = useState<string[]>(() =>
+    props.defaultOpen ? props.groups.map((g) => g.service) : [],
+  )
   return (
     <form
       className="card stack"
@@ -30,6 +37,11 @@ export function RunForm(props: Props) {
     >
       <fieldset>
         <legend>Partner version</legend>
+        <p className="note">
+          The partner is the service the suite tests: a points API that earns, redeems and reverses
+          points. A version is a copy of it. <span className="mono">correct</span> follows the spec;
+          every other one is wrong in one way, and the result says how.
+        </p>
         {props.versions.map((name) => (
           <label className="opt" key={name}>
             <input
@@ -48,10 +60,6 @@ export function RunForm(props: Props) {
             </span>
           </label>
         ))}
-        <p className="note">
-          Every version but <span className="mono">correct</span> is wrong in one way. The result
-          says how.
-        </p>
       </fieldset>
 
       <fieldset>
@@ -70,35 +78,52 @@ export function RunForm(props: Props) {
         {props.groups.map((group) => {
           const ids = group.cases.map((c) => c.id)
           const state = groupState(props.selected, ids)
+          const isOpen = open.includes(group.service)
           return (
             <fieldset className="pick-group" key={group.service}>
-              <label className="opt group-head">
-                <GroupBox
-                  state={state}
-                  disabled={props.busy}
-                  onChange={() => props.onToggleGroup(group.service, state !== 'all')}
-                />
-                <span>
-                  <span className="mono">{group.service}</span>
-                  <small>
-                    {ids.filter((id) => props.selected.includes(id)).length} of {ids.length}
-                  </small>
-                </span>
-              </label>
-              {group.cases.map((c) => (
-                <label className="opt pick-case" key={c.id}>
-                  <input
-                    type="checkbox"
-                    checked={props.selected.includes(c.id)}
-                    onChange={() => props.onToggleCase(c.id)}
+              <div className="group-row">
+                <label className="opt group-head">
+                  <GroupBox
+                    state={state}
                     disabled={props.busy}
+                    onChange={() => props.onToggleGroup(group.service, state !== 'all')}
                   />
                   <span>
-                    {c.name}
-                    <small className="mono">{c.id}</small>
+                    <span className="mono">{group.service}</span>
+                    <small>
+                      {ids.filter((id) => props.selected.includes(id)).length} of {ids.length}
+                    </small>
                   </span>
                 </label>
-              ))}
+                <button
+                  type="button"
+                  className="fold"
+                  aria-expanded={isOpen}
+                  aria-controls={`cases-${group.service}`}
+                  aria-label={`${isOpen ? 'Hide' : 'Show'} the ${group.service} cases`}
+                  onClick={() => setOpen(toggleOpen(open, group.service))}
+                >
+                  <span aria-hidden="true">{isOpen ? '▾' : '▸'}</span>
+                </button>
+              </div>
+              {isOpen ? (
+                <div id={`cases-${group.service}`}>
+                  {group.cases.map((c) => (
+                    <label className="opt pick-case" key={c.id}>
+                      <input
+                        type="checkbox"
+                        checked={props.selected.includes(c.id)}
+                        onChange={() => props.onToggleCase(c.id)}
+                        disabled={props.busy}
+                      />
+                      <span>
+                        {c.name}
+                        <small className="mono">{c.id}</small>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
             </fieldset>
           )
         })}

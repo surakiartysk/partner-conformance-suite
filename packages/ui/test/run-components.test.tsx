@@ -117,8 +117,33 @@ describe('the Run form', () => {
     expect(html).not.toContain('ignores')
   })
 
-  it('shows each service as a group and each case under it, the chosen ones checked', () => {
+  it('starts with every group folded, each saying how much of it is chosen', () => {
     const html = render()
+    expect(html).not.toContain('Earning twice adds once')
+    expect(html).not.toContain('>e/2<')
+    expect(html).toContain('1 of 2') // earn: one of two chosen
+    expect(html.match(/aria-expanded="false"/g)).toHaveLength(2)
+    expect(html).toContain('aria-label="Show the earn cases"')
+    // The boxes that remain are the two groups'.
+    expect(html.match(/type="checkbox"/g)).toHaveLength(2)
+  })
+
+  it('can start with them open, each fold button naming the cases it shows', () => {
+    const html = render({ defaultOpen: true })
+    expect(html.match(/aria-expanded="true"/g)).toHaveLength(2)
+    expect(html).toContain('aria-label="Hide the earn cases"')
+    expect(html).toContain('aria-controls="cases-earn"')
+    expect(html).toContain('id="cases-earn"')
+  })
+
+  it('says what a partner and a version are, and which version is the right one', () => {
+    const html = render()
+    expect(html).toContain('The partner is the service the suite tests')
+    expect(html).toContain('A version is a copy of it')
+  })
+
+  it('shows each service as a group and each case under it, the chosen ones checked', () => {
+    const html = render({ defaultOpen: true })
     // two groups and three cases
     expect(html.match(/type="checkbox"/g)).toHaveLength(5)
     expect(html).toContain('Earning twice adds once')
@@ -153,8 +178,9 @@ describe('the Run form', () => {
     expect(html).toContain('Choose at least one case')
   })
 
-  it('locks every control while a run is going', () => {
-    const html = render({ busy: true })
+  it('locks every control while a run is going, but not the folding, which changes nothing', () => {
+    const html = render({ busy: true, defaultOpen: true })
+    expect(html.match(/class="fold"[^>]*disabled/g)).toBeNull()
     expect(html).toMatch(/<button[^>]*disabled[^>]*>Running…/)
     expect(html.match(/type="radio"[^>]*disabled/g)).toHaveLength(2)
     expect(html.match(/type="checkbox"[^>]*disabled/g)).toHaveLength(5)

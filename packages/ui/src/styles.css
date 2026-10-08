@@ -363,6 +363,20 @@ legend {
 .pick-case {
   margin-left: 22px;
 }
+.group-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.group-row .group-head {
+  flex: 1;
+}
+.fold {
+  padding: 0 14px;
+  flex: none;
+  font-size: 22px;
+  line-height: 1;
+}
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -817,5 +831,9 @@ details.setup .step {
   .chip,
   .opt {
     min-height: 44px;
+  }
+  /* Its height is its row's, which is stretched; a finger needs the width as well. */
+  .fold {
+    min-width: 44px;
   }
 }

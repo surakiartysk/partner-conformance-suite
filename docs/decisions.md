@@ -865,3 +865,22 @@ page no longer sends it, which is two ways to ask for the same thing; it was kep
 rewrite the API's tests for no gain to a visitor. A case can be chosen without the case it would be compared
 with: each case arranges its own state, so nothing is lost, but a visitor choosing one case of a pair sees
 only that one. The three checks that were first missing are in `docs/mutations.md`.
+
+## 40. The groups of cases fold, and start folded
+
+Twenty cases under five services made the Run form long, most of all on a phone, where the button that runs
+them sat below a great deal of scrolling. Each service now has a button, next to its box, that shows or hides
+its cases. They start folded: a first visit sees five lines, each saying how much of its service is chosen
+("2 of 4"), and the cases are one press away. Folding changes nothing that is chosen: the choice lives in the
+page, not in what is drawn, so a group folded and opened again is as it was, and its box works while it is
+folded. The button names what it will do ("Show the earn cases") and says whether it is open (`aria-expanded`,
+`aria-controls`), and stays usable while a run is going, since it only changes what is looked at.
+
+The Partner version heading also says what the partner is, what a version is and which one is right: the page
+used to say only that every version but `correct` is wrong in one way, which leaves a visitor to guess what a
+partner is.
+
+**Cost.** A case is not on the page until its group is opened, so a visitor who wants a case by name has to
+open its group, and the page has no "open all". Whether a group is open is forgotten when the visitor leaves
+the Run page. The fold button needed a width of its own on a touch screen: measured, it was 36.5 px, and the
+end-to-end run now measures it.
