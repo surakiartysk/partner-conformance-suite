@@ -211,6 +211,12 @@ test('on a phone nothing scrolls sideways, and the Run button is on the screen a
   const box = (await button.boundingBox())!
   expect(box.y + box.height, 'the button is below the fold').toBeLessThanOrEqual(812)
   expect(box.height).toBeGreaterThanOrEqual(44)
+  // And every row a finger has to hit: versions, groups and cases alike.
+  const heights = await small
+    .locator('.opt')
+    .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height))
+  expect(heights.length).toBeGreaterThan(30)
+  expect(Math.min(...heights), 'a row is too small to press').toBeGreaterThanOrEqual(44)
   await phone.close()
 })
 

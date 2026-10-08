@@ -135,6 +135,18 @@ describe('the Run form', () => {
     expect(render({ selected: ['e/2'] })).toContain('Run 1 case<')
   })
 
+  it('has All and None, each unavailable when it would change nothing', () => {
+    const everything = render({ selected: ['s/1', 'e/1', 'e/2'] })
+    expect(everything).toMatch(/<button type="button" disabled=""[^>]*>All</)
+    expect(everything).toMatch(/<button type="button"(?! disabled)[^>]*>None</)
+    const nothing = render({ selected: [] })
+    expect(nothing).toMatch(/<button type="button" disabled=""[^>]*>None</)
+    expect(nothing).toMatch(/<button type="button"(?! disabled)[^>]*>All</)
+    const some = render({ selected: ['e/1'] })
+    expect(some).toMatch(/<button type="button"(?! disabled)[^>]*>All</)
+    expect(some).toMatch(/<button type="button"(?! disabled)[^>]*>None</)
+  })
+
   it('cannot be submitted with no case chosen, and says why', () => {
     const html = render({ selected: [] })
     expect(html).toMatch(/<button[^>]*disabled[^>]*>Run 0 cases/)

@@ -119,6 +119,10 @@ describe('POST /api/runs', () => {
     expect(await refused({ cases: ['earn/nothing-like-it'] })).toBe(400)
     expect(await refused({ cases: [id, id] })).toBe(400)
     expect(await refused({ cases: id })).toBe(400)
+    // Not a list either, and not caught by the checks after it: a string of letters
+    // that do not repeat has nothing wrong with it as a set, and an object has no length.
+    expect(await refused({ cases: 'abc' })).toBe(400)
+    expect(await refused({ cases: {} })).toBe(400)
     expect(await refused({ cases: [id, 7] })).toBe(400)
     expect(await refused({ cases: [id], services: ['earn'] })).toBe(400)
     expect(await refused({ cases: [id] })).toBe(201)
