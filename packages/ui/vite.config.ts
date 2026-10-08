@@ -14,6 +14,11 @@ import { defineConfig } from 'vite'
  */
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Nothing is inlined as a data: URI. The page's policy lets fonts come from its
+    // own origin only, and the fonts' small subsets were being inlined and refused.
+    assetsInlineLimit: 0,
+  },
   server: {
     port: 5173,
     proxy: { '/api': 'http://127.0.0.1:8787' },

@@ -237,6 +237,40 @@ describe('the Run page', () => {
     ])
   })
 
+  describe('bringing the lanes into view', () => {
+    const narrow = (matches: boolean) => {
+      const scrolled: string[] = []
+      // Matches only the query the page asks about, so a changed query is noticed.
+      window.matchMedia = ((query: string) => ({
+        matches: matches && query === '(max-width: 860px)',
+        media: query,
+      })) as unknown as typeof window.matchMedia
+      Element.prototype.scrollIntoView = function () {
+        scrolled.push(this.getAttribute('aria-labelledby') ?? '')
+      }
+      return scrolled
+    }
+
+    it('scrolls to them when the run begins where the form sits above them', async () => {
+      const scrolled = narrow(true)
+      const user = userEvent.setup()
+      const { client } = fakeClient({ hold: true })
+      renderPage(client)
+      await user.click(await screen.findByRole('button', { name: 'Run 3 cases' }))
+      await waitFor(() => expect(scrolled).toEqual(['live']))
+    })
+
+    it('leaves the page where it is when the lanes sit beside the form', async () => {
+      const scrolled = narrow(false)
+      const user = userEvent.setup()
+      const { client } = fakeClient({ hold: true })
+      renderPage(client)
+      await user.click(await screen.findByRole('button', { name: 'Run 3 cases' }))
+      await screen.findByRole('button', { name: 'Running…' })
+      expect(scrolled).toEqual([])
+    })
+  })
+
   it('names each case in its lane, with its id', async () => {
     const user = userEvent.setup()
     const { client } = fakeClient({ hold: true })

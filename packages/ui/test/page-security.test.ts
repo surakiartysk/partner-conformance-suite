@@ -135,4 +135,8 @@ describe('the stylesheet', () => {
       .map(([, , tag]) => tag)
     expect(offenders).toEqual([])
   })
+
+  it('keeps the button of the form at the foot of the window', () => {
+    expect(css()).toMatch(/\.form-actions\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0/)
+  })
 })
