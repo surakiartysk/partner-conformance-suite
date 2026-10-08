@@ -143,3 +143,11 @@ export function pointsGivenBack(progress: Progress): 'all' | 'not-all' | 'unknow
   if (members.every((l) => l.restore?.status === 'nothing-owed')) return 'none-moved'
   return 'all'
 }
+
+/** The one-line verdict of a run: what the summary shows and what is announced when it ends. */
+export function verdictText(c: Counts): string {
+  const notPassed = c.total - c.passed
+  return notPassed === 0
+    ? `All ${c.total} cases passed`
+    : `${notPassed} of ${c.total} ${c.total === 1 ? 'case' : 'cases'} did not pass`
+}

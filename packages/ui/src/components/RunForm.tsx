@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { canSubmit, groupState, toggleOpen, type Group } from '../run-form'
 
 interface Props {
@@ -13,12 +13,16 @@ interface Props {
   onAll: () => void
   onNone: () => void
   onSubmit: () => void
-  /** Why the form cannot be submitted right now, if it cannot. */
   busy: boolean
+  /** Why the form cannot be submitted right now, if it cannot. */
   problem: string | null
+  /** What takes the place of the cases once a run has begun. */
+  aside?: ReactNode
   /** Whether the groups start open. They start folded: twenty cases are a long form. */
   defaultOpen?: boolean
 }
+
+const WRONG_WAY = 'Wrong in one way, and the result says how'
 
 export function RunForm(props: Props) {
   const chosen = props.selected.length
@@ -27,110 +31,134 @@ export function RunForm(props: Props) {
   const [open, setOpen] = useState<string[]>(() =>
     props.defaultOpen ? props.groups.map((g) => g.service) : [],
   )
+  const others = props.versions.filter((name) => name !== 'correct')
+  const radio = (name: string) => (
+    <input
+      type="radio"
+      name="version"
+      value={name}
+      checked={props.version === name}
+      onChange={() => props.onVersion(name)}
+      disabled={props.busy}
+    />
+  )
   return (
     <form
-      className="card stack"
+      className="run-form"
       onSubmit={(event) => {
         event.preventDefault()
         if (canSubmit(chosen, props.busy)) props.onSubmit()
       }}
     >
-      <fieldset>
-        <legend>Partner version</legend>
-        <p className="note">
-          The partner is the service the suite tests: a points API that earns, redeems and reverses
-          points. A version is a copy of it. <span className="mono">correct</span> follows the spec;
-          every other one is wrong in one way, and the result says how.
-        </p>
-        {props.versions.map((name) => (
-          <label className="opt" key={name}>
-            <input
-              type="radio"
-              name="version"
-              value={name}
-              checked={props.version === name}
-              onChange={() => props.onVersion(name)}
-              disabled={props.busy}
-            />
-            <span>
-              <span className="mono">{name}</span>
-              {name === 'correct' ? (
-                <small>Implements the spec. Everything should pass.</small>
-              ) : null}
-            </span>
-          </label>
-        ))}
-      </fieldset>
-
-      <fieldset>
-        <legend>Cases</legend>
-        <div className="pick-tools">
-          <button type="button" onClick={props.onAll} disabled={props.busy || chosen === total}>
-            All
-          </button>
-          <button type="button" onClick={props.onNone} disabled={props.busy || chosen === 0}>
-            None
-          </button>
-          <span className="mono note">
-            {chosen} of {total} chosen
-          </span>
+      <div className="grid">
+        <div className="card" role="radiogroup" aria-labelledby="version-title">
+          <h2 id="version-title">Partner version</h2>
+          <p className="note">
+            The partner is the points API under test. Each version is a copy of it:{' '}
+            <span className="mono">correct</span> follows the spec, the others are each wrong in one
+            way.
+          </p>
+          {props.versions.includes('correct') ? (
+            <label className="vopt vcorrect">
+              {radio('correct')}
+              <span>
+                <span className="mono">correct</span>
+                <small>Follows the spec. Everything should pass.</small>
+              </span>
+            </label>
+          ) : null}
+          <p className="note vlabel">{WRONG_WAY}</p>
+          <div className="vgrid">
+            {others.map((name) => (
+              <label className="vopt" key={name}>
+                {radio(name)}
+                <span className="mono">{name}</span>
+              </label>
+            ))}
+          </div>
         </div>
-        {props.groups.map((group) => {
-          const ids = group.cases.map((c) => c.id)
-          const state = groupState(props.selected, ids)
-          const isOpen = open.includes(group.service)
-          return (
-            <fieldset className="pick-group" key={group.service}>
-              <div className="group-row">
-                <label className="opt group-head">
-                  <GroupBox
-                    state={state}
-                    disabled={props.busy}
-                    onChange={() => props.onToggleGroup(group.service, state !== 'all')}
-                  />
-                  <span>
-                    <span className="mono">{group.service}</span>
-                    <small>
-                      {ids.filter((id) => props.selected.includes(id)).length} of {ids.length}
-                    </small>
-                  </span>
-                </label>
+
+        {props.aside ?? (
+          <div className="card" role="group" aria-labelledby="cases-title">
+            <div className="cases-head">
+              <h2 id="cases-title">Cases</h2>
+              <div className="pick-tools">
                 <button
                   type="button"
-                  className="fold"
-                  aria-expanded={isOpen}
-                  aria-controls={`cases-${group.service}`}
-                  aria-label={`${isOpen ? 'Hide' : 'Show'} the ${group.service} cases`}
-                  onClick={() => setOpen(toggleOpen(open, group.service))}
+                  onClick={props.onAll}
+                  disabled={props.busy || chosen === total}
                 >
-                  <span aria-hidden="true">{isOpen ? '▾' : '▸'}</span>
+                  All
                 </button>
+                <button type="button" onClick={props.onNone} disabled={props.busy || chosen === 0}>
+                  None
+                </button>
+                <span className="mono note">
+                  {chosen} of {total} chosen
+                </span>
               </div>
-              {isOpen ? (
-                <div id={`cases-${group.service}`}>
-                  {group.cases.map((c) => (
-                    <label className="opt pick-case" key={c.id}>
-                      <input
-                        type="checkbox"
-                        checked={props.selected.includes(c.id)}
-                        onChange={() => props.onToggleCase(c.id)}
+            </div>
+            {props.groups.map((group) => {
+              const ids = group.cases.map((c) => c.id)
+              const state = groupState(props.selected, ids)
+              const isOpen = open.includes(group.service)
+              return (
+                <div className="pick-group" key={group.service}>
+                  <div className="group-row">
+                    <label className="gname">
+                      <GroupBox
+                        state={state}
                         disabled={props.busy}
+                        onChange={() => props.onToggleGroup(group.service, state !== 'all')}
                       />
-                      <span>
-                        {c.name}
-                        <small className="mono">{c.id}</small>
+                      <span className="gtext">
+                        <span className="mono">{group.service}</span>
+                        <small>
+                          {ids.filter((id) => props.selected.includes(id)).length} of {ids.length}
+                        </small>
                       </span>
                     </label>
-                  ))}
+                    <button
+                      type="button"
+                      className="fold"
+                      aria-expanded={isOpen}
+                      aria-controls={`cases-${group.service}`}
+                      aria-label={`${isOpen ? 'Hide' : 'Show'} the ${group.service} cases`}
+                      onClick={() => setOpen(toggleOpen(open, group.service))}
+                    >
+                      <span aria-hidden="true">{isOpen ? '▾' : '▸'}</span>
+                    </button>
+                  </div>
+                  {isOpen ? (
+                    <div className="pick-list" id={`cases-${group.service}`}>
+                      {group.cases.map((c) => (
+                        <label className="crow" key={c.id} title={c.id}>
+                          <input
+                            type="checkbox"
+                            checked={props.selected.includes(c.id)}
+                            onChange={() => props.onToggleCase(c.id)}
+                            disabled={props.busy}
+                          />
+                          <span>{c.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </fieldset>
-          )
-        })}
-        {chosen === 0 ? <p className="problem">Choose at least one case.</p> : null}
-      </fieldset>
+              )
+            })}
+            {chosen === 0 ? <p className="problem">Choose at least one case.</p> : null}
+          </div>
+        )}
+      </div>
 
-      <div className="form-actions">
+      <div className="run-bar">
+        <p className="run-summary">
+          <span className="long">
+            Will run {chosen} {chosen === 1 ? 'case' : 'cases'} against{' '}
+          </span>
+          <span className="mono">{props.version}</span>
+        </p>
         <button type="submit" className="primary" disabled={!canSubmit(chosen, props.busy)}>
           {props.busy ? 'Running…' : `Run ${chosen} ${chosen === 1 ? 'case' : 'cases'}`}
         </button>

@@ -137,7 +137,7 @@ describe('the stylesheet', () => {
   })
 
   it('keeps the button of the form at the foot of the window', () => {
-    expect(css()).toMatch(/\.form-actions\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0/)
+    expect(css()).toMatch(/\.run-bar\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0/)
   })
 
   it('makes the controls at least 44 px tall for a finger, and says so after the rule it overrides', () => {
@@ -147,7 +147,9 @@ describe('the stylesheet', () => {
     // At equal specificity the later rule wins, so the rule for fingers must come after
     // every rule that sets a smaller minimum on the same controls. A real browser found
     // it above them, where it did nothing.
-    const base = [...text.matchAll(/(^|\n)(button|select|\.chip)\s*\{[^}]*min-height:\s*(\d+)px/g)]
+    const base = [
+      ...text.matchAll(/(^|\n)(button|select|\.vopt|\.crow)\s*\{[^}]*min-height:\s*(\d+)px/g),
+    ]
     expect(base.length).toBeGreaterThan(0)
     for (const rule of base) {
       expect(coarse, `after the ${rule[2]} rule that sets ${rule[3]}px`).toBeGreaterThan(

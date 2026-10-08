@@ -2,7 +2,7 @@ import type { CaseInfo } from '../api'
 import type { Route } from '../route'
 import { PageLink } from './Layout'
 import { givenBackText } from '../given-back'
-import { counts, rows, type Progress } from '../progress'
+import { counts, rows, verdictText, type Progress } from '../progress'
 import { Status } from './Status'
 
 interface Props {
@@ -19,10 +19,7 @@ export function RunSummary({ progress, cases, version, runId, onRunAgain, onNavi
   const c = counts(progress)
   const notPassed = c.total - c.passed
   const unfinished = c.total - c.finished
-  const headline =
-    notPassed === 0
-      ? `All ${c.total} cases passed`
-      : `${notPassed} of ${c.total} ${c.total === 1 ? 'case' : 'cases'} did not pass`
+  const headline = verdictText(c)
   const trouble = progress.lanes.flatMap((lane) =>
     rows(lane)
       .filter((r) => r.status !== 'passed')

@@ -27,14 +27,14 @@ function show(withSession: boolean) {
 describe('what the buttons on Home do', () => {
   it('starts a session when there is none, and goes nowhere else', async () => {
     const { went, started } = show(false)
-    await userEvent.click(screen.getByRole('button', { name: 'Try it →' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Try it' }))
     expect(started()).toBe(1)
     expect(went).toEqual([])
   })
 
   it('goes on to Run, without starting a session, when there is one', async () => {
     const { went, started } = show(true)
-    await userEvent.click(screen.getByRole('button', { name: 'Continue to Run →' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Continue to Run' }))
     expect(went).toEqual([{ page: 'run' }])
     expect(started()).toBe(0)
   })

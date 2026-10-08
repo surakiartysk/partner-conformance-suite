@@ -34,8 +34,20 @@ export function show(value: unknown): string {
 
 const field = (path: string) => (path.startsWith('$.') ? path.slice(2) : path)
 
+/**
+ * A problem type is a long address, and its last part is the name. A sentence that
+ * lists three of them read as a wall of URLs; the lines of the body beside it still
+ * show the addresses in full.
+ */
+export const shortProblemTypes = (text: string) =>
+  text.replace(/"https?:\/\/[^"\s]*\/problems\/([^"\s]+)"/g, '"$1"')
+
 /** One sentence for one disagreement. */
 export function describeMismatch(m: Mismatch): string {
+  return shortProblemTypes(sentenceFor(m))
+}
+
+function sentenceFor(m: Mismatch): string {
   if (m.path === 'status') {
     return `The status should be ${m.expected}; the partner answered ${show(m.actual)}.`
   }

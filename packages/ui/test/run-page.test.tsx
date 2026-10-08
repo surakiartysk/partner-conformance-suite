@@ -144,6 +144,65 @@ describe('the Run page', () => {
     ).toBeTruthy()
   })
 
+  describe('saying how a run is going', () => {
+    const status = () => document.querySelector('.sr-only[role="status"]') as HTMLElement
+
+    it('has a place for it from the start, with nothing in it', async () => {
+      const { client } = fakeClient()
+      renderPage(client)
+      await screen.findByRole('button', { name: 'Run 3 cases' })
+      expect(status()).toBeTruthy()
+      expect(status().textContent).toBe('')
+    })
+
+    it('says once that a run has begun, and what it is of, and not every case after', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient({ hold: true })
+      renderPage(client)
+      await user.click(await screen.findByRole('radio', { name: /off-by-one/ }))
+      await user.click(screen.getByRole('button', { name: 'Run 3 cases' }))
+      await waitFor(() => expect(status().textContent).toBe('Running 3 cases against off-by-one'))
+      // the visible count is not what is announced
+      expect(screen.getByText(/of 3 done/).closest('[role="status"]')).toBeNull()
+    })
+
+    it('says how it ended, the verdict and whether the points are back', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient({ failing: ['earn/duplicate-reference'] })
+      renderPage(client)
+      await user.click(await screen.findByRole('button', { name: 'Run 3 cases' }))
+      await waitFor(() =>
+        expect(status().textContent).toBe(
+          '1 of 3 cases did not pass. Points given back. Both members are at their starting balances.',
+        ),
+      )
+    })
+
+    it('says an all-pass run passed, and goes quiet again when the form is back', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient()
+      renderPage(client)
+      await user.click(await screen.findByRole('button', { name: 'Run 3 cases' }))
+      await waitFor(() => expect(status().textContent).toMatch(/^All 3 cases passed\./))
+      await user.click(await screen.findByRole('button', { name: 'Run again' }))
+      expect(status().textContent).toBe('')
+    })
+  })
+
+  describe('while a run goes', () => {
+    it('keeps the version card and the run bar, and shows the lanes in place of the cases', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient({ hold: true })
+      renderPage(client)
+      await user.click(await screen.findByRole('button', { name: 'Run 3 cases' }))
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Running…' })).toBeTruthy())
+      expect(screen.getByRole('heading', { name: 'Partner version' })).toBeTruthy()
+      expect(screen.queryByRole('heading', { name: 'Cases' })).toBeNull()
+      expect(screen.getByRole('heading', { name: /Running/ })).toBeTruthy()
+      expect(screen.getByText(/Will run 3 cases against/)).toBeTruthy()
+    })
+  })
+
   describe('choosing cases', () => {
     const box = (name: RegExp) => screen.getByRole('checkbox', { name }) as HTMLInputElement
     const unfold = async (user: ReturnType<typeof userEvent.setup>, service: string) =>

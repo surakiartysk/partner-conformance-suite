@@ -112,7 +112,7 @@ describe('the Run form', () => {
 
   it('says what is wrong with no version but only that it is wrong, and what correct is', () => {
     const html = render()
-    expect(html).toContain('Implements the spec')
+    expect(html).toContain('Follows the spec. Everything should pass.')
     expect(html).toContain('wrong in one way')
     expect(html).not.toContain('ignores')
   })
@@ -138,8 +138,8 @@ describe('the Run form', () => {
 
   it('says what a partner and a version are, and which version is the right one', () => {
     const html = render()
-    expect(html).toContain('The partner is the service the suite tests')
-    expect(html).toContain('A version is a copy of it')
+    expect(html).toContain('The partner is the points API under test')
+    expect(html).toContain('Each version is a copy of it')
   })
 
   it('shows each service as a group and each case under it, the chosen ones checked', () => {
@@ -147,7 +147,9 @@ describe('the Run form', () => {
     // two groups and three cases
     expect(html.match(/type="checkbox"/g)).toHaveLength(5)
     expect(html).toContain('Earning twice adds once')
-    expect(html).toContain('>e/2<')
+    // The id is for a hover, not for the list: a second line on every row made the form long.
+    expect(html).toContain('title="e/2"')
+    expect(html).not.toContain('>e/2<')
     expect(html.match(/type="checkbox" checked/g)).toHaveLength(2)
   })
 
@@ -190,11 +192,50 @@ describe('the Run form', () => {
     expect(render({ problem: 'Too many runs.' })).toMatch(/role="alert"[^>]*>Too many runs\./)
   })
 
-  it('keeps the submit button and the reason it failed together at the foot of the form', () => {
+  it('keeps the run bar together: what will run, the button, and the reason it failed', () => {
     const html = render({ problem: 'Too many runs.' })
     expect(html).toMatch(
-      /<div class="form-actions"><button type="submit"[^>]*>Run 2 cases<\/button><p role="alert"[^>]*>Too many runs\.<\/p><\/div><\/form>/,
+      /<div class="run-bar"><p class="run-summary">.*<\/p><button type="submit"[^>]*>Run 2 cases<\/button><p role="alert"[^>]*>Too many runs\.<\/p><\/div><\/form>/,
     )
+  })
+
+  it('says what will run and against which version, in the bar and not only on the button', () => {
+    const two = render({ selected: ['s/1', 'e/1'] })
+    expect(two).toContain('Will run 2 cases against')
+    expect(two).toMatch(/<span class="mono">double-earn<\/span><\/p>/)
+    expect(render({ selected: ['e/2'] })).toContain('Will run 1 case against')
+    expect(render({ selected: ['e/2'], version: 'off-by-one' })).toContain(
+      '<span class="mono">off-by-one</span>',
+    )
+  })
+
+  it('puts correct first, on its own, and the wrong versions in a grid under what that means', () => {
+    const html = render({ versions: ['correct', 'double-earn', 'off-by-one'] })
+    const correct = html.indexOf('vopt vcorrect')
+    const label = html.indexOf('Wrong in one way, and the result says how')
+    const grid = html.indexOf('class="vgrid"')
+    expect(correct).toBeGreaterThan(-1)
+    expect(correct).toBeLessThan(label)
+    expect(label).toBeLessThan(grid)
+    // correct is not among the others
+    expect(html.slice(grid).includes('>correct<')).toBe(false)
+    expect(html.slice(grid).match(/type="radio"/g)).toHaveLength(2)
+  })
+
+  it('names its two cards as headings, and the choices inside them as groups', () => {
+    const html = render()
+    expect(html).toContain('<h2 id="version-title">Partner version</h2>')
+    expect(html).toContain('<h2 id="cases-title">Cases</h2>')
+    expect(html).toContain('role="radiogroup" aria-labelledby="version-title"')
+    expect(html).toContain('role="group" aria-labelledby="cases-title"')
+  })
+
+  it('shows what is given in place of the cases once a run has begun, and the version stays', () => {
+    const html = render({ aside: <p>the lanes</p> })
+    expect(html).toContain('the lanes')
+    expect(html).not.toContain('id="cases-title"')
+    expect(html).toContain('id="version-title"')
+    expect(html).toContain('Will run 2 cases against')
   })
 
   it('has exactly one primary button', () => {
