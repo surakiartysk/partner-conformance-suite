@@ -1,7 +1,7 @@
 import type { SessionView } from '../api'
 import { timeLeft } from '../format'
-import { PageLink } from './Layout'
 import type { Route } from '../route'
+import { PageLink } from './Layout'
 
 interface Props {
   session: SessionView | null
@@ -12,51 +12,68 @@ interface Props {
   now: number
 }
 
+/**
+ * The way in, as the dashboard's sign-in is: one card, one button. There is no
+ * sign-in here (one role, nothing to protect; decision 21 and the rate limits
+ * are what keep a session its own), so the button is the whole of it.
+ */
 export function Home({ session, starting, problem, onStart, onNavigate, now }: Props) {
   return (
-    <>
-      <h1>Does a partner implement the API correctly?</h1>
+    <div className="entry">
+      <div className="mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32" fill="none">
+          <path
+            d="M8 17l5 5 11-12"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <h1>Partner conformance suite</h1>
       <p className="lede">
-        A provider publishes an API and partners implement it. This is how the provider checks: it
-        sends signed requests to the partner, compares each answer with what the specification
-        requires, and gives a verdict for every case.
+        Does a partner implement an API correctly? Signed requests go in, and a verdict for every
+        case comes out.
       </p>
 
-      <section aria-labelledby="try">
-        <h2 id="try">Try it</h2>
-        <p>
-          You get a reference partner of your own for 24 hours, with two test members of 1,000
-          points each. Later you will be able to run the cases against versions of it that are each
-          wrong in one way, and see which case catches which mistake.
-        </p>
+      <div className="card entry-card">
         {session ? (
           <>
-            <p>
-              You already have a session, which ends in {timeLeft(session.expiresAt, now)}.{' '}
-              <PageLink to={{ page: 'connection' }} onNavigate={onNavigate}>
-                Go to the connection
-              </PageLink>
-              .
-            </p>
+            <p className="note">Your session ends in {timeLeft(session.expiresAt, now)}.</p>
+            <button type="button" className="primary" onClick={() => onNavigate({ page: 'run' })}>
+              Continue to Run →
+            </button>
             <button type="button" onClick={onStart} disabled={starting}>
               {starting ? 'Starting…' : 'Start a new session instead'}
             </button>
             <p className="note">
               The new one replaces this one in this browser. The old one ends by itself, and every
-              start counts against the limit for this address.
+              start counts against the limit for this address.{' '}
+              <PageLink to={{ page: 'connection' }} onNavigate={onNavigate}>
+                See the connection
+              </PageLink>
+              .
             </p>
           </>
         ) : (
-          <button type="button" className="primary" onClick={onStart} disabled={starting}>
-            {starting ? 'Starting…' : 'Try it'}
-          </button>
+          <>
+            <button type="button" className="primary" onClick={onStart} disabled={starting}>
+              {starting ? 'Starting…' : 'Try it →'}
+            </button>
+            <p className="note">
+              No sign-up. You get a reference partner of your own for 24 hours, with two test
+              members of 1,000 points each. Versions of it are each wrong in one way, and the result
+              says which case catches which mistake.
+            </p>
+          </>
         )}
         {problem ? (
           <p role="alert" className="problem">
             {problem}
           </p>
         ) : null}
-      </section>
-    </>
+      </div>
+    </div>
   )
 }

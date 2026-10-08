@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository but one has been made to fail by at least one row below (the exception is named under "The page"):
-the 106 in `packages/partner`, the 19 in `packages/cases`, the 120 in `packages/api` and the 234 in `packages/ui`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases`, the 120 in `packages/api` and the 243 in `packages/ui`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -641,6 +641,36 @@ any question, and survived; the stand-in now answers only the question the page 
 | 485 | A clean build reported as a problem                            | check-build.test.ts: what the build must not contain > finds nothing in a build with files for its fonts                            | `expected [ 'always' ] to deeply equal []`                                                   |
 | 486 | Scripts not read                                               | check-build.test.ts: what the build must not contain > finds a font inlined in a script, and in the page                            | `expected [] to have a length of 1 but got +0`                                               |
 | 487 | The page not read                                              | check-build.test.ts: what the build must not contain > finds a font inlined in a script, and in the page                            | `expected [] to have a length of 1 but got +0`                                               |
+
+### The way in
+
+20 breaks in the Home page, which is now one card and one button. The earlier Home tests were
+replaced with it, so the rows for them under "The page" describe a page that no longer exists; they
+were true when they were run. A tap-target rule is held by a test that reads the stylesheet, and
+so is checked as text, not as a rendered size.
+
+| #   | Mutation                                          | Caught by                                                                                                                   | Failure                                                                                        |
+| --- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 488 | The suite not named in the heading                | home.test.tsx: the Home page > names the suite and says what it is, once                                                    | `expected '<div class="entry"><div class="mark" …' to contain '<h1>Partner conformance suit`   |
+| 489 | What the suite is not said                        | home.test.tsx: the Home page > names the suite and says what it is, once                                                    | `expected '<div class="entry"><div class="mark" …' to contain 'Does a partner implement an `   |
+| 490 | The start button worded differently               | home.test.tsx: the Home page > offers to try it, as the one primary button, when there is no session                        | `TestingLibraryElementError: Unable to find an accessible element with the role "button" an`   |
+| 491 | A second primary button                           | home.test.tsx: the Home page > says how long the session has left, and leads on to Run, when there is one                   | `expected [ Array(2) ] to have a length of 1 but got 2`                                        |
+| 492 | No sign-up not said                               | home.test.tsx: the Home page > says there is no sign-up, and what a visitor gets                                            | `expected '<div class="entry"><div class="mark" …' to contain 'No sign-up.'`                   |
+| 493 | The length of a session not said                  | home.test.tsx: the Home page > says there is no sign-up, and what a visitor gets                                            | `expected '<div class="entry"><div class="mark" …' to contain '24 hours'`                      |
+| 494 | A name asked for                                  | home.test.tsx: the Home page > has no sign-in: no password, no name, no input at all                                        | `expected '<div class="entry"><div class="mark" …' not to match /<input\|type="password"\|Pas` |
+| 495 | The time left not said                            | home.test.tsx: the Home page > says how long the session has left, and leads on to Run, when there is one                   | `expected '<div class="entry"><div class="mark" …' to contain 'Your session ends in 24 h 0 `   |
+| 496 | Continue goes to the connection                   | home-interaction.test.tsx: what the buttons on Home do > goes on to Run, without starting a session, when there is one      | `expected [ { page: 'connection' } ] to deeply equal [ { page: 'run' } ]`                      |
+| 497 | Continue starts a new session                     | home-interaction.test.tsx: what the buttons on Home do > goes on to Run, without starting a session, when there is one      | `expected [] to deeply equal [ { page: 'run' } ]`                                              |
+| 498 | Start another does nothing                        | home-interaction.test.tsx: what the buttons on Home do > starts another session only when asked to, and not to Run          | `expected +0 to be 1 // Object.is equality`                                                    |
+| 499 | Starting does not lock the button (new session)   | home.test.tsx: the Home page > disables the button while a session is being started                                         | `expected '<div class="entry"><div class="mark" …' to match /<button[^>]*disabled[^>]*>Star`   |
+| 500 | Starting does not lock the button (first session) | home.test.tsx: the Home page > disables the button while a session is being started                                         | `expected '<div class="entry"><div class="mark" …' to match /<button[^>]*disabled[^>]*>Star`   |
+| 501 | The replace warning dropped                       | home.test.tsx: the Home page > still offers the connection, and lets a visitor start another session, saying what that does | `expected '<div class="entry"><div class="mark" …' to contain 'replaces this one'`             |
+| 502 | The connection link goes to Run                   | home.test.tsx: the Home page > still offers the connection, and lets a visitor start another session, saying what that does | `expected [ { page: 'run' } ] to deeply equal [ { page: 'connection' } ]`                      |
+| 503 | The problem not an alert                          | home.test.tsx: the Home page > shows why starting failed, as an alert, in either state                                      | `expected '<div class="entry"><div class="mark" …' to match /role="alert"[^>]*>Too many ses`   |
+| 504 | The mark read out to a screen reader              | home.test.tsx: the Home page > draws its mark as a graphic that a screen reader skips                                       | `expected '<div class="entry"><div class="mark">…' to match /<div class="mark" aria-hidden=`   |
+| 505 | A sign-in word on the page                        | home.test.tsx: the Home page > says there is no sign-up, and what a visitor gets                                            | `expected '<div class="entry"><div class="mark" …' to contain 'No sign-up.'`                   |
+| 506 | The controls small for a finger                   | page-security.test.ts: the stylesheet > makes the controls at least 44 px tall for a finger                                 | `expected '/*\n * The dashboard\'s palette and t…' to match /@media \(pointer: coarse\)\s*\`   |
+| 507 | The page invites an address                       | home.test.tsx: the Home page > says there is no sign-up, and what a visitor gets                                            | `expected '<div class="entry"><div class="mark" …' to contain 'No sign-up.'`                   |
 
 ## Tests that could not fail, found on the way
 

@@ -762,3 +762,23 @@ it needs, from the same origin and cached. The sticky button covers a strip of t
 last options on a short window, and its background has to be opaque to do that. The scroll
 is one `matchMedia` question the page asks about its own layout, which is a second copy of
 the stylesheet's 860 px breakpoint, and the two have to be changed together.
+
+## 35. The way in is one card and one button, and there is no sign-in
+
+The dashboard's sign-in is a card with a button for the demo and a form for the three
+roles. This suite has one role and nothing behind it to protect, so the way in is the
+card and the button: **Try it** starts a session, as the dashboard's demo button does.
+What keeps one visitor's session theirs is the cookie (decision 21), and what keeps one
+address from starting many is the limit on starts, not a password. A visitor with a session
+is offered the next step, Run, and may start another, which replaces the first in that
+browser and counts against the limit.
+
+A sign-in exists in the design for one case only: a self-hosted deployment where a partner
+enters its own address (decision 1.1 in the plan, not built). It would carry a password,
+and the design for that borrows the dashboard's password field. There is no field on the page
+now, and a test fails if one appears.
+
+**Cost.** No account means no way back to an earlier session from another browser or after
+the cookie is gone: the secret shown once and the runs of that session cannot be recovered. A
+session ends a day after it starts, and a visitor who loses it starts again. The controls are 44 px
+tall on a touch screen and 40 px elsewhere, which is two sizes to keep in step.

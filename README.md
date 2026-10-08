@@ -41,7 +41,7 @@ Built in stages. Done so far:
   or by a sweep every ten minutes.
 
 - **The page** — [`packages/ui`](packages/ui), served by the same Worker as
-  the API: a home page that starts a session, a Connection page with the
+  the API: a home page that is one card and one button (no sign-in) and starts a session, a Connection page with the
   partner's address, the signing secret (shown once) and the test members'
   balances, a Run page (choose a version of the partner and the services, press
   Run, watch the three lanes), and the result of a run: the verdict, each case that
