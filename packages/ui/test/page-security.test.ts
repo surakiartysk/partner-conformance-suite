@@ -139,4 +139,8 @@ describe('the stylesheet', () => {
   it('keeps the button of the form at the foot of the window', () => {
     expect(css()).toMatch(/\.form-actions\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0/)
   })
+
+  it('makes the controls at least 44 px tall for a finger', () => {
+    expect(css()).toMatch(/@media \(pointer: coarse\)\s*\{[^}]*button[^}]*min-height:\s*44px/)
+  })
 })
