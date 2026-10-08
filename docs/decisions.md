@@ -737,3 +737,28 @@ needs to reproduce the request, but the choice is the server's allowlist and not
 page's. A result can be opened only with the session that made the run, which lasts
 a day, and nothing lists past runs yet. The 20 cases are 20 links in one list, and
 on a phone that list is a long scroll below the evidence.
+
+## 34. The build is held to the page's policy, and the Run button stays where it can be pressed
+
+**The build.** Vite turns a small asset into a `data:` URI inside the stylesheet, and
+the fonts' small subsets were inlined that way. The page's policy lets fonts come from
+its own origin only (`font-src 'self'`), so the browser refused them and said so in the
+console. No test saw it: the tests read files and render strings, and the console of a
+real browser was the only place it appeared. Nothing is inlined now
+(`assetsInlineLimit: 0`), and `check:build`, run after the build in `pnpm verify`, looks
+through what was built for a font inlined as a `data:` URI and for any non-image
+`url(data:)`, and fails if it finds one. Images are allowed, because the policy allows
+`data:` images for the icon.
+
+**The form.** Thirteen versions put the Run button below the fold on a phone and on a
+laptop. It now stays at the foot of the window while the form is longer than the window
+(`position: sticky`), grouped with the reason a start failed so the message is not left
+behind. Where the lanes sit under the form, the page scrolls to them when the run begins,
+because the button just pressed is far above them; where they sit beside it, it leaves the
+page alone.
+
+**Cost.** Every font is a request, where a few were free: the browser fetches each subset
+it needs, from the same origin and cached. The sticky button covers a strip of the form's
+last options on a short window, and its background has to be opaque to do that. The scroll
+is one `matchMedia` question the page asks about its own layout, which is a second copy of
+the stylesheet's 860 px breakpoint, and the two have to be changed together.

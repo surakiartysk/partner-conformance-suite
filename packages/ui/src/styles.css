@@ -337,6 +337,23 @@ legend {
   outline-offset: 2px;
 }
 
+/*
+ * The button stays at the foot of the window while the form is longer than the
+ * window: thirteen versions put it below the fold on a phone and on a laptop.
+ */
+.form-actions {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -16px -16px;
+  padding: 12px 16px 16px;
+  background: var(--card);
+  border-top: 1px solid var(--divider);
+  border-radius: 0 0 10px 10px;
+}
+.form-actions .problem {
+  margin: 8px 0 0;
+}
+
 /* ── statuses ────────────────────────────────────────────────────────────── */
 .st {
   display: inline-flex;

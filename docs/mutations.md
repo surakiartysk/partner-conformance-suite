@@ -5,7 +5,7 @@ break in the **implementation** — never in a test's assertion — the test tha
 went red, and the message it gave. Every break was reverted after its run.
 
 Every test in the repository but one has been made to fail by at least one row below (the exception is named under "The page"):
-the 106 in `packages/partner`, the 19 in `packages/cases`, the 120 in `packages/api` and the 224 in `packages/ui`. A new test is not done until it has a row too.
+the 106 in `packages/partner`, the 19 in `packages/cases`, the 120 in `packages/api` and the 234 in `packages/ui`. A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -617,6 +617,30 @@ equivalent: taking the early return out of `runSeconds` for a run with no end ti
 | 472 | The passed count the total                           | result-page.test.tsx: the result page > says the verdict first: how many cases did not pass, with the counts and the points                                | `TestingLibraryElementError: Unable to find an element with the text: ✓ 3 passed. This coul` |
 | 473 | A case taken from the address dropped                | route.test.ts: routes > reads the result of a run, and of one case of it                                                                                   | `expected { page: 'result', runId: 'run_1b2c' } to deeply equal { page: 'result', …(2) }`    |
 | 474 | The summary's button worded differently              | run-components.test.tsx: the summary > offers to open the result, as the one primary button, and to run again                                              | `expected '<section aria-labelledby="verdict"><d…' to contain '>Open the result</button>'`   |
+
+### The form's layout and the build's own check
+
+Thirteen breaks, and one more run by hand: `assetsInlineLimit: 0` taken out of `vite.config.ts`.
+The build still passes and `check:build` fails, naming the stylesheet that carries the inlined
+font; with the setting in, both pass. A break in the width the page
+asks about was first written against a test whose stand-in for `matchMedia` answered `true` to
+any question, and survived; the stand-in now answers only the question the page asks.
+
+| #   | Mutation                                                       | Caught by                                                                                                                           | Failure                                                                                      |
+| --- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 475 | The button and its message not grouped at the foot of the form | run-components.test.tsx: the Run form > keeps the submit button and the reason it failed together at the foot of the form           | `expected '<form class="card stack"><fieldset><l…' to match /…/button><p role="alert"[^>]*>` |
+| 476 | The button not kept at the foot of the window                  | page-security.test.ts: the stylesheet > keeps the button of the form at the foot of the window                                      | `expected '/*\n * The dashboard\'s palette and t…' to match /\.form-actions\s*\{[^}]*positi` |
+| 477 | The lanes not brought into view when a run begins              | run-page.test.tsx: the Run page > bringing the lanes into view > scrolls to them when the run begins where the form sits above them | `expected [] to deeply equal [ 'live' ]`                                                     |
+| 478 | The lanes scrolled to even where they sit beside the form      | run-page.test.tsx: the Run page > bringing the lanes into view > leaves the page where it is when the lanes sit beside the form     | `expected [ 'live' ] to deeply equal []`                                                     |
+| 479 | The wrong width asked about before scrolling                   | run-page.test.tsx: the Run page > bringing the lanes into view > scrolls to them when the run begins where the form sits above them | `expected [] to deeply equal [ 'live' ]`                                                     |
+| 480 | A font inlined in the page not found                           | check-build.test.ts: what the build must not contain > finds a font inlined as a data: URI, in a stylesheet                         | `expected [ Array(1) ] to have a length of 2 but got 1`                                      |
+| 481 | An old font type not found                                     | check-build.test.ts: what the build must not contain > finds an old font type too                                                   | `expected [] to have a length of 1 but got +0`                                               |
+| 482 | An image in a stylesheet refused                               | check-build.test.ts: what the build must not contain > finds a url(data:) that is not an image, and lets an image through           | `expected [ Array(1) ] to deeply equal []`                                                   |
+| 483 | A non-image url(data:) let through                             | check-build.test.ts: what the build must not contain > finds a font inlined as a data: URI, in a stylesheet                         | `expected [ Array(1) ] to have a length of 2 but got 1`                                      |
+| 484 | Folders below the top not looked in                            | check-build.test.ts: what the build must not contain > finds a font inlined as a data: URI, in a stylesheet                         | `expected [] to have a length of 2 but got +0`                                               |
+| 485 | A clean build reported as a problem                            | check-build.test.ts: what the build must not contain > finds nothing in a build with files for its fonts                            | `expected [ 'always' ] to deeply equal []`                                                   |
+| 486 | Scripts not read                                               | check-build.test.ts: what the build must not contain > finds a font inlined in a script, and in the page                            | `expected [] to have a length of 1 but got +0`                                               |
+| 487 | The page not read                                              | check-build.test.ts: what the build must not contain > finds a font inlined in a script, and in the page                            | `expected [] to have a length of 1 but got +0`                                               |
 
 ## Tests that could not fail, found on the way
 

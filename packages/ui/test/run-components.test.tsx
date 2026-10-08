@@ -127,6 +127,13 @@ describe('the Run form', () => {
     expect(render({ problem: 'Too many runs.' })).toMatch(/role="alert"[^>]*>Too many runs\./)
   })
 
+  it('keeps the submit button and the reason it failed together at the foot of the form', () => {
+    const html = render({ problem: 'Too many runs.' })
+    expect(html).toMatch(
+      /<div class="form-actions"><button type="submit"[^>]*>Run 14 cases<\/button><p role="alert"[^>]*>Too many runs\.<\/p><\/div><\/form>/,
+    )
+  })
+
   it('has exactly one primary button', () => {
     expect(render().match(/class="primary"/g)).toHaveLength(1)
   })

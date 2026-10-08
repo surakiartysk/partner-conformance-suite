@@ -68,16 +68,18 @@ export function RunForm(props: Props) {
         {nothingChosen ? <p className="problem">Choose at least one service.</p> : null}
       </fieldset>
 
-      <button type="submit" className="primary" disabled={!canSubmit(props.services, props.busy)}>
-        {props.busy
-          ? 'Running…'
-          : `Run ${props.caseCount} ${props.caseCount === 1 ? 'case' : 'cases'}`}
-      </button>
-      {props.problem ? (
-        <p role="alert" className="problem">
-          {props.problem}
-        </p>
-      ) : null}
+      <div className="form-actions">
+        <button type="submit" className="primary" disabled={!canSubmit(props.services, props.busy)}>
+          {props.busy
+            ? 'Running…'
+            : `Run ${props.caseCount} ${props.caseCount === 1 ? 'case' : 'cases'}`}
+        </button>
+        {props.problem ? (
+          <p role="alert" className="problem">
+            {props.problem}
+          </p>
+        ) : null}
+      </div>
     </form>
   )
 }

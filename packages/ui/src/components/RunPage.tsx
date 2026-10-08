@@ -36,6 +36,7 @@ export function RunPage({
   const [runId, setRunId] = useState('')
   const [progress, setProgress] = useState<Progress | null>(null)
   const controller = useRef<AbortController | null>(null)
+  const livePanel = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     let current = true
@@ -47,6 +48,13 @@ export function RunPage({
       current = false
     }
   }, [client])
+
+  // Where the form and the lanes sit one under the other, the lanes are far below
+  // the button that was just pressed; bring them into view when the run begins.
+  useEffect(() => {
+    if (phase !== 'running') return
+    if (window.matchMedia?.('(max-width: 860px)').matches) livePanel.current?.scrollIntoView?.()
+  }, [phase])
 
   // Leaving the page stops the asking. What the run moved is written down on
   // the server and is given back by a later run or the sweep.
@@ -117,7 +125,7 @@ export function RunPage({
           problem={problem}
         />
         {live && progress ? (
-          <section className="card" aria-labelledby="live">
+          <section className="card" aria-labelledby="live" ref={livePanel}>
             {phase === 'over' && isOver(progress) ? (
               <RunSummary
                 progress={progress}
