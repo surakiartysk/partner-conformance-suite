@@ -157,9 +157,16 @@ test('one case can be picked, and only that case is run', async () => {
   await expect(page.getByText('0 of 20 chosen')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Run 0 cases' })).toBeDisabled()
 
+  // The groups start folded: no case is on the page until its group is opened.
+  await expect(page.getByText('Earning twice with one reference adds the points once')).toHaveCount(
+    0,
+  )
+  await page.getByRole('button', { name: 'Show the earn cases' }).click()
   await page
     .getByRole('checkbox', { name: /Earning twice with one reference adds the points once/ })
     .check()
+  await page.getByRole('button', { name: 'Hide the earn cases' }).click()
+  await expect(page.getByText('1 of 4')).toBeVisible() // earn, folded, still says what is chosen
   await expect(page.getByText('1 of 20 chosen')).toBeVisible()
   // Its group is partly chosen, which the box shows as neither on nor off.
   const group = page.getByRole('checkbox', { name: /^earn\b/ })
@@ -211,11 +218,12 @@ test('on a phone nothing scrolls sideways, and the Run button is on the screen a
   const box = (await button.boundingBox())!
   expect(box.y + box.height, 'the button is below the fold').toBeLessThanOrEqual(812)
   expect(box.height).toBeGreaterThanOrEqual(44)
-  // And every row a finger has to hit: versions, groups and cases alike.
+  // And everything a finger has to hit: versions, groups, cases and the buttons that fold them.
+  for (const fold of await small.locator('.fold').all()) await fold.click()
   const heights = await small
-    .locator('.opt')
+    .locator('.opt, .fold')
     .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height))
-  expect(heights.length).toBeGreaterThan(30)
+  expect(heights.length).toBeGreaterThan(40)
   expect(Math.min(...heights), 'a row is too small to press').toBeGreaterThanOrEqual(44)
   await phone.close()
 })

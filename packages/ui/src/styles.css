@@ -363,6 +363,18 @@ legend {
 .pick-case {
   margin-left: 22px;
 }
+.group-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.group-row .group-head {
+  flex: 1;
+}
+.fold {
+  padding: 0 14px;
+  flex: none;
+}
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -815,7 +827,8 @@ details.setup .step {
   button,
   select,
   .chip,
-  .opt {
+  .opt,
+  .fold {
     min-height: 44px;
   }
 }

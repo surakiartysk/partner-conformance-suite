@@ -146,12 +146,15 @@ describe('the Run page', () => {
 
   describe('choosing cases', () => {
     const box = (name: RegExp) => screen.getByRole('checkbox', { name }) as HTMLInputElement
+    const unfold = async (user: ReturnType<typeof userEvent.setup>, service: string) =>
+      user.click(await screen.findByRole('button', { name: `Show the ${service} cases` }))
 
     it('runs exactly the cases ticked, one case alone included', async () => {
       const user = userEvent.setup()
       const { client, created } = fakeClient()
       renderPage(client)
       await user.click(await screen.findByRole('button', { name: 'None' }))
+      await unfold(user, 'earn')
       await user.click(box(/Earning twice adds the points once/))
       await user.click(screen.getByRole('button', { name: 'Run 1 case' }))
       await waitFor(() => expect(created).toHaveLength(1))
@@ -162,6 +165,7 @@ describe('the Run page', () => {
       const user = userEvent.setup()
       const { client } = fakeClient()
       renderPage(client)
+      await unfold(user, 'earn')
       await user.click(await screen.findByRole('checkbox', { name: /Earning adds exactly/ }))
       expect(box(/Earning adds exactly/).checked).toBe(false)
       expect(box(/Earning twice adds/).checked).toBe(true)
@@ -175,6 +179,8 @@ describe('the Run page', () => {
       const user = userEvent.setup()
       const { client } = fakeClient()
       renderPage(client)
+      await unfold(user, 'earn')
+      await unfold(user, 'security')
       await user.click(await screen.findByRole('checkbox', { name: /Earning adds exactly/ }))
       await user.click(box(/^earn/)) // some → all
       expect(box(/Earning adds exactly/).checked).toBe(true)
@@ -184,6 +190,44 @@ describe('the Run page', () => {
       expect(box(/Earning adds exactly/).checked).toBe(false)
       expect(box(/Earning twice adds/).checked).toBe(false)
       expect(box(/A correctly signed/).checked).toBe(true) // another group, untouched
+    })
+
+    it('starts folded, and unfolds one group without the others', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient()
+      renderPage(client)
+      await screen.findByRole('button', { name: 'Show the earn cases' })
+      expect(screen.queryByText('Earning adds exactly the points earned')).toBeNull()
+      expect(screen.queryByText('A correctly signed request is accepted')).toBeNull()
+
+      await unfold(user, 'earn')
+      expect(screen.getByText('Earning adds exactly the points earned')).toBeTruthy()
+      expect(screen.queryByText('A correctly signed request is accepted')).toBeNull()
+      const hide = screen.getByRole('button', { name: 'Hide the earn cases' })
+      expect(hide.getAttribute('aria-expanded')).toBe('true')
+      expect(document.getElementById(hide.getAttribute('aria-controls')!)).toBeTruthy()
+    })
+
+    it('keeps what is chosen when a group is folded and unfolded, and its box works while folded', async () => {
+      const user = userEvent.setup()
+      const { client, created } = fakeClient()
+      renderPage(client)
+      await unfold(user, 'earn')
+      await user.click(await screen.findByRole('checkbox', { name: /Earning adds exactly/ }))
+      await user.click(screen.getByRole('button', { name: 'Hide the earn cases' }))
+      expect(screen.getByText('1 of 2')).toBeTruthy() // earn, folded, still says what is chosen
+      expect(box(/^earn/).indeterminate).toBe(true)
+
+      await unfold(user, 'earn')
+      expect(box(/Earning adds exactly/).checked).toBe(false)
+      expect(box(/Earning twice adds/).checked).toBe(true)
+
+      await user.click(screen.getByRole('button', { name: 'Hide the earn cases' }))
+      await user.click(box(/^earn/)) // some → all, with the cases out of sight
+      expect(screen.getByRole('button', { name: 'Run 3 cases' })).toBeTruthy()
+      await user.click(screen.getByRole('button', { name: 'Run 3 cases' }))
+      await waitFor(() => expect(created).toHaveLength(1))
+      expect(created[0]!.cases).toContain('earn/adds-points')
     })
 
     it('has All and None, which say how many are chosen', async () => {

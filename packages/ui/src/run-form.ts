@@ -60,6 +60,10 @@ export function chooseCases(
   return inListOrder(all, on ? [...selected, ...ids] : selected.filter((s) => !ids.includes(s)))
 }
 
+/** A service's group folded or unfolded: the others stay as they were. */
+export const toggleOpen = (open: string[], service: string): string[] =>
+  open.includes(service) ? open.filter((s) => s !== service) : [...open, service]
+
 /** How much of a group is chosen: all of it, some of it, none of it. */
 export function groupState(selected: string[], ids: string[]): 'all' | 'some' | 'none' {
   const n = ids.filter((id) => selected.includes(id)).length
