@@ -45,9 +45,9 @@ export function Connection(props: Props) {
           {address}
         </p>
         <p className="note">
-          This is the address the suite builds for each request. Requests reach the partner through
-          a service binding, not over the public internet, so it is a name the partner knows itself
-          by and not a URL you can open.
+          This is the address the suite builds for each request. The suite's own requests reach the
+          partner through a service binding, but the address is the partner&rsquo;s public one too:
+          with the signing secret below you can send it signed requests yourself.
         </p>
       </section>
 

@@ -31,6 +31,12 @@ describe('the Connection page', () => {
     expect(other).not.toContain('/correct/t-1')
   })
 
+  it('says the address is public, since the deployed partner is reachable at it', () => {
+    const html = render()
+    expect(html).toContain('public one too')
+    expect(html).not.toContain('not a URL you can open')
+  })
+
   it('offers every version', () => {
     const html = render()
     expect(html).toContain('>correct</option>')
