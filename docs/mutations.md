@@ -820,6 +820,45 @@ end-to-end test on a touch screen measured 40 px. The stylesheet test now checks
 | 615 | The fold button does nothing                      | journey: one case can be picked, and only that case is run                                                | `locator.check: Target page, context or browser has been closed` |
 | 616 | The cases shown while folded                      | journey: one case can be picked, and only that case is run                                                | `expect(locator).toHaveCount(expected) failed`                   |
 | 617 | The fold button not made 44 px wide for a finger  | journey: on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press | `a fold button is too narrow to press`                           |
+| 618 | The version card has no correct row               | run-components: offers every version as a radio button, with the chosen one checked                       | `expected [ 'type="radio"' ] to have a length of 2 but got 1`    |
+| 619 | correct also listed among the wrong ones          | run-components: offers every version as a radio button, with the chosen one checked                       | `expected [ Array(3) ] to have a length of 2 but got 3`          |
+| 620 | The wrong versions not said to be wrong           | run-components: puts correct first, on its own, and the wrong versions in a grid under what that means    | `expected 347 to be less than -1`                                |
+| 621 | The versions not a radio group                    | run-components: names its two cards as headings, and the choices inside them as groups                    | `expected '<form class="run-form"><div class="gr…' to contain …` |
+| 622 | The cases not a group                             | run-components: names its two cards as headings, and the choices inside them as groups                    | `expected '<form class="run-form"><div class="gr…' to contain …` |
+| 623 | The lanes never take the cases' place             | run-components: shows what is given in place of the cases once a run has begun, and the version stays     | `expected '<form class="run-form"><div class="gr…' to contain …` |
+| 624 | A case's id drawn on its row                      | run-page: starts folded, and unfolds one group without the others                                         | `a case's id appears in the list text`                           |
+| 625 | A case's id not on its row at all                 | run-components: shows each service as a group and each case under it, the chosen ones checked             | `expected '<form class="run-form"><div class="gr…' to contain …` |
+| 626 | The run bar counts every case                     | run-components: says what will run and against which version, in the bar and not only on the button       | `expected '<form class="run-form"><div class="gr…' to contain …` |
+| 627 | The run bar names no version                      | run-components: says what will run and against which version, in the bar and not only on the button       | `expected '<form class="run-form"><div class="gr…' to match /<…` |
+| 628 | The run bar says cases for one                    | run-components: says what will run and against which version, in the bar and not only on the button       | `expected '<form class="run-form"><div class="gr…' to contain …` |
+| 629 | The end of a run announced without the points     | run-page: starts a run with the chosen version and cases, and shows each lane to the end                  | `expected '1 of 3 cases did not pass' to be '1 of 3 cases did …` |
+| 630 | The start of a run announced without its version  | run-page: says once that a run has begun, and what it is of, and not every case after                     | `expected 'Running 3 cases' to be 'Running 3 cases against off…` |
+| 631 | The announcement not a status                     | run-page: has a place for it from the start, with nothing in it                                           | `expected null to be truthy`                                     |
+| 632 | A page keeps the last title                       | app: asks for a session first, and shows the way in when there is none                                    | `expected '' to be 'Partner conformance suite'`                  |
+| 633 | The first page takes the focus too                | layout-behaviour: stays where the browser put it on the first page                                        | `expected <h1 tabindex="-1"></h1> to be <body><div>…(3)</div><…` |
+| 634 | The focus never moves                             | app: starts a session, goes to the connection, and says so in the title and the focus                     | `expected <body><div>…(3)</div></body> to be <h1 tabindex="-1"…` |
+| 635 | The heading cannot take the focus                 | app: starts a session, goes to the connection, and says so in the title and the focus                     | `expected <body><div>…(3)</div></body> to be <h1></h1>`          |
+| 636 | No page itself to fall back on                    | layout-behaviour: goes to the page itself while it has no heading yet                                     | `expected 'BODY' to be 'MAIN'`                                   |
+| 637 | Another result is the same page to the focus      | layout-behaviour: moves again for another result of the same kind of page, but not for a redraw of the s… | `expected 'BODY' to be 'H1'`                                     |
+| 638 | The Run page called the site                      | app: goes on from the connection to the Run page, which loads the cases                                   | `expected 'Partner conformance suite' to be 'Run · Partner con…` |
+| 639 | Problem types left as addresses                   | result-model: are their last part, so a list of them is not a wall of addresses                           | `expected 'type should be one of "https://points…' to be 'type…` |
+| 640 | Every quoted address shortened                    | result-model: shorten whatever host the address has, and only a problem type                              | `expected '"x"' to be '"https://other.test/docs/x"'`             |
+| 641 | A mismatch sentence not shortened                 | result-model: are their last part, so a list of them is not a wall of addresses                           | `expected 'type should be one of "https://points…' to be 'type…` |
+| 642 | The run bar not kept at the foot                  | page-security: keeps the button of the form at the foot of the window                                     | `expected '/*\n * The dashboard\'s palette and t…' to match /\…` |
+| 643 | Body text back at 14 px                           | page-security: sets the text people read at 15 px, and no size outside the scale                          | `expected '/*\n * The dashboard\'s palette and t…' to match /b…` |
+| 644 | Spacing off the steps                             | page-security: spaces things in the steps of the scale, and nothing else                                  | `expected [ 'padding: 12px 18px;' ] to deeply equal []`          |
+| 645 | A size outside the scale                          | page-security: sets the text people read at 15 px, and no size outside the scale                          | `expected [ 14 ] to deeply equal []`                             |
+| 646 | The version column narrower than its longest name | journey: before a run both choices are on the screen side by side, and the run bar is within reach        | `version names that wrap onto a second line`                     |
+| 647 | A page keeps the last title                       | journey: each page has its own title, and moving to it puts the focus on its heading                      | `expect(page).toHaveTitle(expected) failed`                      |
+| 648 | The focus never moves to the new page             | journey: each page has its own title, and moving to it puts the focus on its heading                      | `expect(locator).toBeFocused() failed`                           |
+| 649 | The announcement not a status (end to end)        | journey: when a run ends it is said, for someone who cannot see the page                                  | `expect(locator).toHaveText(expected) failed`                    |
+| 650 | The two cards stacked on a wide screen            | journey: before a run both choices are on the screen side by side, and the run bar is within reach        | `the cases sit to the right of the versions`                     |
+| 651 | The group count in low contrast                   | journey: no serious accessibility violations on any page, in light mode                                   | `/run in light mode`                                             |
+| 652 | Case rows not made 44 px for a finger             | journey: on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press | `a row is too small to press`                                    |
+| 653 | The run bar off the screen on a wide window       | journey: before a run both choices are on the screen side by side, and the run bar is within reach        | `the run bar is on the screen without scrolling`                 |
+| 654 | The lanes never take the cases' place (end to en… | journey: a version that is wrong in one way is found, and the run ends                                    | `expect(locator).toBeVisible() failed`                           |
+| 655 | What is only said is as wide as the page          | journey: when a run ends it is said, for someone who cannot see the page                                  | `what is only said is not drawn`                                 |
+| 656 | A lane's title cannot shrink and its row cannot … | journey: a version that is wrong in one way is found, and the run ends                                    | `statuses cut off at the edge of their lane`                     |
 
 ## Tests that could not fail, found on the way
 
@@ -841,6 +880,18 @@ did.
 - **Equivalent, not a survivor.** Changing the group row from `align-items: stretch` to `center` leaves the
   end-to-end run green, because on a touch screen the `button` rule already makes the fold button 44 px high.
   It changes how the button looks, not what is measured, so it has no row.
+- **A lane's status cut off (redesign).** Two rules each keep a status from being cut off at the edge
+  of its lane: the row wraps, and the title may shrink. Taking out either one alone left the end-to-end
+  run green, so each alone is equivalent as far as what is measured; taking out both turns it red
+  — row 656. The first measurement of the page had shown the cut-off
+  ("Passe") before either rule existed.
+- **Not a mutation.** `.sr-only` made `position: static` still hides the text, by its one-pixel size
+  and clip, so it changes nothing; the test measures the width once the status has words in it, and
+  setting the width to `auto` is red (row 655). The first version of that test measured it while it
+  was empty and could not fail: an empty box is no wider than a pixel whatever its style.
+- **A mutation that did not build.** `{undefined ?? (` for "the lanes never take the cases' place" is
+  a type error, so no end-to-end test ran and the report said red; it was replaced by one that builds
+  (row 654).
 
 - **"refuses a timestamp that is not plain seconds".** It sent `' 1614265330'`
   and friends with the vector's original signature. The timestamp is part of
