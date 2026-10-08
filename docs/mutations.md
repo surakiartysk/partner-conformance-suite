@@ -805,6 +805,21 @@ end-to-end test on a touch screen measured 40 px. The stylesheet test now checks
 | 600 | Part of a group not shown as part                 | journey: one case can be picked, and only that case is run                                                | `expect(received).toBe(expected)`                                |
 | 601 | Case rows not made 44 px for a finger             | journey: on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press | `a row is too small to press`                                    |
 | 602 | Ticking a case does not choose it                 | journey: one case can be picked, and only that case is run                                                | `locator.check: Clicking the checkbox did not change its state`  |
+| 603 | A folded group says it is open                    | run-components: can start with them open, each fold button naming the cases it shows                      | `Target cannot be null or undefined.`                            |
+| 604 | The fold button names the wrong action            | run-components: starts with every group folded, each saying how much of it is chosen                      | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 605 | The fold button does nothing                      | run-page: runs exactly the cases ticked, one case alone included                                          | `Unable to find an accessible element with the role "checkbox"…` |
+| 606 | The cases shown while folded                      | run-components: starts with every group folded, each saying how much of it is chosen                      | `expected '<form class="card stack"><fieldset><l…' not to cont…` |
+| 607 | The groups start open when they should not        | run-components: starts with every group folded, each saying how much of it is chosen                      | `expected '<form class="card stack"><fieldset><l…' not to cont…` |
+| 608 | A group once opened cannot be folded              | run-page: keeps what is chosen when a group is folded and unfolded, and its box works while folded        | `Unable to find role="button" and name "Show the earn cases"`    |
+| 609 | A group cannot be opened                          | run-page: runs exactly the cases ticked, one case alone included                                          | `Unable to find an accessible element with the role "checkbox"…` |
+| 610 | The fold button points at nothing                 | run-components: can start with them open, each fold button naming the cases it shows                      | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 611 | The fold buttons locked while a run goes          | run-components: locks every control while a run is going, but not the folding, which changes nothing      | `expected [ 'class="fold" disabled', …(1) ] to be null`          |
+| 612 | What a partner is left unsaid                     | run-components: says what a partner and a version are, and which version is the right one                 | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 613 | What a version is left unsaid                     | run-components: says what a partner and a version are, and which version is the right one                 | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 614 | A folded group stops saying how much is chosen    | run-components: starts with every group folded, each saying how much of it is chosen                      | `expected '<form class="card stack"><fieldset><l…' to contain …` |
+| 615 | The fold button does nothing                      | journey: one case can be picked, and only that case is run                                                | `locator.check: Target page, context or browser has been closed` |
+| 616 | The cases shown while folded                      | journey: one case can be picked, and only that case is run                                                | `expect(locator).toHaveCount(expected) failed`                   |
+| 617 | The fold button not made 44 px wide for a finger  | journey: on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press | `a fold button is too narrow to press`                           |
 
 ## Tests that could not fail, found on the way
 
@@ -819,6 +834,13 @@ did.
 - **The All and None buttons.** Nothing looked at whether either was disabled
   when it would change nothing, so taking the condition out of both left the
   suite green. A test now renders all, none and some chosen — rows 592 and 593.
+- **The fold button's width (folding groups).** The touch rule listed `.fold` for 44 px of height, but its
+  height comes from the row it is stretched to, so taking it out of the list left the end-to-end run green:
+  the rule did nothing. The first measurement on a touch screen then showed the real problem, a button 36.5
+  px wide, which nothing measured. It now has a width rule of its own and the run measures width — row 617.
+- **Equivalent, not a survivor.** Changing the group row from `align-items: stretch` to `center` leaves the
+  end-to-end run green, because on a touch screen the `button` rule already makes the fold button 44 px high.
+  It changes how the button looks, not what is measured, so it has no row.
 
 - **"refuses a timestamp that is not plain seconds".** It sent `' 1614265330'`
   and friends with the vector's original signature. The timestamp is part of
