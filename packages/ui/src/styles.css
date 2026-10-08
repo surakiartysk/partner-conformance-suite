@@ -342,6 +342,27 @@ legend {
   color: var(--t4);
   font-size: 12px;
 }
+.pick-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pick-tools button {
+  padding: 4px 12px;
+}
+.pick-tools .note {
+  margin-left: auto;
+}
+.pick-group {
+  margin-bottom: 8px;
+}
+.group-head {
+  font-weight: 600;
+}
+.pick-case {
+  margin-left: 22px;
+}
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -793,7 +814,8 @@ details.setup .step {
 @media (pointer: coarse) {
   button,
   select,
-  .chip {
+  .chip,
+  .opt {
     min-height: 44px;
   }
 }

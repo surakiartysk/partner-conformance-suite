@@ -124,21 +124,21 @@ describe('the API client, for runs', () => {
     expect(calls[0]!.url).toBe('/api/cases')
   })
 
-  it('starts a run by naming a version and services, and nothing else', async () => {
+  it('starts a run by naming a version and cases, and nothing else', async () => {
     const { client, calls } = fake(() => json(answer, { status: 201 }))
-    await client.createRun('double-earn', ['earn', 'redeem'])
+    await client.createRun('double-earn', ['earn/adds-points', 'redeem/takes-points'])
     expect(calls[0]!.url).toBe('/api/runs')
     expect(calls[0]!.init?.method).toBe('POST')
     expect(JSON.parse(String(calls[0]!.init?.body))).toEqual({
       version: 'double-earn',
-      services: ['earn', 'redeem'],
+      cases: ['earn/adds-points', 'redeem/takes-points'],
     })
     expect(new Headers(calls[0]!.init?.headers).get('content-type')).toBe('application/json')
   })
 
   it('says a run limit, not a session limit, when too many runs were started', async () => {
     const { client } = fake(() => json({}, { status: 429, headers: { 'retry-after': '600' } }))
-    const error = await failure(client.createRun('correct', ['earn']))
+    const error = await failure(client.createRun('correct', ['earn/adds-points']))
     expect([error.failure, error.retryAfter]).toEqual(['run-limit', 600])
   })
 

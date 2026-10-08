@@ -214,13 +214,13 @@ export function createClient(fetchImpl: Fetch = (input, init) => fetch(input, in
     /** What was wrong with each version, for the result page to say. */
     listVersions: () => call<VersionInfo[]>('/versions'),
 
-    /** Starts a run. The page names a version and services; the server plans the cases. */
-    async createRun(version: string, services: string[]): Promise<RunView> {
+    /** Starts a run. The page names a version and cases; the server plans the lanes. */
+    async createRun(version: string, cases: string[]): Promise<RunView> {
       try {
         return await call<RunView>('/runs', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ version, services }),
+          body: JSON.stringify({ version, cases }),
         })
       } catch (error) {
         // A run limit is not the same thing as a session limit, and says so.

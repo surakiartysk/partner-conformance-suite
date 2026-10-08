@@ -4,7 +4,7 @@ import type { Route } from '../route'
 import { driveRun } from '../driver'
 import { messageFor } from '../messages'
 import { applyEvent, counts, initialProgress, isOver, type Progress } from '../progress'
-import { casesFor, defaultVersion, orderVersions, servicesOf, toggleService } from '../run-form'
+import { chooseCases, defaultVersion, groupCases, orderVersions, toggleCase } from '../run-form'
 import { Lanes } from './Lanes'
 import { RunForm } from './RunForm'
 import { RunSummary } from './RunSummary'
@@ -28,7 +28,7 @@ export function RunPage({
 
   const versions = useMemo(() => orderVersions(session.partner.versions), [session])
   const [version, setVersion] = useState(() => defaultVersion(session.partner.versions))
-  const [services, setServices] = useState<string[] | null>(null)
+  const [picked, setPicked] = useState<string[] | null>(null)
 
   const [phase, setPhase] = useState<Phase>('idle')
   const [problem, setProblem] = useState<string | null>(null)
@@ -61,8 +61,9 @@ export function RunPage({
   useEffect(() => () => controller.current?.abort(), [])
 
   const byId = useMemo(() => new Map((cases ?? []).map((c) => [c.id, c])), [cases])
-  const allServices = useMemo(() => servicesOf(cases ?? []), [cases])
-  const chosen = services ?? allServices
+  const groups = useMemo(() => groupCases(cases ?? []), [cases])
+  const allIds = useMemo(() => (cases ?? []).map((c) => c.id), [cases])
+  const chosen = picked ?? allIds
 
   const start = async () => {
     setPhase('starting')
@@ -116,10 +117,21 @@ export function RunPage({
           versions={versions}
           version={version}
           onVersion={setVersion}
-          services={chosen}
-          allServices={allServices}
-          onToggleService={(s) => setServices(toggleService(chosen, allServices, s))}
-          caseCount={casesFor(cases, chosen).length}
+          groups={groups}
+          selected={chosen}
+          onToggleCase={(id) => setPicked(toggleCase(chosen, allIds, id))}
+          onToggleGroup={(service, on) =>
+            setPicked(
+              chooseCases(
+                chosen,
+                allIds,
+                (groups.find((g) => g.service === service)?.cases ?? []).map((c) => c.id),
+                on,
+              ),
+            )
+          }
+          onAll={() => setPicked(allIds)}
+          onNone={() => setPicked([])}
           onSubmit={start}
           busy={running}
           problem={problem}
