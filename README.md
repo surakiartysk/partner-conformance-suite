@@ -51,7 +51,23 @@ Built in stages. Done so far:
 
 The page is also driven in a real browser by `packages/e2e`, in a CI job of its own.
 
-Next: deployment.
+## Deployed
+
+Live at https://conformance-api.surakiart-ysk.workers.dev, with the reference partner at
+https://points-partner.surakiart-ysk.workers.dev. `docs/architecture.md` says what is not built.
+This is how it was put there, in this order:
+
+1. A D1 database for each Worker (`wrangler d1 create conformance-api`, `... points-partner`), their ids in the two
+   `wrangler.toml` files, and the migrations applied with `--remote`: `wrangler d1 migrations apply conformance-api --remote`, and the same for
+   `points-partner` with `-c ../partner/wrangler.toml`.
+2. The partner first, because the API binds to it: `pnpm --filter @conformance/partner run deploy`. **`run` is needed**: `pnpm` has a
+   `deploy` command of its own, and without `run` it fails asking for a directory instead of running the script.
+3. The secrets, never written down here: `PROVISION_TOKEN` (the same value on both Workers) and `SECRET_KEY` (the API only; 32 random
+   bytes, base64). Keep `SECRET_KEY`: if it is lost, the signing secrets it encrypted cannot be read.
+4. `PARTNER_ORIGIN` in `packages/api/wrangler.toml` is the partner's public address, which the Connection page shows.
+5. The page is built before the API Worker, which serves it: `pnpm build:ui`, then `pnpm --filter @conformance/api run deploy`.
+
+Nothing deploys itself: a merge to `main` changes no Worker until step 5 is run again.
 
 ## Layout
 
