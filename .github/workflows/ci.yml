@@ -38,3 +38,34 @@ jobs:
       # matters runs in the pre-commit hook, before a word reaches history.
       - name: Verify
         run: pnpm verify
+
+  # The page in a real browser, against the real Workers and the reference partner. A
+  # separate job so that the quick check above is not held up by it, and so that one
+  # failing does not hide the other. The Chrome is the one the runner already has.
+  e2e:
+    name: End to end
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: End-to-end tests
+        run: pnpm e2e
+
+      - name: Keep the traces of a failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-traces
+          path: packages/e2e/test-results
+          retention-days: 7

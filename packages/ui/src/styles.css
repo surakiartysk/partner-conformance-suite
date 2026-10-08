@@ -133,15 +133,6 @@ a {
   font-size: 12px;
 }
 
-/* A finger needs a larger target than a pointer does. */
-@media (pointer: coarse) {
-  button,
-  select,
-  .chip {
-    min-height: 44px;
-  }
-}
-
 /* ── the way in ──────────────────────────────────────────────────────────── */
 .entry {
   max-width: 420px;
@@ -795,4 +786,14 @@ details.setup .step {
 }
 .run-row .counts {
   margin: 0;
+}
+
+/* A finger needs a larger target than a pointer does. Last, so it wins: at equal specificity
+   the later rule does, and this one used to sit above the base rule and never applied. */
+@media (pointer: coarse) {
+  button,
+  select,
+  .chip {
+    min-height: 44px;
+  }
 }

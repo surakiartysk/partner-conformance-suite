@@ -109,10 +109,10 @@ them, and ids older than the memory window ([decision 26](decisions.md#26-the-pa
 
 ## Not built yet
 
-- **End-to-end tests and a deployment.** Everything above is reachable in a
-  browser and nothing drives one on every change, so what the unit tests cannot see
-  (a layout, a policy refusing a font) is found by looking. Nothing is deployed.
-  Stage 6.
+- **A deployment.** Everything above runs, and is driven in a real browser by the
+  end-to-end tests, but nothing is deployed: it needs a D1 database for each Worker
+  and their migrations, a cron on each, the secrets, and the page built before the API
+  Worker is. Stage 6.
 - **Testing a partner of your own.** The design has a self-hosted mode in which
   a partner enters its own base URL, behind a guard against server-side request
   forgery. The deployed suite only ever tests the reference partner; nothing

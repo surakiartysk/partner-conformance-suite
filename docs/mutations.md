@@ -735,6 +735,43 @@ done with nothing else editing the source, after the clash recorded under "The l
 | 547 | A load failure not shown                     | history.test.tsx: the History page > waits for the runs, then lists them                                                    | `TypeError: Cannot read properties of null (reading 'length')`                               |
 | 548 | Timeouts counted as failures                 | history.test.tsx: the history > names what did not pass, each kind apart                                                    | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '<span class="st warn">! 3 ti` |
 
+### The end-to-end tests
+
+20 breaks, made in the page, the stylesheet, the policy and the Workers, each followed by a full run of the
+end-to-end suite in Chrome (the suite rebuilds the page and starts the stack every time). Each turned a
+test red, and the one that went red first is the one named. The tests run in order and stop at the first
+failure, so a break is shown to reach the test named and no later one. Every one of the 14 end-to-end tests
+is reached by some break here.
+
+Two of these are the mistakes that no unit test saw. The font allowance removed from the policy is the
+`data:` font the policy refused, caught here by the browser's own complaint. And the rule that makes controls
+44 px tall for a finger sat above the rule it overrides and so never applied: a unit test that only read the
+stylesheet for its text passed (row 506 above was true of the text, and misleading about the page), and the
+end-to-end test on a touch screen measured 40 px. The stylesheet test now checks the order too.
+
+| #   | Mutation                                          | Caught by                                                                                                 | Failure                                                          |
+| --- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 549 | The font-src allowance removed from the policy    | journey: the browser complained about nothing along the way                                               | `expect(received).toEqual(expected) // deep equality`            |
+| 550 | The Run button not kept at the foot of the window | journey: on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press | `the button is below the fold`                                   |
+| 551 | The rule for fingers dropped                      | journey: on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press | `expect(received).toBeGreaterThanOrEqual(expected)`              |
+| 552 | The header's nav rule applied to every nav        | journey: the result shows what did not match, with the request and the answer beside what was expected    | `expect(received).toBeGreaterThan(expected)`                     |
+| 553 | The versions not served                           | journey: the result shows what did not match, with the request and the answer beside what was expected    | `expect(locator).toBeVisible() failed`                           |
+| 554 | The runs listed oldest first                      | journey: the history lists both runs, newest first, and opens one                                         | `expect(locator).toContainText(expected) failed`                 |
+| 555 | The secret never marked as shown                  | journey: the connection shows the partner and both members at 1,000, and the secret once                  | `expect(locator).toBeVisible() failed`                           |
+| 556 | A case that expects one point too many            | journey: a version that is wrong in one way is found, and the run ends                                    | `expect(locator).toBeVisible() failed`                           |
+| 557 | Try it starts a session and goes nowhere          | journey: the way in leads to a session and its connection                                                 | `expect(page).toHaveURL(expected) failed`                        |
+| 558 | A case's address not read                         | journey: a case can be opened by its address, and survives a reload                                       | `expect(locator).toHaveText(expected) failed`                    |
+| 559 | The session start limit raised                    | limit: a sixth session from one address is refused, and the page says so                                  | `expect(received).toBe(expected) // Object.is equality`          |
+| 560 | Low contrast text in light mode                   | journey: no serious accessibility violations on any page, in light mode                                   | `/ in light mode`                                                |
+| 561 | A console error on load                           | journey: the browser complained about nothing along the way                                               | `expect(received).toEqual(expected) // deep equality`            |
+| 562 | The lines that disagreed not marked               | journey: the result shows what did not match, with the request and the answer beside what was expected    | `expect(locator).toBeVisible() failed`                           |
+| 563 | The partner's version list lost the right one     | journey: the connection shows the partner and both members at 1,000, and the secret once                  | `expect(locator).toContainText(expected) failed`                 |
+| 564 | The history link left out of the header           | journey: the history lists both runs, newest first, and opens one                                         | `locator.click: Target page, context or browser has been closed` |
+| 565 | The page that does not exist not named            | journey: a page that does not exist says so                                                               | `expect(locator).toBeVisible() failed`                           |
+| 566 | The controls 42 px with a mouse                   | journey: with a mouse the controls are 40 px, and a narrow window does not make them 44                   | `expect(received).toBe(expected) // Object.is equality`          |
+| 567 | Low contrast text in dark mode                    | journey: no serious accessibility violations on any page, in dark mode                                    | `/ in dark mode`                                                 |
+| 568 | A run that passed everything not said to          | journey: the right version passes everything, and says so                                                 | `expect(locator).toBeVisible() failed`                           |
+
 ## Tests that could not fail, found on the way
 
 Running the mutations is what found these. Each one passed whatever the code
