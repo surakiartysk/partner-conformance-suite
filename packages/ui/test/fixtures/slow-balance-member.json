@@ -1,0 +1,140 @@
+{
+  "id": "run_34fbd3330f4f4c7d9dcb",
+  "version": "slow-balance",
+  "services": ["member"],
+  "createdAt": "2026-10-08T04:08:17.000Z",
+  "finishedAt": "2026-10-08T04:08:27.000Z",
+  "lanes": [
+    {
+      "lane": "read",
+      "cases": ["member/known", "member/unknown", "member/balance"],
+      "position": 3,
+      "done": true,
+      "restore": null
+    }
+  ],
+  "results": [
+    {
+      "caseId": "member/balance",
+      "lane": "read",
+      "status": "timed_out",
+      "result": {
+        "caseId": "member/balance",
+        "status": "timed_out",
+        "steps": [
+          {
+            "phase": "act",
+            "name": "request",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_f608dc9af9544b88a1e8",
+                "webhook-timestamp": "1791432497",
+                "webhook-signature": "v1,YoD/0sL+DFYG/k/57eu3qvrdjudmCsISegeF7ii2+sY="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "timed_out",
+            "durationMs": 10018,
+            "error": "no response within 10000 ms"
+          }
+        ],
+        "durationMs": 10018
+      }
+    },
+    {
+      "caseId": "member/known",
+      "lane": "read",
+      "status": "passed",
+      "result": {
+        "caseId": "member/known",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "act",
+            "name": "request",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c",
+              "headers": {
+                "webhook-id": "msg_0eef5d865a054c1ba2f8",
+                "webhook-timestamp": "1791432497",
+                "webhook-signature": "v1,ZQRB+8Kqa18HaX6agzzKR+IPryHWD6ypr97fqUxuCaw="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 1,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "id": "mbr_e462617e9f364c3c", "name": "Member A", "tier": "standard" },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": {
+                "id": "mbr_e462617e9f364c3c",
+                "name": "‹any non-empty string›",
+                "tier": "‹one of \"standard\", \"silver\", \"gold\"›"
+              }
+            }
+          }
+        ],
+        "durationMs": 1
+      }
+    },
+    {
+      "caseId": "member/unknown",
+      "lane": "read",
+      "status": "passed",
+      "result": {
+        "caseId": "member/unknown",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "act",
+            "name": "request",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_unknown_57936d8a728941929b76",
+              "headers": {
+                "webhook-id": "msg_6e7210864fd44a03b34c",
+                "webhook-timestamp": "1791432497",
+                "webhook-signature": "v1,md9rypOyhjIE+y3S/yke8cvJ3JaOazIKgbE1TJ8BQRA="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 1,
+            "response": {
+              "status": 404,
+              "headers": { "content-type": "application/problem+json" },
+              "body": {
+                "type": "https://points-partner.example/problems/member-not-found",
+                "title": "Member not found",
+                "status": 404
+              },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 404,
+              "headers": { "content-type": "‹media type application/problem+json›" },
+              "body": {
+                "type": "https://points-partner.example/problems/member-not-found",
+                "status": 404
+              }
+            }
+          }
+        ],
+        "durationMs": 1
+      }
+    }
+  ]
+}

@@ -114,3 +114,25 @@ describe('the page source', () => {
     }
   })
 })
+
+describe('the stylesheet', () => {
+  const css = () => read('src/styles.css')
+
+  /**
+   * Found in a browser, not by a test: the header's `nav { display: flex }` also
+   * laid out the list of cases, which is a `<nav>` too, and put one letter of
+   * each name on a line. A bare element selector reaches every element of that
+   * kind on every page; layout belongs to a class or to something inside one.
+   */
+  it('lays nothing out with a bare element selector', () => {
+    const rules = [
+      ...css()
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .matchAll(/(^|\})\s*([a-z][a-z0-9]*)\s*\{([^}]*)\}/g),
+    ]
+    const offenders = rules
+      .filter(([, , , body]) => /\b(display|grid-template|flex|float|position)\s*:/.test(body!))
+      .map(([, , tag]) => tag)
+    expect(offenders).toEqual([])
+  })
+})

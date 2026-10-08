@@ -683,3 +683,57 @@ by another run can hold this one up for minutes. Reading a case's request and
 what came back is not built yet, so a red case in the summary can be named but
 not opened. Run against the local Workers a whole run takes under two seconds, so
 the running state can only be watched with `slow-balance`, whose cases time out.
+
+## 32. What was wrong with a version is served from a copy of the table, and a test holds the copy to it
+
+The result page ends by saying what was wrong with the version that was run, which
+cases catch it, and how many others pass a partner with that bug. `GET /api/versions`
+serves that, from `src/versions.ts`: for each version its bug, how its cases end
+(`failed`, or `timed_out` for a partner that does not answer), and the cases that
+must not pass.
+
+The source is the table in `docs/variants.md`, which already decides what a version
+must get wrong and which a test holds the partner to, both ways. The Worker cannot
+read a markdown file, so `versions.ts` is a copy, and `test/versions.test.ts` reads
+the table and fails if the copy differs in a name, a word, a status or a case id,
+in either direction. The page therefore cannot say something the document does not.
+
+**Cost.** Two places to edit when a version changes, with the test as the only
+thing noticing if one is forgotten: it will fail, but only when someone runs it. The
+bug is text a person wrote in a table cell, shown as it is; it carries no markup,
+and the page renders it as text. Nothing here says the other cases pass for the
+right reason, only that the table says they pass.
+
+## 33. The result page shows what the server recorded, in the case's own words, and no more
+
+Opening a run shows one verdict, the cases with what did not pass first, and one
+case at a time: what did not match as a sentence for each field, then its steps in
+the order they ran, each with the request that was sent and what came back. A
+step that was judged shows **Expected** and **Actual** side by side with the lines
+that disagreed marked; the setup steps (the starting balance read and the arrange
+step) are only held to answering, with a status as their expectation, and sit in
+one closed section. A sentence names its step, because the act and the verify can
+disagree about the same field in the same words.
+
+Expected is the case's wording and not a copy of the answer: `balance at start +
+100 = 1,200`, `any non-empty string`. A matcher is shown as words in a different
+face, so a reader can tell data from description. The first case shown is the
+first that did not pass in the order the run planned them. On a phone the case
+comes before the list of the others, because the evidence is what the reader came
+for.
+
+Everything a partner wrote (a body, a header, the text of a failure) is rendered as
+text, and a test hands each part of the page markup to prove it. The result is read
+from the run the server recorded; the page adds nothing it did not record, and it
+says "not part of this run" for a case the version's table names that the run did
+not plan.
+
+**Cost.** A JSON answer is shown laid out from what was parsed, so its key order,
+spacing and number formats are the page's and not the partner's bytes; a body that
+is not JSON, or was cut at 64 KB, is shown as text and the cut is said. Request
+headers are shown whole, and `webhook-signature` is among them: it is an HMAC of
+that message and not the secret, and hiding it would hide what a partner's developer
+needs to reproduce the request, but the choice is the server's allowlist and not the
+page's. A result can be opened only with the session that made the run, which lasts
+a day, and nothing lists past runs yet. The 20 cases are 20 links in one list, and
+on a phone that list is a long scroll below the evidence.

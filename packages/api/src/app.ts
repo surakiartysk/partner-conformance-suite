@@ -3,6 +3,7 @@ import { listCases } from './case-list'
 import { createRun, getRun, listRuns, next } from './runs'
 import { getSession, requireSession, revealSecret, startSession } from './sessions'
 import type { Env } from './types'
+import { listVersions } from './versions'
 
 /**
  * Everything the suite answers is under `/api`. The page the visitor uses is
@@ -26,6 +27,7 @@ app.use('*', async (c, next) => {
 })
 
 app.get('/cases', listCases)
+app.get('/versions', listVersions)
 app.post('/sessions', startSession)
 app.get('/session', requireSession, getSession)
 app.post('/session/secret', requireSession, revealSecret)

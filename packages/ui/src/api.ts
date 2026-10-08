@@ -34,6 +34,59 @@ export type Lane = 'read' | 'A' | 'B'
 export type Restore =
   { status: 'nothing-owed' } | { status: 'restored' | 'not-restored'; target: number }
 
+/** One disagreement between what a case expected and what arrived. */
+export interface Mismatch {
+  /** Where, as a JSON path (`$.balance`), or `status`, or `header <name>`. */
+  path: string
+  /** What was expected, as the case words it: a literal or a matcher's description. */
+  expected: string
+  actual?: unknown
+  missing?: true
+}
+
+export type Phase = 'start' | 'arrange' | 'act' | 'verify'
+
+export interface RecordedRequest {
+  method: string
+  path: string
+  /** Every header as sent. */
+  headers: Record<string, string>
+  /** The body exactly as sent: JSON text, or empty. */
+  body: string
+}
+
+export interface RecordedResponse {
+  status: number
+  /** An allowlist is shown; the rest are named with their value replaced by `•••`. */
+  headers: Record<string, string>
+  /** Parsed when the body was JSON; the raw text otherwise. Anything a partner wrote. */
+  body: unknown
+  json: boolean
+  /** True when the body was longer than the limit and only its start was kept. */
+  truncated: boolean
+}
+
+export interface StepRecord {
+  phase: Phase
+  name: string
+  request: RecordedRequest
+  response?: RecordedResponse
+  /** The expectation as the case words it; matchers read as `‹description›`. */
+  expected?: { status?: number | string; headers?: Record<string, unknown>; body?: unknown }
+  mismatches: Mismatch[]
+  outcome: 'ok' | 'mismatch' | 'timed_out' | 'error'
+  /** Set when the step did not get an answer. Text the server wrote about a failure. */
+  error?: string
+  durationMs: number
+}
+
+export interface CaseResult {
+  caseId: string
+  status: CaseStatus
+  steps: StepRecord[]
+  durationMs: number
+}
+
 export interface RunView {
   id: string
   version: string
@@ -41,7 +94,15 @@ export interface RunView {
   createdAt: string
   finishedAt: string | null
   lanes: { lane: Lane; cases: string[]; position: number; done: boolean; restore: Restore | null }[]
-  results: { caseId: string; lane: Lane; status: CaseStatus; result: { durationMs: number } }[]
+  results: { caseId: string; lane: Lane; status: CaseStatus; result: CaseResult }[]
+}
+
+/** What is wrong with one version of the partner, once a run is over. */
+export interface VersionInfo {
+  name: string
+  bug: string | null
+  status: 'failed' | 'timed_out' | null
+  catches: string[]
 }
 
 /** The answer to one `next`: the case just run, or that the lane is done. */
@@ -134,6 +195,9 @@ export function createClient(fetchImpl: Fetch = (input, init) => fetch(input, in
 
     /** What each case is about, in the order the server lists them. */
     listCases: () => call<CaseInfo[]>('/cases'),
+
+    /** What was wrong with each version, for the result page to say. */
+    listVersions: () => call<VersionInfo[]>('/versions'),
 
     /** Starts a run. The page names a version and services; the server plans the cases. */
     async createRun(version: string, services: string[]): Promise<RunView> {

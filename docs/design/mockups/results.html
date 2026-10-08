@@ -113,11 +113,11 @@
           </div>
 
           <details class="setup">
-            <summary>Setup · 2 steps, not judged</summary>
+            <summary>Setup · 2 steps, only held to answering</summary>
             <div class="step">
               <header>
                 <span><b>Start</b> — read the balance before anything moves</span>
-                <span class="st idle">Not judged</span>
+                <span class="st pass"><span aria-hidden="true">✓</span>Matched</span>
               </header>
               <div class="pane">
                 <div class="req">GET /members/mbr_1b7e/balance → 200 · 22 ms</div>
@@ -136,7 +136,7 @@
             <div class="step">
               <header>
                 <span><b>Arrange · first</b> — earn 100 points</span>
-                <span class="st idle">Not judged</span>
+                <span class="st pass"><span aria-hidden="true">✓</span>Matched</span>
               </header>
               <div class="pane"><div class="req">POST /points/earn → 200 · 41 ms</div></div>
               <div class="two">
@@ -150,11 +150,11 @@
                 </div>
               </div>
               <details>
-                <summary>Request headers (3 shown, 2 hidden)</summary>
+                <summary>Request headers (3 shown, 0 hidden)</summary>
                 <pre>
 content-type: application/json
 webhook-id: msg_4c1d…
-webhook-signature: v1,•••</pre>
+webhook-signature: v1,xpyAxO6vn86sTyr2gy5r2NcI+uw6nH1OsvPyQDElDUM=</pre>
               </details>
             </div>
           </details>
@@ -180,10 +180,10 @@ webhook-signature: v1,•••</pre>
               </div>
             </div>
             <details>
-              <summary>Request and response headers (4 shown, 3 hidden)</summary>
+              <summary>Request and response headers (5 shown, 0 hidden)</summary>
               <pre>
 request   webhook-id: msg_9e07…   (a new id: the body is repeated, the message is not)
-request   webhook-signature: v1,•••
+request   webhook-signature: v1,xpyAxO6vn86sTyr2gy5r2NcI+uw6nH1OsvPyQDElDUM=
 response  content-type: application/json</pre>
             </details>
           </div>

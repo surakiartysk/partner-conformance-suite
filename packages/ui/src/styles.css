@@ -104,7 +104,7 @@ a {
   font-weight: 700;
   text-decoration: none;
 }
-nav {
+.bar nav {
   display: flex;
   gap: 20px;
 }
@@ -446,7 +446,7 @@ legend {
   font-size: 12px;
   color: var(--t4);
 }
-progress {
+.lane progress {
   display: block;
   width: 100%;
   height: 4px;
@@ -455,14 +455,14 @@ progress {
   background: var(--surface);
   color: var(--primary);
 }
-progress::-webkit-progress-bar {
+.lane progress::-webkit-progress-bar {
   background: var(--surface);
 }
-progress::-webkit-progress-value {
+.lane progress::-webkit-progress-value {
   background: var(--primary);
   transition: width 200ms var(--ease);
 }
-progress::-moz-progress-bar {
+.lane progress::-moz-progress-bar {
   background: var(--primary);
 }
 .counts {
@@ -483,4 +483,223 @@ progress::-moz-progress-bar {
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 16px;
+}
+
+/* ── the result of a run ─────────────────────────────────────────────────── */
+.verdict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  align-items: center;
+  justify-content: space-between;
+}
+.verdict h1 {
+  margin-top: 4px;
+}
+.split {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  grid-template-areas: 'side detail';
+  align-items: start;
+  margin-top: 16px;
+}
+.split .side {
+  grid-area: side;
+}
+.split .detail {
+  grid-area: detail;
+}
+@media (max-width: 860px) {
+  /* The evidence comes first on a phone; the list of the other cases follows. */
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'detail' 'side';
+  }
+}
+.list {
+  padding: 0;
+  overflow: hidden;
+}
+.list .grp {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--t4);
+  background: var(--surface);
+}
+.list .it {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  min-height: 44px;
+  border-top: 1px solid var(--divider);
+  font-size: 13px;
+  text-decoration: none;
+}
+.list .it:hover {
+  background: var(--hover);
+}
+.list .it[aria-current='true'] {
+  background: var(--hover);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+.list .it .nm {
+  overflow-wrap: anywhere;
+}
+.list .it small {
+  display: block;
+  color: var(--t4);
+  font-size: 12px;
+}
+
+.callout {
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 12px 0 16px;
+}
+.callout p {
+  margin: 0;
+}
+.callout ul {
+  margin: 4px 0 0;
+  padding-left: 20px;
+}
+.callout.bad {
+  border-color: var(--fail);
+  background: var(--fail-bg);
+}
+.callout.ok {
+  border-color: var(--pass);
+  background: var(--pass-bg);
+}
+
+.step {
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.step > header {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface);
+  font-size: 13px;
+}
+.pane {
+  padding: 10px 12px;
+  border-top: 1px solid var(--divider);
+  min-width: 0;
+}
+.pane h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t4);
+}
+.pane p {
+  margin: 0;
+}
+.req {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.two .pane + .pane {
+  border-left: 1px solid var(--divider);
+}
+@media (max-width: 640px) {
+  .two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .two .pane + .pane {
+    border-left: 0;
+  }
+}
+pre.json {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ln {
+  display: block;
+  padding: 0 6px;
+  margin: 0 -6px;
+  border-radius: 3px;
+}
+.ln.bad {
+  background: var(--fail-bg);
+  box-shadow: inset 3px 0 0 var(--fail);
+}
+.matcher {
+  color: var(--t4);
+  font-family: var(--font-ui);
+}
+details {
+  font-size: 12px;
+  color: var(--t4);
+}
+details > summary {
+  cursor: pointer;
+  min-height: 24px;
+  padding: 8px 12px;
+}
+.step details {
+  border-top: 1px solid var(--divider);
+}
+details.setup {
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  margin-top: 12px;
+  color: var(--t1);
+  font-size: 13px;
+}
+details.setup > summary {
+  color: var(--t3);
+  font-weight: 600;
+}
+details.setup .step {
+  margin: 0 12px 12px;
+}
+.reveal {
+  margin-top: 16px;
+}
+.reveal dl {
+  margin: 12px 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 120px) minmax(0, 1fr);
+  gap: 8px 16px;
+  font-size: 13px;
+}
+.reveal dt {
+  color: var(--t4);
+}
+.reveal dd {
+  margin: 0;
+}
+.reveal ul {
+  margin: 0;
+  padding-left: 18px;
+}
+@media (max-width: 640px) {
+  .reveal dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .reveal dd {
+    margin-bottom: 8px;
+  }
 }

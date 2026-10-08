@@ -72,9 +72,12 @@ the suite put the points back.
   says so. A matched step is collapsed by default but never removed: a developer comparing a pass
   with a failure needs the pass's request and answer, and a reader needs to see that the case did
   not pass by checking too little.
-- **Why setup has no Expected.** The starting balance read is not judged, and an arrange step only
-  has to answer 2xx (if it does not, the case ends as `error`, not `failed`, because nothing it
-  then said about the partner would mean anything).
+- **What setup is held to.** The starting balance read expects a status (`200`) and the arrange
+  step expects any `2xx`; neither is judged on its body. If the arrange step does not answer 2xx the
+  case ends as `error`, not `failed`, because nothing it then said about the partner would mean
+  anything. (An earlier version of this brief said setup steps had no expectation at all. That was
+  wrong: it was written from memory, and the recorded results of a real run show the status
+  expectation on both.)
 - **Headers are folded** and shown from an allowlist; the rest appear as names with the value
   hidden (`•••`).
 - **The reveal** comes last: what was wrong with that version, which case catches it, and why
@@ -98,6 +101,20 @@ the suite put the points back.
   slash. Lanes stack below 1000 px.
 - Looked at at 1280 and 375 px, dark and light; no horizontal scroll at 375. Not checked: a
   screen reader, keyboard order, or any browser but Chromium.
+
+## Found while building the result page
+
+- **Request signatures are shown in full.** The server's allowlist shows every `webhook-*` header,
+  so `webhook-signature` appears as the HMAC it is, where the mockups drew `v1,•••`. It is not the
+  secret; hiding it is a change to the allowlist, not to the page.
+- **The numbers in the mockups were tidy.** A real run reads the starting balance after earlier cases
+  in the same lane have moved it, so the repeat is expected to leave 1,200 and leaves 1,300.
+- **The list of cases was laid out as a column of single letters** until the header's `nav` rule was
+  scoped to the header: it had also applied to the list, which is a `<nav>` too. No test could see
+  it, so a test now forbids laying anything out with a bare element selector.
+- **The act and the verify disagree in the same words**, so each sentence of "what didn't match"
+  names its step.
+- **A run under a second says so** instead of "0 s".
 
 ## Found while building the Run page
 

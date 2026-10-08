@@ -1,0 +1,522 @@
+{
+  "id": "run_dfa892badb9c4ec2acbd",
+  "version": "correct",
+  "services": ["earn"],
+  "createdAt": "2026-10-08T04:08:16.000Z",
+  "finishedAt": "2026-10-08T04:08:16.000Z",
+  "lanes": [
+    {
+      "lane": "A",
+      "cases": ["earn/adds-points", "earn/duplicate-reference", "earn/invalid-points"],
+      "position": 3,
+      "done": true,
+      "restore": {
+        "status": "restored",
+        "target": 1000,
+        "result": {
+          "caseId": "restore/A",
+          "status": "passed",
+          "steps": [
+            {
+              "phase": "start",
+              "name": "balance at start",
+              "request": {
+                "method": "GET",
+                "path": "/members/mbr_e462617e9f364c3c/balance",
+                "headers": {
+                  "webhook-id": "msg_214e4813ae244d9e94f0",
+                  "webhook-timestamp": "1791432496",
+                  "webhook-signature": "v1,bYY6jhqm8Cysb81bPWiMfGkMd8EmRAWF4cICBCQ1b/4="
+                },
+                "body": ""
+              },
+              "mismatches": [],
+              "outcome": "ok",
+              "durationMs": 2,
+              "response": {
+                "status": 200,
+                "headers": { "content-type": "application/json" },
+                "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1200 },
+                "json": true,
+                "truncated": false
+              },
+              "expected": { "status": 200 }
+            },
+            {
+              "phase": "act",
+              "name": "restore",
+              "request": {
+                "method": "POST",
+                "path": "/points/redeem",
+                "headers": {
+                  "webhook-id": "msg_cb89977924ec42e9a621",
+                  "webhook-timestamp": "1791432496",
+                  "webhook-signature": "v1,bnAgBD5ER85/9l2a5OIjwAAGUQHpkdQwEUdigtq4rbs=",
+                  "content-type": "application/json"
+                },
+                "body": "{\"memberId\":\"mbr_e462617e9f364c3c\",\"points\":200,\"reference\":\"rst_run_dfa892badb9c4ec2acbd_A_-200\"}"
+              },
+              "mismatches": [],
+              "outcome": "ok",
+              "durationMs": 4,
+              "response": {
+                "status": 200,
+                "headers": { "content-type": "application/json" },
+                "body": {
+                  "transactionId": "txn_d4feb76f7ae943fbb778",
+                  "type": "redeem",
+                  "memberId": "mbr_e462617e9f364c3c",
+                  "points": 200,
+                  "balance": 1000
+                },
+                "json": true,
+                "truncated": false
+              },
+              "expected": { "status": 200, "body": { "balance": 1000 } }
+            },
+            {
+              "phase": "verify",
+              "name": "balance",
+              "request": {
+                "method": "GET",
+                "path": "/members/mbr_e462617e9f364c3c/balance",
+                "headers": {
+                  "webhook-id": "msg_619c02da90f645678c6f",
+                  "webhook-timestamp": "1791432496",
+                  "webhook-signature": "v1,PVxZTeQ500wrKDTh98ZYBir2v1hMdMwbH6YTJDCYrMc="
+                },
+                "body": ""
+              },
+              "mismatches": [],
+              "outcome": "ok",
+              "durationMs": 2,
+              "response": {
+                "status": 200,
+                "headers": { "content-type": "application/json" },
+                "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1000 },
+                "json": true,
+                "truncated": false
+              },
+              "expected": {
+                "status": 200,
+                "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1000 }
+              }
+            }
+          ],
+          "durationMs": 8
+        }
+      }
+    },
+    {
+      "lane": "read",
+      "cases": ["earn/unknown-member"],
+      "position": 1,
+      "done": true,
+      "restore": null
+    }
+  ],
+  "results": [
+    {
+      "caseId": "earn/adds-points",
+      "lane": "A",
+      "status": "passed",
+      "result": {
+        "caseId": "earn/adds-points",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "start",
+            "name": "balance at start",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_ae8a9fd03b5042f98aff",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,gWoJRIlaHqlaQ8orWefGAlVz+MTSFSY85Qv1cGpr2bQ="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 1,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1000 },
+              "json": true,
+              "truncated": false
+            },
+            "expected": { "status": 200 }
+          },
+          {
+            "phase": "act",
+            "name": "earn",
+            "request": {
+              "method": "POST",
+              "path": "/points/earn",
+              "headers": {
+                "webhook-id": "msg_c01b1a70296e4c48a883",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,py9MOkYmjRH7EhDqdQ6dGTwBlygelVG80J+xXLxNZWA=",
+                "content-type": "application/json"
+              },
+              "body": "{\"memberId\":\"mbr_e462617e9f364c3c\",\"points\":100,\"reference\":\"ref_09baae2d2aaf483bb150\"}"
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 14,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": {
+                "transactionId": "txn_1d89583b38714a4c80ba",
+                "type": "earn",
+                "memberId": "mbr_e462617e9f364c3c",
+                "points": 100,
+                "balance": 1100
+              },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": {
+                "transactionId": "‹any non-empty string›",
+                "type": "earn",
+                "memberId": "mbr_e462617e9f364c3c",
+                "points": 100,
+                "balance": "‹balance at start + 100 = 1,100›"
+              }
+            }
+          },
+          {
+            "phase": "verify",
+            "name": "balance",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_ba6e645777034bbf9ea3",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,wvxKpfV6ek4pXP9W0neV2T2ty466laaeEG6P5OUVqq4="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 2,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1100 },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": {
+                "memberId": "mbr_e462617e9f364c3c",
+                "balance": "‹balance at start + 100 = 1,100›"
+              }
+            }
+          }
+        ],
+        "durationMs": 17
+      }
+    },
+    {
+      "caseId": "earn/duplicate-reference",
+      "lane": "A",
+      "status": "passed",
+      "result": {
+        "caseId": "earn/duplicate-reference",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "start",
+            "name": "balance at start",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_4f10afea8c694b8d9713",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,gcyQlpxGOs0UtD+el0FNIfBMicm4q/Bl+K8jfEd3YQM="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 2,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1100 },
+              "json": true,
+              "truncated": false
+            },
+            "expected": { "status": 200 }
+          },
+          {
+            "phase": "arrange",
+            "name": "first",
+            "request": {
+              "method": "POST",
+              "path": "/points/earn",
+              "headers": {
+                "webhook-id": "msg_53a831bf2f9542828a1f",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,A5bkh7ohQp6G30HeiUfbhcgySoP7hpa8YWD3w1QTHWU=",
+                "content-type": "application/json"
+              },
+              "body": "{\"memberId\":\"mbr_e462617e9f364c3c\",\"points\":100,\"reference\":\"ref_b3dc5410713146f89980\"}"
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 3,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": {
+                "transactionId": "txn_c01dffebc3a540de934e",
+                "type": "earn",
+                "memberId": "mbr_e462617e9f364c3c",
+                "points": 100,
+                "balance": 1200
+              },
+              "json": true,
+              "truncated": false
+            },
+            "expected": { "status": "any 2xx" }
+          },
+          {
+            "phase": "act",
+            "name": "repeat",
+            "request": {
+              "method": "POST",
+              "path": "/points/earn",
+              "headers": {
+                "webhook-id": "msg_462f621997654850b422",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,WczhlQfCOH7tWnHi4fqibJJO3PamxnCvMEunABAfMSo=",
+                "content-type": "application/json"
+              },
+              "body": "{\"memberId\":\"mbr_e462617e9f364c3c\",\"points\":100,\"reference\":\"ref_b3dc5410713146f89980\"}"
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 2,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": {
+                "transactionId": "txn_c01dffebc3a540de934e",
+                "type": "earn",
+                "memberId": "mbr_e462617e9f364c3c",
+                "points": 100,
+                "balance": 1200
+              },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": {
+                "transactionId": "txn_c01dffebc3a540de934e",
+                "balance": "‹balance at start + 100 = 1,200›"
+              }
+            }
+          },
+          {
+            "phase": "verify",
+            "name": "balance",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_05792344812347d78d8b",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,42hOhL+Cbt75hPMeep5/l/W8ZYDzDpyeJL39o9ORnS0="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 3,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1200 },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": {
+                "memberId": "mbr_e462617e9f364c3c",
+                "balance": "‹balance at start + 100 = 1,200›"
+              }
+            }
+          }
+        ],
+        "durationMs": 10
+      }
+    },
+    {
+      "caseId": "earn/invalid-points",
+      "lane": "A",
+      "status": "passed",
+      "result": {
+        "caseId": "earn/invalid-points",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "start",
+            "name": "balance at start",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_9b2da553b8e74ec2b061",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,HO6V/sHeq0/UkFm+iGSIrsRuC4by2Wz6DndecEI1sCs="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 1,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1200 },
+              "json": true,
+              "truncated": false
+            },
+            "expected": { "status": 200 }
+          },
+          {
+            "phase": "act",
+            "name": "earn",
+            "request": {
+              "method": "POST",
+              "path": "/points/earn",
+              "headers": {
+                "webhook-id": "msg_130d50db9acc4a8d92ea",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,6eou/+8pXwzuf2WHp6bEoJSMqHqhS9i3UuHAlyQgibA=",
+                "content-type": "application/json"
+              },
+              "body": "{\"memberId\":\"mbr_e462617e9f364c3c\",\"points\":0,\"reference\":\"ref_315214c38329431da15e\"}"
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 2,
+            "response": {
+              "status": 400,
+              "headers": { "content-type": "application/problem+json" },
+              "body": {
+                "type": "https://points-partner.example/problems/invalid-request",
+                "title": "Invalid request",
+                "status": 400,
+                "detail": "points must be an integer from 1 to 1000000"
+              },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 400,
+              "headers": { "content-type": "‹media type application/problem+json›" },
+              "body": {
+                "type": "https://points-partner.example/problems/invalid-request",
+                "status": 400
+              }
+            }
+          },
+          {
+            "phase": "verify",
+            "name": "balance",
+            "request": {
+              "method": "GET",
+              "path": "/members/mbr_e462617e9f364c3c/balance",
+              "headers": {
+                "webhook-id": "msg_3c5d8f9d400b4f02bbf4",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,4MkbtN8ExAvh0v8oYBmlEbSYE8HdXD8jI27/AVMSWQs="
+              },
+              "body": ""
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 3,
+            "response": {
+              "status": 200,
+              "headers": { "content-type": "application/json" },
+              "body": { "memberId": "mbr_e462617e9f364c3c", "balance": 1200 },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 200,
+              "body": {
+                "memberId": "mbr_e462617e9f364c3c",
+                "balance": "‹balance at start, unchanged = 1,200›"
+              }
+            }
+          }
+        ],
+        "durationMs": 6
+      }
+    },
+    {
+      "caseId": "earn/unknown-member",
+      "lane": "read",
+      "status": "passed",
+      "result": {
+        "caseId": "earn/unknown-member",
+        "status": "passed",
+        "steps": [
+          {
+            "phase": "act",
+            "name": "earn",
+            "request": {
+              "method": "POST",
+              "path": "/points/earn",
+              "headers": {
+                "webhook-id": "msg_894752d267de412d8b0a",
+                "webhook-timestamp": "1791432496",
+                "webhook-signature": "v1,rhZesR73Z7M8UPsW+lADlHeIeFLPzenomJWRm7K72Ew=",
+                "content-type": "application/json"
+              },
+              "body": "{\"memberId\":\"mbr_unknown_c09dea562da04572a5d6\",\"points\":10,\"reference\":\"ref_0c744416a615433d87a7\"}"
+            },
+            "mismatches": [],
+            "outcome": "ok",
+            "durationMs": 3,
+            "response": {
+              "status": 404,
+              "headers": { "content-type": "application/problem+json" },
+              "body": {
+                "type": "https://points-partner.example/problems/member-not-found",
+                "title": "Member not found",
+                "status": 404
+              },
+              "json": true,
+              "truncated": false
+            },
+            "expected": {
+              "status": 404,
+              "headers": { "content-type": "‹media type application/problem+json›" },
+              "body": {
+                "type": "https://points-partner.example/problems/member-not-found",
+                "status": 404
+              }
+            }
+          }
+        ],
+        "durationMs": 3
+      }
+    }
+  ]
+}
