@@ -205,6 +205,12 @@ test('before a run both choices are on the screen side by side, and the run bar 
   expect(bar.y + bar.height, 'the run bar is on the screen without scrolling').toBeLessThanOrEqual(
     800,
   )
+  const tall = await page
+    .locator('.vgrid .vopt')
+    .evaluateAll((chips) =>
+      chips.filter((c) => c.getBoundingClientRect().height > 46).map((c) => c.textContent),
+    )
+  expect(tall, 'version names that wrap onto a second line').toEqual([])
   const form = (await page.locator('form.run-form').boundingBox())!
   expect(form.height, 'the whole form is shorter than it was').toBeLessThan(800)
 })
@@ -224,6 +230,8 @@ test('when a run ends it is said, for someone who cannot see the page', async ()
   await page.goto('/run')
   const status = page.locator('.sr-only[role="status"]')
   await expect(status).toHaveText('')
+  const said = (await status.boundingBox())!
+  expect(said.width, 'what is only said is not drawn').toBeLessThanOrEqual(1)
   await page.getByRole('button', { name: 'None' }).click()
   await page.getByRole('button', { name: 'Show the earn cases' }).click()
   await page

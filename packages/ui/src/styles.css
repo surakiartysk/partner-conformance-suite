@@ -258,7 +258,7 @@ button:disabled {
 }
 select {
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   min-height: 40px;
   padding: 6px 8px;
   border: 1px solid var(--border);
