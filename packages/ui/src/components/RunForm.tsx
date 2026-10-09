@@ -22,7 +22,7 @@ interface Props {
   defaultOpen?: boolean
 }
 
-const WRONG_WAY = 'Wrong in one way, and the result says how'
+const PLANTED = 'Planted bugs, one in each; the result says which'
 
 export function RunForm(props: Props) {
   const chosen = props.selected.length
@@ -52,11 +52,14 @@ export function RunForm(props: Props) {
     >
       <div className="grid">
         <div className="card" role="radiogroup" aria-labelledby="version-title">
-          <h2 id="version-title">Partner version</h2>
+          <div className="card-head">
+            <h2 id="version-title">Partner version</h2>
+            <span className="demo-chip">Demo</span>
+          </div>
           <p className="note">
-            The partner is the points API under test. Each version is a copy of it:{' '}
-            <span className="mono">correct</span> follows the spec, the others are each wrong in one
-            way.
+            A sample points API built into this site, not your system.{' '}
+            <span className="mono">correct</span> follows the spec; each other version has one bug
+            planted in it, to show what the cases catch.
           </p>
           {props.versions.includes('correct') ? (
             <label className="vopt vcorrect">
@@ -67,7 +70,7 @@ export function RunForm(props: Props) {
               </span>
             </label>
           ) : null}
-          <p className="note vlabel">{WRONG_WAY}</p>
+          <p className="note vlabel">{PLANTED}</p>
           <div className="vgrid">
             {others.map((name) => (
               <label className="vopt" key={name}>

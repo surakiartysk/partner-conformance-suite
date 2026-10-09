@@ -912,3 +912,30 @@ which is better than empty but is not full. A visitor who wants a case by name s
 announcement repeats a sentence that is also on the page, so a test that finds that sentence by its text finds it
 twice and must look at the visible one. Everything here was checked in Chrome and, for the page as it stood before
 this change, in Safari on an iPhone simulator; not in Firefox, and not with a screen reader.
+
+## 42. The site says it is a demo, the result shows Expected whole, and a page explains how a run works
+
+Seen again in a browser, three things read wrong. The Run page offered "a partner" and thirteen versions of it with
+nothing to say they belong to the site and are not the visitor's system, so it looked like part of a real product.
+The result page showed under Expected only what a case asserts (a status, two fields), so beside a whole answer it
+looked as though almost nothing had been expected. And nothing on the site said how a run works or where the contract
+is.
+
+Every page now carries a line, "Demo: this site tests a built-in sample partner, not your API", with a link to
+**How it works**. The Run form's card has a _Demo_ chip and says what `correct` and the other versions are. How it works
+is open without a session (like Home), draws one run as a picture with the same four numbered steps written out as a
+list, describes the lanes, the partner API (linking the specification, which the build copies to `/openapi.yaml` and
+the headers serve as `text/plain` so a browser shows it and does not download it) and the limits, which a test ties to
+the API's own constants. The Run page, when idle, links to the session's last run and says that every run is kept under
+History.
+
+Expected is laid out line for line with Actual (`alignBodies`): lines are paired by their path and by the order within
+a path, a field a case never looks at is said to be _not checked_ in Expected, a field it expected and the answer lacks
+is _missing_ in Actual, and only the lines that disagreed are red. When a case expects no body at all but the answer is
+JSON, the first line says `body: not checked` and the rest is left blank to the same height. The select on the
+Connection page draws its own arrow with room for it, and the lanes have space above them.
+
+**Cost.** This is a label, not a mode. A visitor still cannot enter their own partner's address, and so there is no
+"real" side to be a demo of; decision 1 and the architecture's "Not built yet" say so. The picture is left out below
+640 px, where its labels would be about 6 px high; the numbered list says the same thing there. Checked in Chrome only, at desktop and phone width; not in other browsers, and not with a
+screen reader.

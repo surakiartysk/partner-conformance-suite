@@ -47,7 +47,8 @@ Built in stages. Done so far:
   Run, watch the three lanes), and the result of a run: the verdict, each case that
   did not pass with what did not match, the request that was sent and what came
   back beside what was expected, and what was wrong with the version; and the
-  history of the session's runs.
+  history of the session's runs. Every page says the site tests a built-in sample partner, and
+  a How it works page draws a run and links the contract at `/openapi.yaml`.
 
 The page is also driven in a real browser by `packages/e2e`, in a CI job of its own.
 

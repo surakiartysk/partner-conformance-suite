@@ -7,6 +7,12 @@ describe('routes', () => {
     expect(parseRoute('/connection')).toEqual({ page: 'connection' })
     expect(parseRoute('/run')).toEqual({ page: 'run' })
     expect(parseRoute('/history')).toEqual({ page: 'history' })
+    expect(parseRoute('/how-it-works')).toEqual({ page: 'how-it-works' })
+    expect(parseRoute('/how-it-works/')).toEqual({ page: 'how-it-works' })
+  })
+
+  it('writes the address of the page that explains the site', () => {
+    expect(pathFor({ page: 'how-it-works' })).toBe('/how-it-works')
   })
 
   it('reads the result of a run, and of one case of it', () => {

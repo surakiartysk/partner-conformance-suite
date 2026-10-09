@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Mismatch, RunView } from '../src/api'
 import {
+  alignBodies,
   bodyLines,
   defaultCase,
   describeMismatch,
@@ -322,5 +323,87 @@ describe('how long a run took', () => {
     expect(runSeconds(at(null))).toBeNull()
     expect(runSeconds(at('not a date'))).toBeNull()
     expect(runSeconds(at('2026-10-08T03:57:00.000Z'))).toBeNull()
+  })
+})
+
+describe('two bodies side by side', () => {
+  const lines = (value: unknown, marked: string[] = []) => jsonLines(value, new Set(marked))
+  const text = (ls: { head: string; value: string; tail: string }[]) =>
+    ls.map((l) => l.head + l.value + l.tail)
+
+  it('are the same length, line for line, whatever each had', () => {
+    const both = alignBodies(
+      lines({ a: 1, b: 2 }),
+      lines({ a: 1, extra: true, b: 3, more: { x: 1 } }),
+    )
+    expect(both.expected).toHaveLength(both.actual.length)
+  })
+
+  it('say "not checked" where the case expected nothing of a field, and leave the line it did check', () => {
+    const both = alignBodies(
+      lines({ id: 'x', balance: 1200 }, ['$.id', '$.balance']),
+      lines({ id: 'y', type: 'earn', balance: 1300 }, ['$.id', '$.balance']),
+    )
+    expect(text(both.expected)).toEqual([
+      '{',
+      '  "id": "x",',
+      '  "type": not checked',
+      '  "balance": 1200',
+      '}',
+    ])
+    expect(text(both.actual)).toEqual([
+      '{',
+      '  "id": "y",',
+      '  "type": "earn",',
+      '  "balance": 1300',
+      '}',
+    ])
+  })
+
+  it('keeps a red mark where it was, and puts none on a line that was not checked', () => {
+    const both = alignBodies(
+      lines({ id: 'x', balance: 1 }, ['$.id']),
+      lines({ id: 'y', type: 'earn', balance: 2 }, ['$.id']),
+    )
+    expect(both.expected.map((l) => l.marked)).toEqual([false, true, false, false, false])
+    expect(both.actual.map((l) => l.marked)).toEqual([false, true, false, false, false])
+  })
+
+  it('say "missing" in the answer where the case expected a field it lacks, and keep the mark', () => {
+    const both = alignBodies(lines({ id: 'x', tier: 'gold' }, ['$.tier']), lines({ id: 'x' }))
+    expect(text(both.actual)).toEqual(['{', '  "id": "x"', '  "tier": missing', '}'])
+    expect(both.actual.find((l) => l.value === 'missing')!.marked).toBe(true)
+    expect(both.expected.find((l) => l.value.includes('gold'))!.marked).toBe(true)
+  })
+
+  it('give an object nothing expected of it one "not checked" and blank lines for what is inside it', () => {
+    const both = alignBodies(lines({ id: 1 }), lines({ id: 1, nested: { a: 1, b: [2] } }))
+    const shown = text(both.expected)
+    expect(shown.filter((l) => l.includes('not checked'))).toEqual(['  "nested": not checked'])
+    expect(shown.slice(2).every((l) => !/\d/.test(l))).toBe(true)
+    expect(both.expected).toHaveLength(both.actual.length)
+  })
+
+  it('keep the closing of an object with the closing of the object, when a number became an object', () => {
+    // The case expects `x: 1`; the answer has `x: { y: 1 }`. The opening of x pairs, y is not checked,
+    // and the closing of x is told apart from the closing of the whole body by its order.
+    const both = alignBodies(lines({ x: 1 }), lines({ x: { y: 1 } }))
+    expect(both.expected).toHaveLength(both.actual.length)
+    expect(text(both.expected).at(-1)).toBe('}')
+    expect(text(both.actual).at(-1)).toBe('}')
+    expect(text(both.actual).filter((l) => l === 'missing')).toEqual([])
+    expect(both.actual.some((l) => l.value === 'missing')).toBe(false)
+  })
+
+  it('leave two bodies that agree exactly as they were', () => {
+    const body = { a: 1, b: { c: [1, 2] } }
+    const both = alignBodies(lines(body), lines(body))
+    expect(text(both.expected)).toEqual(text(lines(body)))
+    expect(text(both.actual)).toEqual(text(lines(body)))
+  })
+
+  it('show the placeholder as a description, not as data', () => {
+    const both = alignBodies(lines({ a: 1 }), lines({ a: 1, b: 2 }))
+    expect(both.expected.find((l) => l.value === 'not checked')!.matcher).toBe(true)
   })
 })

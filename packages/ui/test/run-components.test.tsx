@@ -113,7 +113,7 @@ describe('the Run form', () => {
   it('says what is wrong with no version but only that it is wrong, and what correct is', () => {
     const html = render()
     expect(html).toContain('Follows the spec. Everything should pass.')
-    expect(html).toContain('wrong in one way')
+    expect(html).toContain('one bug planted in it')
     expect(html).not.toContain('ignores')
   })
 
@@ -136,10 +136,19 @@ describe('the Run form', () => {
     expect(html).toContain('id="cases-earn"')
   })
 
+  it('says it is a demo: a chip beside the heading, and in the note that these versions are not the visitor\u2019s system', () => {
+    const html = render()
+    expect(html).toMatch(
+      /<h2 id="version-title">Partner version<\/h2><span class="demo-chip">Demo<\/span>/,
+    )
+    expect(html).toContain('not your system')
+    expect(html).toContain('one bug planted in it')
+  })
+
   it('says what a partner and a version are, and which version is the right one', () => {
     const html = render()
-    expect(html).toContain('The partner is the points API under test')
-    expect(html).toContain('Each version is a copy of it')
+    expect(html).toContain('A sample points API built into this site, not your system')
+    expect(html).toContain('to show what the cases catch')
   })
 
   it('shows each service as a group and each case under it, the chosen ones checked', () => {
@@ -212,7 +221,7 @@ describe('the Run form', () => {
   it('puts correct first, on its own, and the wrong versions in a grid under what that means', () => {
     const html = render({ versions: ['correct', 'double-earn', 'off-by-one'] })
     const correct = html.indexOf('vopt vcorrect')
-    const label = html.indexOf('Wrong in one way, and the result says how')
+    const label = html.indexOf('Planted bugs, one in each; the result says which')
     const grid = html.indexOf('class="vgrid"')
     expect(correct).toBeGreaterThan(-1)
     expect(correct).toBeLessThan(label)

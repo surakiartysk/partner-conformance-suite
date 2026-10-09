@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ago, points, timeLeft } from '../src/format'
+import { ago, points, runSummary, timeLeft } from '../src/format'
 
 describe('points', () => {
   it('groups thousands', () => {
@@ -51,5 +51,30 @@ describe('ago', () => {
   it('says just now for a time ahead of the clock, and for one it cannot read', () => {
     expect(ago(before(-5 * 60_000), at)).toBe('just now')
     expect(ago('not a date', at)).toBe('just now')
+  })
+})
+
+describe('runSummary', () => {
+  const counts = (passed: number, failed = 0, timedOut = 0, error = 0) => ({
+    passed,
+    failed,
+    timedOut,
+    error,
+  })
+  const done = '2026-10-09T10:00:00.000Z'
+
+  it('says every case passed when none did not, and how many', () => {
+    expect(runSummary({ finishedAt: done, total: 20, counts: counts(20) })).toBe('all 20 passed')
+    expect(runSummary({ finishedAt: done, total: 1, counts: counts(1) })).toBe('passed')
+  })
+
+  it('counts a failure, a timeout and an error together as the ones that did not pass', () => {
+    expect(runSummary({ finishedAt: done, total: 20, counts: counts(17, 1, 1, 1) })).toBe(
+      '17 passed, 3 did not',
+    )
+  })
+
+  it('says a run that has not ended has not ended, however its counts look', () => {
+    expect(runSummary({ finishedAt: null, total: 20, counts: counts(20) })).toBe('not finished')
   })
 })

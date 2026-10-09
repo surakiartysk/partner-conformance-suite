@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, type CaseInfo, type Client, type RunView, type SessionView } from '../api'
+import {
+  ApiError,
+  type CaseInfo,
+  type Client,
+  type RunListItem,
+  type RunView,
+  type SessionView,
+} from '../api'
+import { ago, runSummary } from '../format'
 import type { Route } from '../route'
 import { driveRun } from '../driver'
 import { messageFor } from '../messages'
@@ -13,6 +21,7 @@ import {
 } from '../progress'
 import { givenBackText } from '../given-back'
 import { chooseCases, defaultVersion, groupCases, orderVersions, toggleCase } from '../run-form'
+import { PageLink } from './Layout'
 import { Lanes } from './Lanes'
 import { RunForm } from './RunForm'
 import { RunSummary } from './RunSummary'
@@ -33,6 +42,7 @@ export function RunPage({
 }) {
   const [cases, setCases] = useState<CaseInfo[] | null>(null)
   const [loadProblem, setLoadProblem] = useState<string | null>(null)
+  const [lastRun, setLastRun] = useState<RunListItem | null>(null)
 
   const versions = useMemo(() => orderVersions(session.partner.versions), [session])
   const [version, setVersion] = useState(() => defaultVersion(session.partner.versions))
@@ -52,6 +62,20 @@ export function RunPage({
       .listCases()
       .then((list) => current && setCases(list))
       .catch((error) => current && setLoadProblem(problemOf(error)))
+    return () => {
+      current = false
+    }
+  }, [client])
+
+  // The results of earlier runs are kept for the session, and the form begins empty each time it
+  // is opened, so the way back to the last one is said here. Not being able to ask is no reason to
+  // say anything.
+  useEffect(() => {
+    let current = true
+    client
+      .listRuns()
+      .then((runs) => current && setLastRun(runs[0] ?? null))
+      .catch(() => undefined)
     return () => {
       current = false
     }
@@ -173,6 +197,15 @@ export function RunPage({
     <>
       <h1>Run</h1>
       <p className="lede">Choose a version of the partner to test, and the cases to run.</p>
+      {lastRun && phase === 'idle' ? (
+        <p className="note last-run">
+          Your last run:{' '}
+          <PageLink to={{ page: 'result', runId: lastRun.id }} onNavigate={onNavigate}>
+            <span className="mono">{lastRun.version}</span>, {runSummary(lastRun)}
+          </PageLink>
+          , {ago(lastRun.createdAt)}. Every run is kept for this session under History.
+        </p>
+      ) : null}
       <div role="status" className="sr-only">
         {announcement}
       </div>

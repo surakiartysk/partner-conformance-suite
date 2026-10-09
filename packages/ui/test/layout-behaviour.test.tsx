@@ -18,6 +18,7 @@ describe('the title of a page', () => {
     expect(titleFor({ page: 'connection' })).toBe('Connection · Partner conformance suite')
     expect(titleFor({ page: 'run' })).toBe('Run · Partner conformance suite')
     expect(titleFor({ page: 'history' })).toBe('History · Partner conformance suite')
+    expect(titleFor({ page: 'how-it-works' })).toBe('How it works · Partner conformance suite')
     expect(titleFor({ page: 'result', runId: 'run_1' })).toBe('Result · Partner conformance suite')
     expect(titleFor({ page: 'not-found' })).toBe('Not found · Partner conformance suite')
   })

@@ -69,6 +69,13 @@ test('a version that is wrong in one way is found, and the run ends', async () =
   })
   await expect(page.getByRole('heading', { name: '1 of 20 cases did not pass' })).toBeVisible()
   await expect(page.getByText('✓ 19 passed')).toBeVisible()
+  // The lanes do not begin against the buttons above them.
+  const buttons = (await page.getByRole('button', { name: 'Open the result' }).boundingBox())!
+  const lanes = (await page.locator('.lanes').boundingBox())!
+  expect(
+    lanes.y - (buttons.y + buttons.height),
+    'space between the buttons and the lanes',
+  ).toBeGreaterThanOrEqual(12)
   // Every status is whole, inside its lane: three lanes side by side once cut them off.
   const clipped = await page.locator('.lane .row .st').evaluateAll((badges) =>
     badges
@@ -104,6 +111,14 @@ test('the result shows what did not match, with the request and the answer besid
   await expect(act.getByRole('heading', { name: 'Actual' })).toBeVisible()
   await expect(act.locator('.ln.bad').first()).toBeVisible()
   await expect(act.locator('.matcher', { hasText: 'balance at start + 100' })).toBeVisible()
+  // Expected is laid out line for line with Actual: what this step does not check (type, memberId,
+  // points of the earn answer) is said, in words, beside it, and is not marked red.
+  await expect(act.locator('.matcher', { hasText: 'not checked' })).toHaveCount(3)
+  await expect(act.locator('.ln.bad .matcher', { hasText: 'not checked' })).toHaveCount(0)
+  const panes = await act
+    .locator('.two .json')
+    .evaluateAll((pres) => pres.map((p) => p.querySelectorAll('.ln').length))
+  expect(panes[0], 'both panes have the same number of lines').toBe(panes[1])
   await expect(detail.locator('details.setup')).not.toHaveAttribute('open', '')
 
   // The list of cases is a list of lines, not a column of single letters: each is as wide
@@ -244,6 +259,81 @@ test('when a run ends it is said, for someone who cannot see the page', async ()
   expect(said.width, 'what is only said is not drawn').toBeLessThanOrEqual(1)
 })
 
+test('the page says it is a demo, on the page and beside the sample partner, and links to how it works', async () => {
+  await page.goto('/run')
+  await expect(
+    page.getByText('Demo: this site tests a built-in sample partner, not your API.'),
+  ).toBeVisible()
+  await expect(page.locator('.demo-chip')).toHaveText('Demo')
+  await expect(page.getByText('not your system')).toBeVisible()
+  await expect(page.getByText(/Planted bugs, one in each/)).toBeVisible()
+})
+
+test('the way back to the last run is on the Run page, and opens it', async () => {
+  await page.goto('/run')
+  const link = page.locator('.last-run a')
+  await expect(link).toBeVisible()
+  await expect(page.locator('.last-run')).toContainText(
+    'Every run is kept for this session under History',
+  )
+  await link.click()
+  await expect(page).toHaveURL(/\/runs\/run_[0-9a-f]+$/)
+})
+
+test('how it works shows the run as a picture and as steps, and the spec it links to can be read', async () => {
+  await page.goto('/')
+  await page.getByRole('link', { name: 'How it works', exact: true }).first().click()
+  await expect(page).toHaveTitle('How it works · Partner conformance suite')
+  await expect(page.getByRole('heading', { name: 'How it works', level: 1 })).toBeFocused()
+  const diagram = page.locator('svg.dg')
+  await expect(diagram).toBeVisible()
+  expect(
+    (await diagram.boundingBox())!.width,
+    'the picture uses the width of the page',
+  ).toBeGreaterThan(500)
+  await expect(page.locator('.steps li')).toHaveCount(4)
+  const spec = await page.request.get('/openapi.yaml')
+  expect(spec.status()).toBe(200)
+  expect(spec.headers()['content-type']).toContain('text/plain')
+  expect(await spec.text()).toMatch(/^openapi: 3\.1\.0/)
+})
+
+test('on a phone how it works leaves the picture out and keeps the steps, and nothing scrolls sideways', async ({
+  browser,
+}) => {
+  const phone = await browser.newContext({
+    viewport: { width: 375, height: 812 },
+    hasTouch: true,
+    isMobile: true,
+    storageState: await context.storageState(),
+  })
+  const small = await phone.newPage()
+  await small.goto('/how-it-works')
+  await expect(small.getByRole('heading', { name: 'How it works', level: 1 })).toBeVisible()
+  await expect(small.locator('svg.dg')).toBeHidden()
+  await expect(small.locator('.steps li')).toHaveCount(4)
+  expect(
+    await small.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+  ).toBeLessThanOrEqual(0)
+  await phone.close()
+})
+
+test('the version select on the Connection page draws its own arrow, with room for it', async () => {
+  await page.goto('/connection')
+  const select = page.locator('select').first()
+  const style = await select.evaluate((el) => {
+    const cs = getComputedStyle(el)
+    return {
+      appearance: cs.appearance,
+      pad: parseFloat(cs.paddingRight),
+      image: cs.backgroundImage,
+    }
+  })
+  expect(style.appearance).toBe('none')
+  expect(style.pad).toBeGreaterThanOrEqual(28)
+  expect(style.image).toContain('linear-gradient')
+})
+
 test('on a phone nothing scrolls sideways, and the Run button is on the screen and big enough to press', async ({
   browser,
 }) => {
@@ -316,6 +406,7 @@ for (const scheme of ['light', 'dark'] as const) {
     const pages = [
       '/',
       '/connection',
+      '/how-it-works',
       '/run',
       '/history',
       resultUrl,

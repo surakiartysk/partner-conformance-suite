@@ -2,7 +2,14 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, type CaseInfo, type Client, type NextAnswer, type RunView } from '../src/api'
+import {
+  ApiError,
+  type CaseInfo,
+  type Client,
+  type NextAnswer,
+  type RunListItem,
+  type RunView,
+} from '../src/api'
 import { RunPage } from '../src/components/RunPage'
 import type { Route } from '../src/route'
 import { session } from './fixtures'
@@ -60,6 +67,7 @@ function fakeClient(
   const waiters: (() => void)[] = []
   const client = {
     listCases: async () => CASES,
+    listRuns: async () => [],
     createRun: async (version: string, cases: string[]) => {
       created.push({ version, cases })
       if (options.failCreate) throw options.failCreate
@@ -120,6 +128,7 @@ describe('the Run page', () => {
       listCases: async () => {
         throw new ApiError('network', 0)
       },
+      listRuns: async () => [],
     } as unknown as Client
     renderPage(client)
     expect((await screen.findByRole('alert')).textContent).toContain('could not be reached')
@@ -142,6 +151,57 @@ describe('the Run page', () => {
     expect(
       screen.getByText('Points given back. Both members are at their starting balances.'),
     ).toBeTruthy()
+  })
+
+  describe('the way back to the last run', () => {
+    const run = (over: Partial<RunListItem> = {}): RunListItem => ({
+      id: 'run_last',
+      version: 'double-earn',
+      services: ['earn'],
+      createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+      finishedAt: new Date().toISOString(),
+      total: 20,
+      counts: { passed: 19, failed: 1, timedOut: 0, error: 0 },
+      ...over,
+    })
+    const withRuns = (runs: RunListItem[] | Error) => {
+      const { client } = fakeClient()
+      ;(client as unknown as { listRuns: () => Promise<RunListItem[]> }).listRuns = async () => {
+        if (runs instanceof Error) throw runs
+        return runs
+      }
+      return client
+    }
+
+    it('links to the most recent run, says how it ended and how long ago, and where all are kept', async () => {
+      renderPage(withRuns([run(), run({ id: 'run_older', version: 'correct' })]))
+      const link = await screen.findByRole('link', { name: /double-earn, 19 passed, 1 did not/ })
+      expect(link.getAttribute('href')).toBe('/runs/run_last')
+      expect(screen.getByText(/5 min ago/)).toBeTruthy()
+      expect(screen.getByText(/kept for this session under History/)).toBeTruthy()
+    })
+
+    it('says nothing when there has been no run, or when the runs could not be asked for', async () => {
+      const first = renderPage(withRuns([]))
+      await screen.findByRole('button', { name: 'Run 3 cases' })
+      expect(screen.queryByText(/Your last run/)).toBeNull()
+      first.unmount()
+      renderPage(withRuns(new ApiError('network', 0)))
+      await screen.findByRole('button', { name: 'Run 3 cases' })
+      expect(screen.queryByText(/Your last run/)).toBeNull()
+    })
+
+    it('is not shown while a run goes, when the page is already about one', async () => {
+      const user = userEvent.setup()
+      const { client } = fakeClient({ hold: true })
+      ;(client as unknown as { listRuns: () => Promise<RunListItem[]> }).listRuns = async () => [
+        run(),
+      ]
+      renderPage(client)
+      await screen.findByText(/Your last run/)
+      await user.click(screen.getByRole('button', { name: 'Run 3 cases' }))
+      await waitFor(() => expect(screen.queryByText(/Your last run/)).toBeNull())
+    })
   })
 
   describe('saying how a run is going', () => {

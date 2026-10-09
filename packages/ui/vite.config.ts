@@ -1,5 +1,21 @@
+import { readFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
+
+/**
+ * The partner API's specification, served from the page's own origin as `/openapi.yaml`: the How it
+ * works page links to it, and it is the one source (packages/spec), not a copy kept beside the page.
+ */
+const spec = (): Plugin => ({
+  name: 'partner-spec',
+  generateBundle() {
+    this.emitFile({
+      type: 'asset',
+      fileName: 'openapi.yaml',
+      source: readFileSync(new URL('../spec/openapi.yaml', import.meta.url), 'utf8'),
+    })
+  },
+})
 
 /**
  * Development goes through a proxy so the session cookie behaves as it will in
@@ -13,7 +29,7 @@ import { defineConfig } from 'vite'
  * the page and the fetch gets HTML with a 200.
  */
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), spec()],
   build: {
     // Nothing is inlined as a data: URI. The page's policy lets fonts come from its
     // own origin only, and the fonts' small subsets were being inlined and refused.

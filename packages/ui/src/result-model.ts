@@ -161,6 +161,70 @@ export function jsonLines(value: unknown, marked: Set<string>, base = '$'): Json
   return lines
 }
 
+/**
+ * Two bodies side by side, line for line.
+ *
+ * What a case expects is only what it checks, so `Expected` listed two fields and `Actual` six, and
+ * the eye had to find which of the six the two were. Each line of the answer that nothing was
+ * expected of is given a line of its own on the expected side, saying so; each line a case expects
+ * that the answer lacks is given one on the answer's side, saying that. Lines pair by path, and
+ * the opening and closing of one object are told apart by their order.
+ */
+export function alignBodies(
+  expected: JsonLine[],
+  actual: JsonLine[],
+): { expected: JsonLine[]; actual: JsonLine[] } {
+  const keys = (lines: JsonLine[]) => {
+    const seen = new Map<string, number>()
+    return lines.map((l) => {
+      const n = seen.get(l.path) ?? 0
+      seen.set(l.path, n + 1)
+      return `${l.path}#${n}`
+    })
+  }
+  const ek = keys(expected)
+  const ak = keys(actual)
+  const inExpected = new Set(ek)
+  // Only a line that names something has words; the lines inside it, and its closing, are left blank.
+  const stand = (line: JsonLine, words: string, marked: boolean): JsonLine => ({
+    head: line.head,
+    value: /"[^"]*":\s*$/.test(line.head) ? words : '',
+    tail: '',
+    matcher: true,
+    path: line.path,
+    marked,
+  })
+  const outE: JsonLine[] = []
+  const outA: JsonLine[] = []
+  const uncheckedRoots: string[] = []
+  let i = 0
+  let j = 0
+  while (i < expected.length || j < actual.length) {
+    const e = expected[i]
+    const a = actual[j]
+    if (e && a && ek[i] === ak[j]) {
+      outE.push(e)
+      outA.push(a)
+      i++
+      j++
+    } else if (a && (!e || !inExpected.has(ak[j]!))) {
+      // What is inside an object nothing was expected of is covered by the one line that says so.
+      const inside = uncheckedRoots.some(
+        (r) => a.path.startsWith(`${r}.`) || a.path.startsWith(`${r}[`),
+      )
+      outE.push(stand(a, inside ? '' : 'not checked', false))
+      if (!inside && (a.value === '{' || a.value === '[')) uncheckedRoots.push(a.path)
+      outA.push(a)
+      j++
+    } else {
+      outE.push(e!)
+      outA.push(stand(e!, 'missing', e!.marked))
+      i++
+    }
+  }
+  return { expected: outE, actual: outA }
+}
+
 /** A request body, laid out if it is JSON and left as it was sent if it is not. */
 export function bodyLines(body: string): JsonLine[] | string | null {
   if (body === '') return null

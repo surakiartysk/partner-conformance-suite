@@ -33,9 +33,24 @@ export function findProblems(dist) {
   return problems
 }
 
+/** What the build must contain, because a page links to it and nothing else would notice it gone. */
+export const REQUIRED = ['index.html', 'openapi.yaml']
+
+export function findMissing(dist) {
+  return REQUIRED.filter((name) => {
+    try {
+      return !statSync(join(dist, name)).isFile()
+    } catch {
+      return true
+    }
+  }).map(
+    (name) => `${join(dist, name)}: not in the build, and the How it works page links to the spec`,
+  )
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const dist = join(import.meta.dirname, '..', 'dist')
-  const problems = findProblems(dist)
+  const problems = [...findProblems(dist), ...findMissing(dist)]
   if (problems.length > 0) {
     console.error(problems.join('\n'))
     process.exit(1)

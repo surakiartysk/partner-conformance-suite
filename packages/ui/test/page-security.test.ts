@@ -131,7 +131,9 @@ describe('the stylesheet', () => {
         .matchAll(/(^|\})\s*([a-z][a-z0-9]*)\s*\{([^}]*)\}/g),
     ]
     const offenders = rules
-      .filter(([, , , body]) => /\b(display|grid-template|flex|float|position)\s*:/.test(body!))
+      .filter(([, , , body]) =>
+        /(?<![\w-])(display|grid-template|flex|float|position)\s*:/.test(body!),
+      )
       .map(([, , tag]) => tag)
     expect(offenders).toEqual([])
   })
@@ -162,6 +164,35 @@ describe('the stylesheet', () => {
       }
     }
     expect(off).toEqual([])
+  })
+
+  /**
+   * Seen in a browser: the version select on the Connection page had the browser's own arrow, which
+   * sat against the edge of its padding and looked adrift from the text. The arrow is drawn here, a
+   * fixed distance from the right, with room left for it.
+   */
+  it('draws the select\u2019s arrow itself and leaves room for it', () => {
+    const rule = /(?:^|\n)select \{([^}]*)\}/.exec(css())![1]!
+    expect(rule).toMatch(/appearance:\s*none/)
+    expect(rule).toMatch(/background-image:[^;]*linear-gradient/)
+    expect(Number(/padding:\s*\d+px (\d+)px/.exec(rule)![1])).toBeGreaterThanOrEqual(28)
+  })
+
+  /** Seen in a browser: the lanes began against the buttons above them. */
+  it('puts space above the lanes', () => {
+    const rule = /\n\.lanes \{([^}]*)\}/.exec(css())![1]!
+    expect(Number(/margin-top:\s*(\d+)px/.exec(rule)![1])).toBeGreaterThanOrEqual(12)
+  })
+
+  it('leaves the picture of a run out where its labels would be too small to read, and keeps the steps', () => {
+    const rule = /@media \(max-width: 640px\) \{\s*\.figure \{([^}]*)\}/.exec(css())?.[1] ?? ''
+    expect(rule).toMatch(/display:\s*none/)
+    expect(css()).not.toMatch(/\.steps \{[^}]*display:\s*none/)
+  })
+
+  it('serves the specification as text, so the browser shows it and does not download it', () => {
+    const headers = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8')
+    expect(headers).toMatch(/\/openapi\.yaml\n\s+Content-Type: text\/plain; charset=utf-8/)
   })
 
   it('keeps the button of the form at the foot of the window', () => {

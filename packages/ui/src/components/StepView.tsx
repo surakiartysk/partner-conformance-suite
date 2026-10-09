@@ -1,5 +1,6 @@
 import type { StepRecord } from '../api'
 import {
+  alignBodies,
   bodyLines,
   isSetup,
   jsonLines,
@@ -45,37 +46,64 @@ function Headers({ label, headers }: { label: string; headers: Record<string, st
   )
 }
 
-function expectedLines(step: StepRecord, marked: Set<string>): JsonLine[] {
+/** What the case expects: its status and headers, then the body it checks, if it checks one. */
+function expectedParts(step: StepRecord, marked: Set<string>) {
   const expected = step.expected ?? {}
-  const lines: JsonLine[] = []
+  const head: JsonLine[] = []
   if (expected.status !== undefined) {
-    lines.push({ ...text(`status ${expected.status}`), marked: marked.has('status') })
+    head.push({ ...text(`status ${expected.status}`), marked: marked.has('status') })
   }
   for (const [name, value] of Object.entries(expected.headers ?? {})) {
     const key = `header ${name.toLowerCase()}`
     const described = /^‹(.*)›$/s.exec(String(value))
-    lines.push({
+    head.push({
       ...text(described ? described[1]! : String(value)),
       head: `${name}: `,
       matcher: described !== null,
       marked: marked.has(key),
     })
   }
-  if ('body' in expected) lines.push(...jsonLines(expected.body, marked))
-  return lines
+  const body = 'body' in expected ? jsonLines(expected.body, marked) : null
+  return { head, body }
 }
 
-function actualLines(step: StepRecord, marked: Set<string>): JsonLine[] {
+/** What the partner answered: status, the headers the case looks at, then the body. */
+function actualParts(step: StepRecord, marked: Set<string>) {
   const response = step.response
-  if (!response) return []
-  const lines: JsonLine[] = [{ ...text(`status ${response.status}`), marked: marked.has('status') }]
+  if (!response) return { head: [] as JsonLine[], body: null, json: false }
+  const head: JsonLine[] = [{ ...text(`status ${response.status}`), marked: marked.has('status') }]
   for (const name of Object.keys(step.expected?.headers ?? {})) {
     const key = `header ${name.toLowerCase()}`
     const sent = response.headers[name.toLowerCase()]
-    lines.push({ ...text(`${name}: ${sent ?? '(none)'}`), marked: marked.has(key) })
+    head.push({ ...text(`${name}: ${sent ?? '(none)'}`), marked: marked.has(key) })
   }
-  if (!response.json) return lines.concat(text(String(response.body)))
-  return lines.concat(jsonLines(response.body, marked))
+  if (!response.json)
+    return { head: head.concat(text(String(response.body))), body: null, json: false }
+  return { head, body: jsonLines(response.body, marked), json: true }
+}
+
+/** The two panes' lines. Where both have a body they are laid side by side line for line. */
+function panes(step: StepRecord, marked: Set<string>) {
+  const e = expectedParts(step, marked)
+  const a = actualParts(step, marked)
+  if (e.body && a.body) {
+    const both = alignBodies(e.body, a.body)
+    return { expected: [...e.head, ...both.expected], actual: [...a.head, ...both.actual] }
+  }
+  if (a.body) {
+    // A step that expects only a status still got a body back: say that the body is not checked, on
+    // the first of as many lines as the answer has, so the two panes are the same height.
+    const empty = a.body.map((line, i) => ({
+      head: '',
+      value: i === 0 ? 'body: not checked' : '',
+      tail: '',
+      matcher: true,
+      path: line.path,
+      marked: false,
+    }))
+    return { expected: [...e.head, ...empty], actual: [...a.head, ...a.body] }
+  }
+  return { expected: [...e.head, ...(e.body ?? [])], actual: [...a.head] }
 }
 
 export function StepView({ step }: { step: StepRecord }) {
@@ -83,7 +111,7 @@ export function StepView({ step }: { step: StepRecord }) {
   const marked = mismatchPaths(step)
   const body = bodyLines(step.request.body)
   const judged = !isSetup(step)
-  const actual = actualLines(step, marked)
+  const shown = panes(step, marked)
   return (
     <div className="step">
       <header>
@@ -121,7 +149,7 @@ export function StepView({ step }: { step: StepRecord }) {
           <div className="pane">
             <h4>{judged || step.expected ? 'Expected' : 'Response'}</h4>
             {step.expected ? (
-              <JsonBlock lines={expectedLines(step, marked)} />
+              <JsonBlock lines={shown.expected} />
             ) : (
               <p className="note">Nothing is expected of this step beyond an answer.</p>
             )}
@@ -131,7 +159,7 @@ export function StepView({ step }: { step: StepRecord }) {
             {step.response.truncated ? (
               <p className="note">Only the start of a long answer was kept.</p>
             ) : null}
-            <JsonBlock lines={actual} />
+            <JsonBlock lines={shown.actual} />
           </div>
         </div>
       ) : null}
