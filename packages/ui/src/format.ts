@@ -25,3 +25,15 @@ export function ago(iso: string, now: number = Date.now()): string {
   if (hours < 24) return `${hours} h ago`
   return `${Math.floor(hours / 24)} d ago`
 }
+
+/** How a run ended, in a few words: for the line that links to the last one. */
+export function runSummary(run: {
+  finishedAt: string | null
+  total: number
+  counts: { passed: number; failed: number; timedOut: number; error: number }
+}): string {
+  if (run.finishedAt === null) return 'not finished'
+  const bad = run.counts.failed + run.counts.timedOut + run.counts.error
+  if (bad === 0) return run.total === 1 ? 'passed' : `all ${run.total} passed`
+  return `${run.counts.passed} passed, ${bad} did not`
+}

@@ -43,3 +43,23 @@ describe('the page chrome', () => {
     expect(withSession).toContain('href="/history"')
   })
 })
+
+describe('the demo notice and the page that explains it', () => {
+  it('says on every page that this tests a built-in sample, with a link to how it works', () => {
+    for (const route of [{ page: 'home' }, { page: 'run' }, { page: 'history' }] as Route[]) {
+      const html = render(route)
+      expect(html).toContain('Demo: this site tests a built-in sample partner, not your API.')
+      expect(html).toMatch(/<a href="\/how-it-works">How it works<\/a><\/p>/)
+    }
+  })
+
+  it('links How it works from the header with no session, like Home and unlike the rest', () => {
+    const html = render({ page: 'home' }, false)
+    expect(html).toContain('<a href="/how-it-works" class="nav-link">How it works</a>')
+    expect(html).not.toContain('href="/run" class="nav-link')
+  })
+
+  it('marks it as the current page when it is the page', () => {
+    expect(current(render({ page: 'how-it-works' }))).toEqual(['/how-it-works'])
+  })
+})

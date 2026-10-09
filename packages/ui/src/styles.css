@@ -260,11 +260,24 @@ select {
   font: inherit;
   font-size: 15px;
   min-height: 40px;
-  padding: 6px 8px;
+  padding: 6px 32px 6px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--card);
   color: var(--t1);
+  /* The browser's own arrow sits against the edge of whatever padding is left it, which looked
+     adrift from the text. This one is drawn, a fixed distance from the right, in the note colour. */
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--t4) 50%),
+    linear-gradient(135deg, var(--t4) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 11px) 50%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
 }
 .block {
   background: var(--surface);
@@ -602,6 +615,7 @@ legend {
 
 /* ── lanes ───────────────────────────────────────────────────────────────── */
 .lanes {
+  margin-top: 16px;
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -967,5 +981,115 @@ details.setup .step {
   /* Its height is its row's, which is stretched; a finger needs the width as well. */
   .fold {
     min-width: 44px;
+  }
+}
+
+/* ── the demo notice, the chip on the sample partner, the last run ───────── */
+.demo {
+  background: var(--surface);
+  border-bottom: 1px solid var(--divider);
+}
+.demo p {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--t3);
+}
+.demo a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.card-head h2 {
+  margin: 0;
+}
+.demo-chip {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--t3);
+}
+.last-run a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── how it works ────────────────────────────────────────────────────────── */
+.figure {
+  margin: 0 0 16px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+}
+.figure figcaption {
+  margin-top: 8px;
+}
+.dg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.dg-life {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.dg-box {
+  fill: var(--surface);
+  stroke: var(--border);
+}
+.dg-name {
+  fill: var(--t1);
+  font-size: 13px;
+  font-weight: 700;
+}
+.dg-arrow {
+  stroke: var(--t3);
+  stroke-width: 1.5;
+}
+.dg-return {
+  stroke-dasharray: 5 4;
+}
+.dg-tip {
+  fill: var(--t3);
+}
+.dg-label {
+  fill: var(--t1);
+  font-size: 13px;
+}
+.dg-frame {
+  fill: none;
+  stroke: var(--border);
+}
+.dg-frame-label {
+  fill: var(--t4);
+  font-size: 13px;
+}
+.steps {
+  max-width: 68ch;
+  padding-left: 20px;
+}
+.steps li {
+  margin-bottom: 8px;
+}
+
+/*
+ * The picture is 720 units wide, and on a phone that scales its 13 px labels down to about 6 px, which
+ * cannot be read. Where it would be that small it is left out, and the steps written beside it, which
+ * say the same, are all there is.
+ */
+@media (max-width: 640px) {
+  .figure {
+    display: none;
   }
 }

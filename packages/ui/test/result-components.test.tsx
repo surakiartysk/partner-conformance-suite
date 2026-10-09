@@ -4,6 +4,7 @@ import type { CaseResult } from '../src/api'
 import { CaseDetail } from '../src/components/CaseDetail'
 import { CaseList } from '../src/components/CaseList'
 import { StepView } from '../src/components/StepView'
+import { isSetup } from '../src/result-model'
 import { VersionReveal } from '../src/components/VersionReveal'
 import { groupCases } from '../src/result-model'
 import { CASES, CORRECT, DOUBLE_EARN, PLAIN_ERRORS, SLOW_BALANCE, VERSIONS } from './fixtures-runs'
@@ -104,6 +105,31 @@ describe('a step', () => {
     expect(html).toContain('<h4>Expected</h4>')
     expect(html).toContain('<h4>Actual</h4>')
     expect(html.match(/class="ln bad"/g)).toHaveLength(4) // two fields, on each side
+  })
+
+  it('lays Expected out line for line with Actual, saying "not checked" for what the case does not look at', () => {
+    const html = renderToStaticMarkup(
+      <StepView step={step(DOUBLE_EARN, 'earn/duplicate-reference', 'act')} />,
+    )
+    const [expected, actual] = html.split('<h4>Actual</h4>')
+    const lines = (pane: string) => (pane.match(/class="ln[^"]*"/g) ?? []).length
+    expect(lines(expected!.split('<h4>Expected</h4>')[1]!)).toBe(lines(actual!))
+    // The earn answer has type, memberId and points that this step does not check.
+    expect(html.match(/<span class="matcher">not checked<\/span>/g)).toHaveLength(3)
+    // The two it checks are the two marked red, on both sides, and the unchecked ones are not.
+    expect(html.match(/class="ln bad"/g)).toHaveLength(4)
+    expect(html).not.toMatch(/class="ln bad"[^>]*>[^<]*<span class="matcher">not checked/)
+  })
+
+  it('says the body is not checked, as tall as the answer, in a step that expects only a status', () => {
+    const setup = result(DOUBLE_EARN, 'earn/duplicate-reference').steps.find(
+      (s) => isSetup(s) && s.response?.json,
+    )!
+    const html = renderToStaticMarkup(<StepView step={setup} />)
+    const [expected, actual] = html.split('<h4>Actual</h4>')
+    const lines = (pane: string) => (pane.match(/class="ln[^"]*"/g) ?? []).length
+    expect(html.match(/body: not checked/g)).toHaveLength(1)
+    expect(lines(expected!.split('<h4>Expected</h4>')[1]!)).toBe(lines(actual!))
   })
 
   it('shows what a matcher expects as words, not as a quoted string with brackets', () => {

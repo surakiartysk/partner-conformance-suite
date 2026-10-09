@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 // @ts-expect-error a plain script, with no types of its own
-import { findProblems } from '../scripts/check-build.mjs'
+import { findMissing, findProblems } from '../scripts/check-build.mjs'
 
 function dist(files: Record<string, string>): string {
   const dir = mkdtempSync(join(tmpdir(), 'dist-'))
@@ -59,5 +59,23 @@ describe('what the build must not contain', () => {
     mkdirSync(join(d, 'assets', 'deep'))
     writeFileSync(join(d, 'assets', 'deep', 'b.css'), 'src:url(data:font/woff2;base64,A)')
     expect(findProblems(d).length).toBeGreaterThan(0)
+  })
+})
+
+describe('what the build must contain', () => {
+  it('finds nothing missing when the page and the spec it links to are there', () => {
+    expect(
+      findMissing(dist({ 'index.html': '<html/>', 'openapi.yaml': 'openapi: 3.1.0' })),
+    ).toEqual([])
+  })
+
+  it('names the spec when it is not in the build, since a page links to it', () => {
+    const missing = findMissing(dist({ 'index.html': '<html/>' }))
+    expect(missing).toHaveLength(1)
+    expect(missing[0]).toContain('openapi.yaml')
+  })
+
+  it('names the page when it is not there', () => {
+    expect(findMissing(dist({ 'openapi.yaml': 'x' })).join('\n')).toContain('index.html')
   })
 })
