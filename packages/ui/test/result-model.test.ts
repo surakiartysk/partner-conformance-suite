@@ -384,6 +384,17 @@ describe('two bodies side by side', () => {
     expect(both.expected).toHaveLength(both.actual.length)
   })
 
+  it('keep the closing of an object with the closing of the object, when a number became an object', () => {
+    // The case expects `x: 1`; the answer has `x: { y: 1 }`. The opening of x pairs, y is not checked,
+    // and the closing of x is told apart from the closing of the whole body by its order.
+    const both = alignBodies(lines({ x: 1 }), lines({ x: { y: 1 } }))
+    expect(both.expected).toHaveLength(both.actual.length)
+    expect(text(both.expected).at(-1)).toBe('}')
+    expect(text(both.actual).at(-1)).toBe('}')
+    expect(text(both.actual).filter((l) => l === 'missing')).toEqual([])
+    expect(both.actual.some((l) => l.value === 'missing')).toBe(false)
+  })
+
   it('leave two bodies that agree exactly as they were', () => {
     const body = { a: 1, b: { c: [1, 2] } }
     const both = alignBodies(lines(body), lines(body))
