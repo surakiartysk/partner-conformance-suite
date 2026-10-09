@@ -14,9 +14,9 @@ describe('the How it works page', () => {
     expect(html.match(/<section aria-labelledby="[a-z-]+">/g)).toHaveLength(4)
   })
 
-  it('says at the top that the API under test is a sample and that testing your own is not there yet', () => {
+  it('says at the top that the API under test is a sample and that it cannot test your own yet', () => {
     expect(html).toContain('a sample built into the site')
-    expect(html).toContain('Testing your own API is not available yet')
+    expect(html).toContain('It cannot test your own yet')
   })
 
   it('links to the partner API specification on its own origin', () => {
@@ -40,6 +40,14 @@ describe('the How it works page', () => {
     for (const name of ['Your browser', 'The suite', 'The sample partner'])
       expect(html).toContain(`>${name}</text>`)
     expect(html).not.toMatch(/ style="/)
+  })
+
+  it('says what a lane is: reads share one, and a member’s writes go one at a time in theirs', () => {
+    const lanes = html.match(/<section aria-labelledby="lanes">([\s\S]*?)<\/section>/)![1]!
+    const words = lanes.replace(/<[^>]+>/g, '').replace(/&rsquo;/g, '’')
+    expect(words).toContain('Cases that only read share one lane')
+    expect(words).toContain('one at a time in that member’s lane')
+    expect(words).toContain('never move one balance at once')
   })
 
   it('has a caption that says what a solid and a dashed arrow mean', () => {
@@ -79,7 +87,7 @@ describe('what the page says about limits', () => {
     expect(constant('runs.ts', 'RUN_WINDOW_SECONDS')).toBe(3600)
     const sessions = constant('sessions.ts', 'SESSION_STARTS_ALLOWED')
     const runs = constant('runs.ts', 'RUNS_ALLOWED')
-    expect(text).toContain(`${words[sessions]} sessions an hour can be started`)
+    expect(text.toLowerCase()).toContain(`${words[sessions]} sessions an hour can be started`)
     expect(text).toContain(`a session can start ${words[runs]} runs an hour`)
   })
 })
