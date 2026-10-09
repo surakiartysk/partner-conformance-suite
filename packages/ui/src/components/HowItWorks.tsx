@@ -10,19 +10,19 @@
 export const STEPS = [
   {
     title: 'Try it',
-    text: 'The suite makes you a tenant on the sample partner: two test members with 1,000 points each, and a signing secret it keeps encrypted.',
+    text: 'The suite makes you a tenant on the sample partner: two test members with 1,000 points each, and a signing secret.',
   },
   {
     title: 'Run',
-    text: 'You pick a version and the cases. The suite plans them into lanes.',
+    text: 'You pick a version and the cases; the suite plans them into lanes.',
   },
   {
     title: 'Each case',
-    text: 'Your browser asks a lane for its next case. The suite builds a request, signs it, sends it to the partner, judges the answer against what the case expects, and stores the result.',
+    text: 'Your browser asks a lane for its next case. The suite signs a request, sends it, judges the answer against what the case expects, and stores the result.',
   },
   {
     title: 'Give it back',
-    text: 'When a lane that moved points is done, the suite puts the members back where they started, through the partner’s own API.',
+    text: 'When a lane that moved points is done, the suite puts the members back where they started.',
   },
 ] as const
 
@@ -48,7 +48,7 @@ function Diagram() {
     </g>
   )
   return (
-    <svg className="dg" viewBox="0 0 720 460" aria-hidden="true" focusable="false">
+    <svg className="dg" viewBox="0 0 720 430" aria-hidden="true" focusable="false">
       <defs>
         <marker
           id="dg-tip"
@@ -68,7 +68,7 @@ function Diagram() {
         [RIGHT, 'The sample partner'],
       ].map(([x, name]) => (
         <g key={name}>
-          <line className="dg-life" x1={x} y1={40} x2={x} y2={445} />
+          <line className="dg-life" x1={x} y1={40} x2={x} y2={415} />
           <rect className="dg-box" x={Number(x) - 70} y={8} width={140} height={32} rx={6} />
           <text className="dg-name" x={x} y={29} textAnchor="middle">
             {name}
@@ -78,7 +78,7 @@ function Diagram() {
       {arrow(80, LEFT, MIDDLE, '1 · Try it')}
       {arrow(110, MIDDLE, RIGHT, 'make a tenant and two members')}
       {arrow(160, LEFT, MIDDLE, '2 · Run: plan the lanes')}
-      <rect className="dg-frame" x={30} y={190} width={660} height={190} rx={6} />
+      <rect className="dg-frame" x={30} y={190} width={660} height={150} rx={6} />
       <text className="dg-frame-label" x={42} y={208}>
         3 · for each case, in each lane
       </text>
@@ -86,8 +86,8 @@ function Diagram() {
       {arrow(268, MIDDLE, RIGHT, 'a signed request')}
       {arrow(298, RIGHT, MIDDLE, 'the answer', 'dg-return')}
       {arrow(328, MIDDLE, LEFT, 'the verdict, stored', 'dg-return')}
-      {arrow(410, MIDDLE, RIGHT, '4 · give the points back')}
-      {arrow(440, MIDDLE, LEFT, 'the lane is done', 'dg-return')}
+      {arrow(374, MIDDLE, RIGHT, '4 · give the points back')}
+      {arrow(404, MIDDLE, LEFT, 'the lane is done', 'dg-return')}
     </svg>
   )
 }
@@ -97,19 +97,16 @@ export function HowItWorks() {
     <>
       <h1>How it works</h1>
       <p className="lede">
-        This site checks a points API the way a client of it would: it sends signed requests and
-        judges every answer. The API under test here is a sample built into the site, so you can see
-        what the checks catch. Testing your own API is not available yet.
+        This site sends signed requests to a points API and judges every answer, the way a client
+        would. The API here is a sample built into the site, so you can see what the checks catch.
+        It cannot test your own yet.
       </p>
 
       <section aria-labelledby="one-run">
         <h2 id="one-run">One run</h2>
         <figure className="figure">
           <Diagram />
-          <figcaption className="note">
-            One run, from pressing Try it to the points being given back. Solid arrows ask, dashed
-            arrows answer.
-          </figcaption>
+          <figcaption className="note">Solid arrows ask, dashed arrows answer.</figcaption>
         </figure>
         <ol className="steps">
           {STEPS.map((step) => (
@@ -123,30 +120,29 @@ export function HowItWorks() {
       <section aria-labelledby="lanes">
         <h2 id="lanes">Lanes</h2>
         <p>
-          Cases that only read run together in the read-only lane. Cases that change a
-          member&rsquo;s points run one at a time in that member&rsquo;s lane, because two cases
-          moving one balance at once would spoil each other&rsquo;s expected values. The lanes run
-          side by side.
+          Cases that only read share one lane. Cases that change a member&rsquo;s points run one at
+          a time in that member&rsquo;s lane, so two of them never move one balance at once. The
+          lanes run side by side.
         </p>
       </section>
 
       <section aria-labelledby="partner">
         <h2 id="partner">The partner API</h2>
         <p>
-          The sample partner is a points API: members and their balances, earning, redeeming and
-          reversing points. Every request is signed with Standard Webhooks (HMAC-SHA256). The cases
-          are checked against its specification, <a href="/openapi.yaml">openapi.yaml</a>. Each
-          version other than <span className="mono">correct</span> breaks the spec in one way, and
-          the result of a run says which case caught it.
+          The sample partner is a points API: balances, earning, redeeming and reversing. Requests
+          are signed with Standard Webhooks and checked against its specification,{' '}
+          <a href="/openapi.yaml">openapi.yaml</a>. Each version other than{' '}
+          <span className="mono">correct</span> breaks the spec in one way; the result says which
+          case caught it.
         </p>
       </section>
 
       <section aria-labelledby="yours">
         <h2 id="yours">Yours alone</h2>
         <p>
-          A session is yours for a day: its own tenant on the partner, its own two members and its
-          own results. Every run is kept for the session and listed under History. From one address,
-          five sessions an hour can be started, and a session can start twenty runs an hour.
+          A session is yours for a day, with its own tenant, members and results; every run stays
+          under History. Five sessions an hour can be started from one address, and a session can
+          start twenty runs an hour.
         </p>
       </section>
     </>

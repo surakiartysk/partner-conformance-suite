@@ -935,6 +935,8 @@ is _missing_ in Actual, and only the lines that disagreed are red. When a case e
 JSON, the first line says `body: not checked` and the rest is left blank to the same height. The select on the
 Connection page draws its own arrow with room for it, and the lanes have space above them.
 
+The first version of How it works was 423 words (with the header and footer) and 1,801 px tall, and said the same four steps in the picture and in the list, and the sample's nature in three places. A design critique and a copy review cut it to 356 words and 1,734 px: the lede and the steps are shorter, the caption says only what the arrows mean, and the picture has no empty space under its last step. The picture and the list stay both, because the picture is for looking and the list is what a screen reader reads.
+
 **Cost.** This is a label, not a mode. A visitor still cannot enter their own partner's address, and so there is no
 "real" side to be a demo of; decision 1 and the architecture's "Not built yet" say so. The picture is left out below
 640 px, where its labels would be about 6 px high; the numbered list says the same thing there. Checked in Chrome only, at desktop and phone width; not in other browsers, and not with a
