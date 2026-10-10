@@ -115,11 +115,9 @@ export function StepView({ step }: { step: StepRecord }) {
   return (
     <div className="step">
       <header>
-        <span>
-          <b>
-            {PHASE_LABEL[step.phase]} · {step.name}
-          </b>
-        </span>
+        <h3 className="step-title">
+          {PHASE_LABEL[step.phase]} · {step.name}
+        </h3>
         <span className={`st ${outcome.cls}`}>
           <span aria-hidden="true">{outcome.mark}</span>
           {outcome.word}

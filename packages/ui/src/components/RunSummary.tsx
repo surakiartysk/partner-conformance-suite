@@ -28,7 +28,7 @@ export function RunSummary({ progress, cases, version, runId, onRunAgain, onNavi
   return (
     <section aria-labelledby="verdict">
       <div className="mono note">{version}</div>
-      <h2 id="verdict" className={notPassed === 0 ? '' : 'problem'}>
+      <h2 id="verdict" className={notPassed === 0 ? '' : 'verdict-bad'}>
         {headline}
       </h2>
       <div className="counts">

@@ -941,3 +941,23 @@ The first version of How it works was 423 words (with the header and footer) and
 "real" side to be a demo of; decision 1 and the architecture's "Not built yet" say so. The picture is left out below
 640 px, where its labels would be about 6 px high; the numbered list says the same thing there. Checked in Chrome only, at desktop and phone width; not in other browsers, and not with a
 screen reader.
+
+## 43. The result page leads with its verdict and what was wrong
+
+A design review of the result page on the live site, by the same probes and axe as the Run page's, found three
+things the tests could not see. The verdict, "1 of 20 cases did not pass", was the page's h1 and wore `.problem`,
+which sets 13px for an error line; so the page's title was smaller than the mono line above it. "What was wrong
+with double-earn", the part that says what the run caught and why the other cases did not, was the last thing on
+the page, under the list of twenty cases, 1,700px down on a laptop. And each step's "Request body", "Expected"
+and "Actual" were h4s under the case's h2, with no h3 between.
+
+The verdict is coloured by `.verdict-bad`, which is only a colour, so it keeps the h1's 28px (and the Run page's
+summary its h2); what was wrong with the version follows the verdict, before the cases; and each step's title is
+an h3. The Home, Connection and History pages were reviewed the same way and nothing in them was changed: axe
+found nothing, contrast passed everywhere, and the first screen of each holds five to eleven things to press.
+
+**Cost.** The reveal now sits between the verdict and the case it explains, so on a phone the failing step is one
+card further down. Nineteen passing cases are still listed in full; folding a group that all passed was
+considered and left, because the list is also the run's record. The first name for the heading's class, `.bad`,
+was already used by the mismatch callout and the marked lines, and turned their text red; the tests were green
+and a screenshot caught it. Checked in Chrome only.

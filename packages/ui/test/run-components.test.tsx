@@ -332,6 +332,13 @@ describe('the summary', () => {
       />,
     )
 
+  it('colours a verdict that is not a pass at the heading’s size, not as a 13px problem line', () => {
+    expect(render(finishAll(['passed', 'failed']))).toContain(
+      '<h2 id="verdict" class="verdict-bad">',
+    )
+    expect(render(finishAll(['passed', 'passed']))).toContain('<h2 id="verdict" class="">')
+  })
+
   it('says all passed when they did, and lists nothing that did not pass', () => {
     const html = render(finishAll(['passed', 'passed']))
     expect(html).toContain('All 2 cases passed')
