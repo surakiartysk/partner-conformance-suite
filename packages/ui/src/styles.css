@@ -195,6 +195,12 @@ p {
   color: var(--danger-text);
   font-size: 13px;
 }
+/* A heading that reports something wrong: the colour of a problem at the heading's own size. The
+   result page's h1 wore .problem and was 13px, smaller than the mono line above it. Its own name:
+   .bad is already the callout's and a marked line's. */
+.verdict-bad {
+  color: var(--danger-text);
+}
 section + section {
   margin-top: 24px;
 }
@@ -830,6 +836,11 @@ legend {
   padding: 10px 12px;
   border-top: 1px solid var(--divider);
   min-width: 0;
+}
+.step-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
 }
 .pane h4 {
   margin: 0 0 6px;

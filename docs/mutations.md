@@ -904,6 +904,12 @@ end-to-end test on a touch screen measured 40 px. The stylesheet test now checks
 | 699 | Ten runs an hour                                      | how-it-works: are the API’s own: sessions started, runs started, and the hour                             | `expected '…' to contain 'a session can start twenty runs an hour'` |
 | 700 | A session said to last an hour                        | how-it-works: says a session lasts a day, as long as the partner keeps a tenant                           | `expected '…' to contain 'A session is yours for a day'`            |
 | 701 | Lanes said to run together (after the test was added) | how-it-works: says what a lane is: reads share one, and a member’s writes go one at a time in theirs      | `expected '…' to contain 'never move one balance at once'`          |
+| 702 | The verdict h1 back on .problem                       | result-page: colours a verdict that is not a pass without making it small                                 | `expected 'problem' to be 'verdict-bad' // Object.is equality`      |
+| 703 | The summary h2 back on .problem                       | run-components: colours a verdict that is not a pass at the heading’s size, not as a 13px problem line    | `expected '<section aria-labelledby="verdict"><d…' to contain '<…`  |
+| 704 | .verdict-bad given 13px                               | page-security: gives a heading that reports a problem the problem colour and nothing else                 | `expected '\n  color: var(--danger-text);\n  fon…' not to match …`  |
+| 705 | A bare .bad that colours the callout and marked lines | page-security: gives a heading that reports a problem the problem colour and nothing else                 | `expected '/*\n * The dashboard\'s palette and t…' not to match …`  |
+| 706 | Step titles not headings                              | result-page: titles each step with an h3, so its h4s have a heading above them                            | `TestingLibraryElementError: Unable to find an accessible elemen…`  |
+| 707 | What was wrong back under the cases                   | result-page: says what was wrong with the version before the cases, not after them                        | `expected +0 to be truthy`                                          |
 
 Rows 657 to 695 are for the change of decision 42: 31 in the unit tests and 8 in the end-to-end test. Row 660's
 mutation ("Lines paired by path alone") survived the first version of the tests, which had no body where one path is
@@ -912,6 +918,11 @@ red, and the row names that test. The rows for the last run, the lanes' margin a
 sentence had no message captured the first time; the messages are from running them again.
 
 Rows 696 to 701 are for the shortening of the How it works page after a design critique. Row 701's mutation (the Lanes sentence) survived at first, because nothing read the Lanes section; a test of its three claims now turns it red.
+
+Rows 702 to 707 are for the result page's review (decision 43). Row 705 is also a record of a mistake: the
+first name for the heading's class was `.bad`, which the mismatch callout and every marked line already used, so
+their text turned red in the browser while every test stayed green. It was seen in a screenshot, renamed
+`.verdict-bad`, and a test now refuses a bare `.bad` rule.
 
 ## Tests that could not fail, found on the way
 

@@ -118,6 +118,14 @@ describe('the page source', () => {
 describe('the stylesheet', () => {
   const css = () => read('src/styles.css')
 
+  it('gives a heading that reports a problem the problem colour and nothing else', () => {
+    const bad = /\n\.verdict-bad \{([^}]*)\}/.exec(css())?.[1] ?? ''
+    expect(bad).toMatch(/color:\s*var\(--danger-text\)/)
+    expect(bad).not.toMatch(/font-size/)
+    // A bare .bad would colour the callout and every marked line as well: the name was taken.
+    expect(css()).not.toMatch(/\n\.bad \{/)
+  })
+
   /**
    * Found in a browser, not by a test: the header's `nav { display: flex }` also
    * laid out the list of cases, which is a `<nav>` too, and put one letter of

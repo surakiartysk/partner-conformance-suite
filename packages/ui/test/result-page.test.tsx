@@ -171,3 +171,36 @@ describe('the result page', () => {
     await waitFor(() => expect(within(detail).getByText('This case has not run.')).toBeTruthy())
   })
 })
+
+/*
+ * Found by the design review of the result page on the live site: the verdict h1 wore `.problem`,
+ * which sets 13px, so it was smaller than the mono line above it; "What was wrong with double-earn"
+ * was the last thing on the page, under 1,700px of cases; and the steps' h4s sat under an h2 with no
+ * h3 between.
+ */
+describe('the order and weight of the result page', () => {
+  it('colours a verdict that is not a pass without making it small', async () => {
+    show(DOUBLE_EARN)
+    const h1 = await screen.findByRole('heading', { level: 1 })
+    expect(h1.className).toBe('verdict-bad')
+    expect(h1.className).not.toContain('problem')
+  })
+
+  it('says what was wrong with the version before the cases, not after them', async () => {
+    show(DOUBLE_EARN)
+    const reveal = await screen.findByRole('heading', { name: /What was wrong with/ })
+    const firstCase = screen.getByRole('article')
+    expect(
+      reveal.compareDocumentPosition(firstCase) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('titles each step with an h3, so its h4s have a heading above them', async () => {
+    show(DOUBLE_EARN)
+    const detail = await screen.findByRole('article')
+    const steps = within(detail).getAllByRole('heading', { level: 3 })
+    expect(steps.length).toBeGreaterThan(0)
+    expect(steps.map((h) => h.textContent)).toContain('Act · repeat')
+    expect(within(detail).getAllByRole('heading', { level: 4 }).length).toBeGreaterThan(0)
+  })
+})

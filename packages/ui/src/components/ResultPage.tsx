@@ -77,7 +77,10 @@ export function ResultPage({ client, runId, caseId, onNavigate }: Props) {
             {run.version} · {c.total} {c.total === 1 ? 'case' : 'cases'}
             {seconds === null ? '' : ` · ${formatSeconds(seconds)}`}
           </div>
-          <h1 id="verdict" className={notPassed === 0 && c.finished === c.total ? '' : 'problem'}>
+          <h1
+            id="verdict"
+            className={notPassed === 0 && c.finished === c.total ? '' : 'verdict-bad'}
+          >
             {run.finishedAt === null && c.finished < c.total
               ? `${c.finished} of ${c.total} cases done so far`
               : notPassed === 0
@@ -98,6 +101,19 @@ export function ResultPage({ client, runId, caseId, onNavigate }: Props) {
           </button>
         </div>
       </section>
+
+      {/*
+        What was wrong with the version comes straight after the verdict. It sat
+        under the list of cases, and with twenty cases that list is 1,700px on a
+        laptop: the answer to "what did this run catch" was the last thing on the
+        page, below nineteen passes.
+      */}
+      <VersionReveal
+        version={run.version}
+        info={versions.find((v) => v.name === run.version)}
+        cases={byId}
+        ran={ran}
+      />
 
       <div className="split">
         <div className="detail">
@@ -122,13 +138,6 @@ export function ResultPage({ client, runId, caseId, onNavigate }: Props) {
           />
         </div>
       </div>
-
-      <VersionReveal
-        version={run.version}
-        info={versions.find((v) => v.name === run.version)}
-        cases={byId}
-        ran={ran}
-      />
     </>
   )
 }
