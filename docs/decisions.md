@@ -942,6 +942,13 @@ The first version of How it works was 423 words (with the header and footer) and
 640 px, where its labels would be about 6 px high; the numbered list says the same thing there. Checked in Chrome only, at desktop and phone width; not in other browsers, and not with a
 screen reader.
 
+**Later: who is who in the picture.** The owner read the sequence as two parties, the browser at one end and the
+partner at the other with the suite between, and asked whether the browser and the destination were not the same
+customer. They are: in use a partner opens the suite and points it at its own API. The picture now puts "Your
+browser" and "Your API" side by side in one frame, "You, the partner", with the suite outside it, and the caption
+says that this deployment takes no address yet, so a sample partner stands in for yours. The direction is unchanged:
+the suite sends the requests; nothing here is a callback from the partner.
+
 ## 43. The result page leads with its verdict and what was wrong
 
 A design review of the result page on the live site, by the same probes and axe as the Run page's, found three

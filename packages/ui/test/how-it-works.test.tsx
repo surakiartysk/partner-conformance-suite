@@ -37,7 +37,7 @@ describe('the How it works page', () => {
   })
 
   it('has three lifelines named for who they are, and nothing inline that the page policy would refuse', () => {
-    for (const name of ['Your browser', 'The suite', 'The sample partner'])
+    for (const name of ['Your browser', 'Your API', 'The suite'])
       expect(html).toContain(`>${name}</text>`)
     expect(html).not.toMatch(/ style="/)
   })
@@ -89,5 +89,34 @@ describe('what the page says about limits', () => {
     const runs = constant('runs.ts', 'RUNS_ALLOWED')
     expect(text.toLowerCase()).toContain(`${words[sessions]} sessions an hour can be started`)
     expect(text).toContain(`a session can start ${words[runs]} runs an hour`)
+  })
+})
+
+/*
+ * The owner read the first picture as two parties: the browser at one end, the partner at the
+ * other, the suite between. In use they are one company, which opens the suite and points it at
+ * its own API; the picture frames them together and the caption says the sample stands in.
+ */
+describe('who the picture says is who', () => {
+  it('frames the browser and the API together as the partner, the suite outside the frame', () => {
+    expect(html).toContain('>You, the partner</text>')
+    const names = [...html.matchAll(/<text class="dg-name" x="(\d+)"[^>]*>([^<]+)</g)].map((m) => [
+      m[2],
+      Number(m[1]),
+    ])
+    const at = Object.fromEntries(names)
+    const frame = /<rect class="dg-frame" x="(\d+)" y="-18" width="(\d+)"/.exec(html)!
+    const [left, right] = [Number(frame[1]), Number(frame[1]) + Number(frame[2])]
+    for (const inside of ['Your browser', 'Your API']) {
+      expect(at[inside]).toBeGreaterThan(left)
+      expect(at[inside]).toBeLessThan(right)
+    }
+    expect(at['The suite']).toBeGreaterThan(right)
+  })
+
+  it('says that a sample partner stands in for yours, because this deployment takes no address', () => {
+    expect(html).toMatch(
+      /<figcaption[^>]*>[^<]*the same\s+partner’s[^<]*sample partner stands in for yours/,
+    )
   })
 })
