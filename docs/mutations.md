@@ -4,8 +4,11 @@ A test that has never failed has not shown it can. Each row is a deliberate
 break in the **implementation** — never in a test's assertion — the test that
 went red, and the message it gave. Every break was reverted after its run.
 
-Every test in the repository but one has been made to fail by at least one row below (the exception is named under "The page"):
-the 106 in `packages/partner`, the 19 in `packages/cases`, the 127 in `packages/api` and the 262 in `packages/ui`. A new test is not done until it has a row too.
+When this was last counted, on 8 October 2026, every test in the repository but one had been made to fail by at
+least one row below (the exception is named under "The page"): the 106 in `packages/partner`, the 19 in
+`packages/cases`, the 127 in `packages/api` and the 262 in `packages/ui`. That count has not been redone since,
+and there are now 131 in `packages/api` and 356 in `packages/ui`. The seven tests of `App.tsx` written later
+that day had no row until "The page as a whole". A new test is not done until it has a row too.
 
 ## Reference partner
 
@@ -734,6 +737,41 @@ done with nothing else editing the source, after the clash recorded under "The l
 | 546 | The invitation goes nowhere                  | history.test.tsx: the History page > goes to Run from the empty state                                                       | `expected [] to deeply equal [ { page: 'run' } ]`                                            |
 | 547 | A load failure not shown                     | history.test.tsx: the History page > waits for the runs, then lists them                                                    | `TypeError: Cannot read properties of null (reading 'length')`                               |
 | 548 | Timeouts counted as failures                 | history.test.tsx: the history > names what did not pass, each kind apart                                                    | `expected '<ul class="runs"><li><a href="/runs/r…' to contain '<span class="st warn">! 3 ti` |
+
+### The page as a whole
+
+17 breaks in `App.tsx`, 16 of them red and one equivalent (below): the glue that holds the session, the
+route and the browser's history, against the 14 tests in `app.test.tsx`: the seven written with the Run page's layout, which had no row, and seven written now
+for what App does between answers (the secret, the balances read again, a start that fails, the wait for the
+first answer, the clock). Run against `app.test.tsx` alone.
+
+| #   | Mutation                                     | Caught by                                                                                                               | Failure                                                                                       |
+| --- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 712 | The first answer never marks the page loaded | app.test.tsx: the page as a whole > asks for a session first, and shows the way in when there is none                   | `TestingLibraryElementError: Unable to find role="button" and name "Try it"`                  |
+| 713 | Starting goes to Run, not the connection     | app.test.tsx: the page as a whole > starts a session, goes to the connection, and says so in the title and the focus    | `TestingLibraryElementError: Unable to find role="heading" and name "Connection"`             |
+| 714 | The session not read again after starting    | app.test.tsx: the page as a whole > reads the session again after starting it, since starting does not report balances  | `expected [ 'GET /api/session' ] to have a length of 2 but got 1`                             |
+| 715 | Continue goes to History                     | app.test.tsx: the page as a whole > goes on from the connection to the Run page, which loads the cases                  | `TestingLibraryElementError: Unable to find role="heading" and name "Run"`                    |
+| 716 | Run drawn without a session                  | app.test.tsx: the page as a whole > says there is no session, rather than a blank page, on a page that needs one        | `TypeError: Cannot read properties of null (reading 'partner')`                               |
+| 717 | Back in the browser not followed             | app.test.tsx: the page as a whole > follows the browser back, to the page it came from                                  | `expected 'Connection · Partner conformance suite' to be 'History · Partner conformance sui…` |
+| 718 | A missing page not named                     | app.test.tsx: the page as a whole > names a page that does not exist                                                    | `TestingLibraryElementError: Unable to find role="heading" and name "Not found"`              |
+| 719 | The secret not kept once shown               | app.test.tsx: the page between its answers > shows the signing secret when asked, once                                  | `expected undefined to be 'whsec_test' // Object.is equality`                                 |
+| 720 | A failed showing not said                    | app.test.tsx: the page between its answers > says why the secret could not be shown, in its own words                   | `TestingLibraryElementError: Unable to find role="alert"`                                     |
+| 721 | An old secret kept for a new session         | app.test.tsx: the page between its answers > forgets a secret shown for the old session when a new one starts           | `expected <p class="mono block" …(1)></p> to be null`                                         |
+| 722 | Balances read again but not shown            | app.test.tsx: the page between its answers > reads the balances again, and says so when the session has ended meanwhile | `TestingLibraryElementError: Unable to find an element with the text: 900. This could be be…` |
+| 723 | A failed start not said                      | app.test.tsx: the page between its answers > says why a session could not be started, and stays where it is             | `TestingLibraryElementError: Unable to find role="alert"`                                     |
+| 724 | The start button left locked after a failure | app.test.tsx: the page between its answers > forgets a secret shown for the old session when a new one starts           | `TestingLibraryElementError: Unable to find role="button" and name "Start a new session ins…` |
+| 725 | The page drawn before the first answer       | app.test.tsx: the page between its answers > says it is loading until the server has said whether there is a session    | `TestingLibraryElementError: Unable to find an element with the text: Loading…. This could …` |
+| 726 | The clock not read again                     | app.test.tsx: the page between its answers > counts the session down while the page stays open                          | `TestingLibraryElementError: Unable to find an element with the text: Your session ends in …` |
+| 727 | The connection drawn without a session       | app.test.tsx: the page between its answers > reads the balances again, and says so when the session has ended meanwhile | `TypeError: Cannot read properties of null (reading 'partner')`                               |
+
+- **Removed, not survived.** Reading the balances again also set the secret's problem to "no session" when the
+  session had ended. Breaking that line failed nothing, and could not: with no session, the page in place of the
+  connection says "There is no session" and the place that showed the secret's problem is not drawn. The line
+  is gone, and the test now checks the page that says it instead (row 727).
+- **Equivalent, not a survivor.** After the secret is shown, the page marks its copy of the session as having
+  shown it. Removing that changes nothing a visitor sees: the secret itself is on the page until a new session
+  replaces this one, and reading the session again takes the server's word. It is kept so the page's copy says
+  what the server says, and has no row.
 
 ### The end-to-end tests
 
