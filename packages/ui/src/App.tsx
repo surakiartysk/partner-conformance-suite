@@ -96,9 +96,9 @@ export function App() {
   const refresh = async () => {
     setRefreshing(true)
     try {
-      const fresh = await client.getSession()
-      setSession(fresh)
-      if (!fresh) setSecretProblem(messageFor('no-session'))
+      // A session that has ended comes back as null, and the page in place of the
+      // connection says so; nothing more needs saying here.
+      setSession(await client.getSession())
     } catch (error) {
       setSecretProblem(problemOf(error))
     } finally {
