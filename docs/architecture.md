@@ -112,7 +112,8 @@ them, and ids older than the memory window ([decision 26](decisions.md#26-the-pa
 - **Testing a partner of your own.** The design has a self-hosted mode in which
   a partner enters its own base URL, behind a guard against server-side request
   forgery. The deployed suite only ever tests the reference partner; nothing
-  that takes a URL exists.
+  that takes a URL exists. What building it would take, and why
+  not on the public demo: [proposals/own-partner.md](proposals/own-partner.md).
 - **Rotating a signing secret.** Standard Webhooks allows several signatures in
   one header for exactly this, and the partner's verifier already accepts any
   of them. Nothing on the suite's side signs with two.
