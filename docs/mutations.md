@@ -910,6 +910,10 @@ end-to-end test on a touch screen measured 40 px. The stylesheet test now checks
 | 705 | A bare .bad that colours the callout and marked lines | page-security: gives a heading that reports a problem the problem colour and nothing else                 | `expected '/*\n * The dashboard\'s palette and t…' not to match …`  |
 | 706 | Step titles not headings                              | result-page: titles each step with an h3, so its h4s have a heading above them                            | `TestingLibraryElementError: Unable to find an accessible elemen…`  |
 | 707 | What was wrong back under the cases                   | result-page: says what was wrong with the version before the cases, not after them                        | `expected +0 to be truthy`                                          |
+| 708 | The partner's frame takes the suite in too            | how-it-works: frames the browser and the API together as the partner, the suite outside the frame         | `expected 610 to be greater than 712`                               |
+| 709 | The frame not named "You, the partner"                | how-it-works: frames the browser and the API together as the partner, the suite outside the frame         | `expected '<h1>How it works</h1><p class="lede">…' to contain '>…`  |
+| 710 | The API lifeline named the sample partner again       | how-it-works: has three lifelines named for who they are, …                                               | `expected '<h1>How it works</h1><p class="lede">…' to contain '>…`  |
+| 711 | The caption does not say the sample stands in         | how-it-works: says that a sample partner stands in for yours, …                                           | `expected '<h1>How it works</h1><p class="lede">…' to match /<fi…`  |
 
 Rows 657 to 695 are for the change of decision 42: 31 in the unit tests and 8 in the end-to-end test. Row 660's
 mutation ("Lines paired by path alone") survived the first version of the tests, which had no body where one path is
@@ -923,6 +927,8 @@ Rows 702 to 707 are for the result page's review (decision 43). Row 705 is also 
 first name for the heading's class was `.bad`, which the mismatch callout and every marked line already used, so
 their text turned red in the browser while every test stayed green. It was seen in a screenshot, renamed
 `.verdict-bad`, and a test now refuses a bare `.bad` rule.
+
+Rows 708 to 711 are for the How it works picture redrawn with the browser and the API in one frame (decision 42).
 
 ## Tests that could not fail, found on the way
 
