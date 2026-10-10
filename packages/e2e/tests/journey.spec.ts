@@ -407,6 +407,7 @@ for (const scheme of ['light', 'dark'] as const) {
       '/',
       '/connection',
       '/how-it-works',
+      '/for-partners',
       '/run',
       '/history',
       resultUrl,

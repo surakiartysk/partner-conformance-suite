@@ -14,10 +14,11 @@ const LINKS = [
   { page: 'run', label: 'Run' },
   { page: 'history', label: 'History' },
   { page: 'how-it-works', label: 'How it works' },
+  { page: 'for-partners', label: 'For partners' },
 ] as const
 
 /** The pages that need no session, so they are linked before there is one. */
-const OPEN = new Set<string>(['home', 'how-it-works'])
+const OPEN = new Set<string>(['home', 'how-it-works', 'for-partners'])
 
 /** A link that navigates in the page, and still works as a link when opened in a new tab. */
 export function PageLink({
@@ -61,6 +62,8 @@ export function titleFor(route: Route): string {
       return `History · ${SITE}`
     case 'how-it-works':
       return `How it works · ${SITE}`
+    case 'for-partners':
+      return `For partners · ${SITE}`
     case 'result':
       return `Result · ${SITE}`
     default:

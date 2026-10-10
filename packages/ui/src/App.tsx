@@ -3,6 +3,7 @@ import { ApiError, createClient, type SessionView } from './api'
 import { Connection } from './components/Connection'
 import { Home } from './components/Home'
 import { HistoryPage } from './components/HistoryPage'
+import { ForPartners } from './components/ForPartners'
 import { HowItWorks } from './components/HowItWorks'
 import { Layout } from './components/Layout'
 import { ResultPage } from './components/ResultPage'
@@ -152,6 +153,8 @@ export function App() {
     )
   } else if (route.page === 'how-it-works') {
     page = <HowItWorks />
+  } else if (route.page === 'for-partners') {
+    page = <ForPartners />
   } else if (route.page === 'history') {
     page = session ? (
       <HistoryPage client={client} now={now} onNavigate={navigate} />

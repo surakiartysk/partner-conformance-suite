@@ -110,6 +110,13 @@ describe('the page as a whole', () => {
     await waitFor(() => expect(document.title).toBe('History · Partner conformance suite'))
   })
 
+  it('draws For partners at its address, with no session needed', async () => {
+    window.history.replaceState(null, '', '/for-partners')
+    render(<App />)
+    expect(await screen.findByRole('heading', { name: 'For partners', level: 1 })).toBeTruthy()
+    expect(document.title).toBe('For partners · Partner conformance suite')
+  })
+
   it('names a page that does not exist', async () => {
     window.history.replaceState(null, '', '/nothing-here')
     render(<App />)
