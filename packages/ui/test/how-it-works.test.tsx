@@ -14,9 +14,14 @@ describe('the How it works page', () => {
     expect(html.match(/<section aria-labelledby="[a-z-]+">/g)).toHaveLength(4)
   })
 
-  it('says at the top that the API under test is a sample and that it cannot test your own yet', () => {
-    expect(html).toContain('a sample built into the site')
-    expect(html).toContain('It cannot test your own yet')
+  it('says at the top that this is a simulation, and what real use would be, promising nothing for later', () => {
+    expect(html).toContain('It is a simulation: the API here is a sample built into the site')
+    expect(html).toContain('In real use, a partner gives the suite its own API’s address.')
+    expect(html).not.toMatch(/\byet\b/)
+  })
+
+  it('sends a partner who wants the contract in full to For partners', () => {
+    expect(html).toContain('<a href="/for-partners">For partners</a>')
   })
 
   it('links to the partner API specification on its own origin', () => {
@@ -114,9 +119,9 @@ describe('who the picture says is who', () => {
     expect(at['The suite']).toBeGreaterThan(right)
   })
 
-  it('says that a sample partner stands in for yours, because this deployment takes no address', () => {
+  it('says that a sample partner stands in for yours, because this is simulated', () => {
     expect(html).toMatch(
-      /<figcaption[^>]*>[^<]*the same\s+partner’s[^<]*sample partner stands in for yours/,
+      /<figcaption[^>]*>[^<]*In real use, the browser and the API are the\s+same partner’s[^<]*Here it is\s+simulated, and a sample partner stands in for yours/,
     )
   })
 })

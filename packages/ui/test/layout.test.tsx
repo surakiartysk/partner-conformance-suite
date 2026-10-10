@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { Layout } from '../src/components/Layout'
+import { Layout, titleFor } from '../src/components/Layout'
 import type { Route } from '../src/route'
 
 const render = (route: Route, hasSession = true) =>
@@ -61,5 +61,13 @@ describe('the demo notice and the page that explains it', () => {
 
   it('marks it as the current page when it is the page', () => {
     expect(current(render({ page: 'how-it-works' }))).toEqual(['/how-it-works'])
+  })
+
+  it('links For partners from the header with no session, marks it when it is the page, and names it in the title', () => {
+    expect(render({ page: 'home' }, false)).toContain(
+      '<a href="/for-partners" class="nav-link">For partners</a>',
+    )
+    expect(current(render({ page: 'for-partners' }))).toEqual(['/for-partners'])
+    expect(titleFor({ page: 'for-partners' })).toBe('For partners · Partner conformance suite')
   })
 })

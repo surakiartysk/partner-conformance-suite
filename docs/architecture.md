@@ -107,13 +107,12 @@ remembered for twice the timestamp tolerance). The partner has a cron of its own
 every ten minutes: it deletes tenants that have expired, with everything under
 them, and ids older than the memory window ([decision 26](decisions.md#26-the-partner-forgets-what-has-expired-on-a-cron-of-its-own)).
 
-## Not built yet
+## Not built
 
-- **Testing a partner of your own.** The design has a self-hosted mode in which
-  a partner enters its own base URL, behind a guard against server-side request
-  forgery. The deployed suite only ever tests the reference partner; nothing
-  that takes a URL exists. What building it would take, and why
-  not on the public demo: [proposals/own-partner.md](proposals/own-partner.md).
+- **An address field, by decision.** The partner is simulated, and the suite
+  takes its target only from its own configuration, never from a request
+  ([decision 44](decisions.md#44-it-is-a-simulation-said-plainly-and-a-page-says-what-a-partner-implements)).
+
 - **Rotating a signing secret.** Standard Webhooks allows several signatures in
   one header for exactly this, and the partner's verifier already accepts any
   of them. Nothing on the suite's side signs with two.

@@ -111,8 +111,8 @@ export function HowItWorks() {
       <h1>How it works</h1>
       <p className="lede">
         This site sends signed requests to a points API and judges every answer, the way a client
-        would. The API here is a sample built into the site, so you can see what the checks catch.
-        It cannot test your own yet.
+        would. It is a simulation: the API here is a sample built into the site, so you can see what
+        the checks catch. In real use, a partner gives the suite its own API&rsquo;s address.
       </p>
 
       <section aria-labelledby="one-run">
@@ -120,10 +120,9 @@ export function HowItWorks() {
         <figure className="figure">
           <Diagram />
           <figcaption className="note">
-            Solid arrows ask, dashed arrows answer. In use, the browser and the API are the same
-            partner&rsquo;s: it opens the suite and points it at its own API. This deployment does
-            not take an address yet, so a sample partner stands in for yours, one bug planted in
-            each version.
+            Solid arrows ask, dashed arrows answer. In real use, the browser and the API are the
+            same partner&rsquo;s: it opens the suite and points it at its own API. Here it is
+            simulated, and a sample partner stands in for yours, one bug planted in each version.
           </figcaption>
         </figure>
         <ol className="steps">
@@ -151,7 +150,8 @@ export function HowItWorks() {
           are signed with Standard Webhooks and checked against its specification,{' '}
           <a href="/openapi.yaml">openapi.yaml</a>. Each version other than{' '}
           <span className="mono">correct</span> breaks the spec in one way; the result says which
-          case caught it.
+          case caught it. What a partner implements, with a signed request worked through, is under{' '}
+          <a href="/for-partners">For partners</a>.
         </p>
       </section>
 

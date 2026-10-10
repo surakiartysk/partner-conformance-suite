@@ -13,6 +13,7 @@ export type Route =
   | { page: 'run' }
   | { page: 'history' }
   | { page: 'how-it-works' }
+  | { page: 'for-partners' }
   | { page: 'result'; runId: string; caseId?: string }
   | { page: 'not-found' }
 
@@ -23,6 +24,7 @@ export function parseRoute(pathname: string): Route {
   if (path === '/run') return { page: 'run' }
   if (path === '/history') return { page: 'history' }
   if (path === '/how-it-works') return { page: 'how-it-works' }
+  if (path === '/for-partners') return { page: 'for-partners' }
   // /runs/<id>, or /runs/<id>/cases/<service>/<name> for one case of it.
   const result = /^\/runs\/([A-Za-z0-9_-]+)(?:\/cases\/([a-z]+\/[a-z-]+))?$/.exec(path)
   if (result) return { page: 'result', runId: result[1]!, caseId: result[2] }

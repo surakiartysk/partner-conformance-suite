@@ -7,7 +7,7 @@ went red, and the message it gave. Every break was reverted after its run.
 When this was last counted, on 8 October 2026, every test in the repository but one had been made to fail by at
 least one row below (the exception is named under "The page"): the 106 in `packages/partner`, the 19 in
 `packages/cases`, the 127 in `packages/api` and the 262 in `packages/ui`. That count has not been redone since,
-and there are now 131 in `packages/api` and 356 in `packages/ui`. The seven tests of `App.tsx` written later
+and there are now 131 in `packages/api` and 366 in `packages/ui`. The seven tests of `App.tsx` written later
 that day had no row until "The page as a whole". A new test is not done until it has a row too.
 
 ## Reference partner
@@ -772,6 +772,35 @@ first answer, the clock). Run against `app.test.tsx` alone.
   shown it. Removing that changes nothing a visitor sees: the secret itself is on the page until a new session
   replaces this one, and reading the session again takes the server's word. It is kept so the page's copy says
   what the server says, and has no row.
+
+### For partners, and saying it is a simulation
+
+17 breaks in the For partners page, the data it is drawn from, How it works's new words and the route, all red
+(decision 44). The rows the page lists are held to `openapi.yaml` by reading the spec's own lines; the worked
+request's signature is recomputed with Node's HMAC, apart from the suite's signer and the partner's verifier. Row
+744 came from a look at 320px: the example secret, inline, ran 42px past the screen.
+"An operation the spec does not have" was caught first by a test that drew the page, which failed on the broken row,
+and also by the test that compares the rows with the spec.
+
+| #   | Mutation                                         | Caught by                                                                                                                                                                    | Failure                                                                                                 |
+| --- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 728 | A summary that is not the spec's                 | for-partners.test.tsx: the For partners page > lists exactly the operations the spec has, each with its method, summary and statuses                                         | `expected [ { method: 'GET', …(3) }, …(4) ] to deeply equal [ { method: 'GET', …(3) }, …(4)…`           |
+| 729 | A status the spec lists left out                 | for-partners.test.tsx: the For partners page > lists exactly the operations the spec has, each with its method, summary and statuses                                         | `expected [ { method: 'GET', …(3) }, …(4) ] to deeply equal [ { method: 'GET', …(3) }, …(4)…`           |
+| 730 | An operation the spec does not have              | app.test.tsx: the page as a whole > draws For partners at its address, with no session needed                                                                                | `TypeError: Cannot read properties of undefined (reading 'join')`                                       |
+| 731 | A row without its statuses                       | for-partners.test.tsx: the For partners page > draws a row for every operation                                                                                               | `expected '<h1>For partners</h1><p class="lede">…' to contain '<td class="mono">200 401 404…`           |
+| 732 | The page not saying it is simulated              | for-partners.test.tsx: the For partners page > says the partner here is simulated, and that in real use it gives its own address                                             | `expected '<h1>For partners</h1><p class="lede">…' to contain 'On this site the partner is …`           |
+| 733 | The example signature one character off          | for-partners.test.tsx: the For partners page > gives a worked request whose signature is right, recomputed without the suite or the partner                                  | `expected 'v1,q7pPqDCGayqCgJjEY2z2otKT+XO+1fQrlJ…' to be 'v1,q7pPqDCGayqCgJjEY2z2otKU+XO+1f…`           |
+| 734 | The example without its timestamp                | for-partners.test.tsx: the For partners page > shows the worked request whole: the three headers and the body exactly as signed                                              | `expected 'POST /points/earn\ncontent-type: appl…' to contain 'webhook-timestamp: 176016960…`           |
+| 735 | The example body laid out, not as signed         | for-partners.test.tsx: the For partners page > shows the worked request whole: the three headers and the body exactly as signed                                              | `expected false to be true // Object.is equality`                                                       |
+| 736 | The case walk-through earning 10                 | for-partners.test.tsx: the For partners page > walks through a case that exists, as the case sends it                                                                        | `expected '<h1>For partners</h1><p class="lede">…' to contain '<span class="mono">POST /poi…`           |
+| 737 | The lede promising it again                      | how-it-works.test.tsx: the How it works page > says at the top that this is a simulation, and what real use would be, promising nothing for later                            | `expected '<h1>How it works</h1><p class="lede">…' to contain 'In real use, a partner gives…`           |
+| 738 | No link to For partners                          | how-it-works.test.tsx: the How it works page > sends a partner who wants the contract in full to For partners                                                                | `expected '<h1>How it works</h1><p class="lede">…' to contain '<a href="/for-partners">For …`           |
+| 739 | The caption back to "no address yet"             | how-it-works.test.tsx: the How it works page > says at the top that this is a simulation, and what real use would be, promising nothing for later                            | `expected '<h1>How it works</h1><p class="lede">…' not to match /\byet\b/`                              |
+| 740 | The address not read                             | route.test.ts: routes > reads each page the page has                                                                                                                         | `expected { page: 'not-found' } to deeply equal { page: 'for-partners' }`                               |
+| 741 | For partners only with a session                 | layout.test.tsx: the demo notice and the page that explains it > links For partners from the header with no session, marks it when it is the page, and names it in the title | `expected '<div class="demo"><p>Demo: this site …' to contain '<a href="/for-partners" clas…`           |
+| 742 | No title of its own                              | layout.test.tsx: the demo notice and the page that explains it > links For partners from the header with no session, marks it when it is the page, and names it in the title | `expected 'Partner conformance suite' to be 'For partners · Partner conformance su…' // Obj…`           |
+| 743 | The page not drawn by App                        | app.test.tsx: the page as a whole > draws For partners at its address, with no session needed                                                                                | `TestingLibraryElementError: Unable to find role="heading" and name "For partners"`                     |
+| 744 | The example secret inline, where it cannot break | for-partners.test.tsx: the For partners page > puts the example secret in a block that can break, since it has no space to break at                                          | `expected '<h1>For partners</h1><p class="lede">…' to contain '<p class="mono block" aria-label="The…'` |
 
 ### The end-to-end tests
 

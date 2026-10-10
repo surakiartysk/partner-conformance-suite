@@ -784,6 +784,8 @@ enters its own address (decision 1.1 in the plan, not built). It would carry a p
 and the design for that borrows the dashboard's password field. There is no field on the page
 now, and a test fails if one appears.
 
+_Later:_ that self-hosted deployment is not to be built (decision 44), so neither is its sign-in.
+
 **Cost.** No account means no way back to an earlier session from another browser or after
 the cookie is gone: the secret shown once and the runs of that session cannot be recovered. A
 session ends a day after it starts, and a visitor who loses it starts again. The controls are 44 px
@@ -949,6 +951,9 @@ browser" and "Your API" side by side in one frame, "You, the partner", with the 
 says that this deployment takes no address yet, so a sample partner stands in for yours. The direction is unchanged:
 the suite sends the requests; nothing here is a callback from the partner.
 
+_Later:_ "yet" is gone from the caption and the lede (decision 44): the site says it is a simulation and what real use
+would be, and promises nothing.
+
 ## 43. The result page leads with its verdict and what was wrong
 
 A design review of the result page on the live site, by the same probes and axe as the Run page's, found three
@@ -968,3 +973,30 @@ card further down. Nineteen passing cases are still listed in full; folding a gr
 considered and left, because the list is also the run's record. The first name for the heading's class, `.bad`,
 was already used by the mismatch callout and the marked lines, and turned their text red; the tests were green
 and a screenshot caught it. Checked in Chrome only.
+
+## 44. It is a simulation, said plainly, and a page says what a partner implements
+
+A proposal (`docs/proposals/own-partner.md`) costed a mode in which a partner enters its own API's address. The owner
+decided against it: there is no real partner, the demo simulates one and sends requests to itself, and the suite
+takes its target only from its own configuration (`PARTNER_ORIGIN`), never from what a browser sends. What a browser
+sends is a version and case ids, each checked against the server's own lists. The proposal is removed; this entry is
+its record.
+
+The pages had said "It cannot test your own yet" and "This deployment does not take an address yet", which promised a
+feature that is not coming. They now say what is true: it is a simulation, and in real use a partner gives the suite
+its own API's address. The hub's page for the suite says the same.
+
+The contract was `openapi.yaml`, which a browser shows as plain text, and a request could be seen only by running a
+case and opening its result. A page, **For partners**, open without a session, now says what a partner implements:
+
+- the five operations, each with its method, summary and the statuses it answers with, from `contract.ts`, which a
+  test holds to the spec line by line;
+- how a request is signed, and what a partner refuses;
+- one signed request whole, signed with the secret Standard Webhooks publishes for its test vector, whose signature a
+  test recomputes with Node's own HMAC, independently of the suite's signer and the partner's verifier;
+- the requests of `earn/adds-points` in order, which a test holds to the case's own definition.
+
+**Cost.** The page's rows are written out, not generated from the spec at build time, so a change to the spec fails a
+test until the page is changed too; the alternative was a YAML parser in the page for five rows. The worked example's
+timestamp is fixed, so the request it shows would be refused as stale, and the page says so. A visitor still cannot
+test their own API here, by decision now rather than for want of time. Checked in Chrome only.
