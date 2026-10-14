@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, type MiddlewareHandler } from 'hono'
 import { listCases } from './case-list'
 import { createRun, getRun, listRuns, next } from './runs'
 import { getSession, requireSession, revealSecret, startSession } from './sessions'
@@ -28,7 +28,28 @@ app.use('*', async (c, next) => {
 
 app.get('/cases', listCases)
 app.get('/versions', listVersions)
-app.post('/sessions', startSession)
+/**
+ * Starting a session is refused to other sites' pages.
+ *
+ * Every other write needs the session cookie, which `SameSite=Lax` keeps off
+ * other sites' requests (decision 21). Starting one needs nothing, so any page
+ * could POST here from its visitors' browsers and spend their five starts an
+ * hour. A browser says where a request came from in `Sec-Fetch-Site`; one too
+ * old to send it still sends `Origin` on a cross-site POST. A request with
+ * neither is not from a browser page, and a script could send anything anyway.
+ */
+const fromThisSite: MiddlewareHandler<Env> = async (c, next) => {
+  const site = c.req.header('sec-fetch-site')
+  const origin = c.req.header('origin')
+  const elsewhere =
+    site === 'cross-site' ||
+    site === 'same-site' ||
+    (site === undefined && origin !== undefined && origin !== new URL(c.req.url).origin)
+  if (elsewhere) return c.json({ error: 'start a session from this site' }, 403)
+  await next()
+}
+
+app.post('/sessions', fromThisSite, startSession)
 app.get('/session', requireSession, getSession)
 app.post('/session/secret', requireSession, revealSecret)
 

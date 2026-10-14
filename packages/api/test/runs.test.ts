@@ -150,6 +150,19 @@ describe('POST /api/runs', () => {
     expect((await createRun(cookie, { version: 'correct', services: [] })).status).toBe(400)
   })
 
+  it('refuses a service named twice, as it refuses a case named twice', async () => {
+    const { cookie } = await startSession()
+    const response = await createRun(cookie, { version: 'correct', services: ['earn', 'earn'] })
+    expect(response.status).toBe(400)
+  })
+
+  it('answers 400, not 500, to a body that is JSON but not an object', async () => {
+    const { cookie } = await startSession()
+    for (const body of [null, 7, 'correct']) {
+      expect((await createRun(cookie, body)).status, JSON.stringify(body)).toBe(400)
+    }
+  })
+
   it('needs a session', async () => {
     const response = await callApi('/runs', { method: 'POST', body: '{"version":"correct"}' })
     expect(response.status).toBe(401)

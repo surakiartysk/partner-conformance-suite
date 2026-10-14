@@ -165,6 +165,31 @@ describe('POST /api/sessions', () => {
     expect(clientKey(undefined)).toBe('unknown')
   })
 
+  it('refuses a start from another site’s page, and charges it nothing', async () => {
+    // Starting needs no cookie, so SameSite cannot stop another page doing it.
+    const visitor = client()
+    const elsewhere: Record<string, string>[] = [
+      { 'sec-fetch-site': 'cross-site' },
+      { 'sec-fetch-site': 'same-site' },
+      { origin: 'https://elsewhere.example' },
+    ]
+    for (const headers of elsewhere) {
+      expect((await start(visitor, { headers })).status, JSON.stringify(headers)).toBe(403)
+    }
+    for (let i = 0; i < SESSION_STARTS_ALLOWED; i++) {
+      expect((await start(visitor)).status).toBe(201)
+    }
+  })
+
+  it('takes a start from this site’s own page', async () => {
+    expect((await start(client(), { headers: { 'sec-fetch-site': 'same-origin' } })).status).toBe(
+      201,
+    )
+    expect((await start(client(), { headers: { origin: 'https://suite.example' } })).status).toBe(
+      201,
+    )
+  })
+
   it('counts starts that arrive together, rather than letting them all read the same count', async () => {
     const busy = client()
     const statuses = await Promise.all(
