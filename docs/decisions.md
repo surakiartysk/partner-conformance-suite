@@ -415,6 +415,12 @@ What keeps that safe:
   failing starts still count. An IPv6 address is counted by its /64 (14
   October): counted one by one, a machine handed a /64 could start every
   session from a new address, and a security review found it.
+- **A start from another site's page is refused** (14 October). Every other
+  write needs the cookie, which `Lax` keeps off other sites' requests; starting
+  needs nothing, so any page could have spent its visitors' five starts. A
+  `Sec-Fetch-Site` of `cross-site` or `same-site` is refused, and so is an
+  `Origin` that is not this one when that header is absent. A request with
+  neither is not from a page, and a script can send what it likes anyway.
 - **A session ends when its tenant does.** Its expiry is the one the partner
   answered with, so there is never a session pointing at a partner that has
   forgotten it.

@@ -65,7 +65,11 @@ async function findRun(c: Context<Env>, id: string): Promise<RunRow | null> {
 export async function createRun(c: Context<Env>): Promise<Response> {
   let body: { version?: unknown; services?: unknown; cases?: unknown }
   try {
-    body = await c.req.json()
+    // JSON that is not an object (`null`, a number) is read as an empty body
+    // and refused for what it lacks. `null` used to reach `body.version` and
+    // answer 500.
+    const parsed: unknown = await c.req.json()
+    body = parsed !== null && typeof parsed === 'object' ? parsed : {}
   } catch {
     body = {}
   }
@@ -95,12 +99,15 @@ export async function createRun(c: Context<Env>): Promise<Response> {
     services = SERVICES.filter((s) => chosen.some((definition) => definition.service === s))
   } else {
     const named = body.services ?? SERVICES
+    // Each once, as cases are: a service named twice was stored twice, and the
+    // run's record then disagreed with what it ran.
     if (
       !Array.isArray(named) ||
       named.length === 0 ||
+      new Set(named).size !== named.length ||
       !named.every((s) => SERVICES.includes(s as Service))
     ) {
-      return c.json({ error: `services must be some of: ${SERVICES.join(', ')}` }, 400)
+      return c.json({ error: `services must be some of: ${SERVICES.join(', ')}, each once` }, 400)
     }
     services = named
     chosen = CASES.filter((definition) => services.includes(definition.service))
