@@ -2,7 +2,7 @@ import { createExecutionContext, env } from 'cloudflare:test'
 import { beforeAll, describe, expect, it } from 'vitest'
 import api from '../src/index'
 import { decrypt, sha256Hex } from '../src/secrets'
-import { SESSION_STARTS_ALLOWED } from '../src/sessions'
+import { SESSION_STARTS_ALLOWED, clientKey } from '../src/sessions'
 import { apiEnv, callApi, cookieFrom, migrateAll, startSession, toPartner } from './helpers'
 
 beforeAll(migrateAll)
@@ -143,6 +143,26 @@ describe('POST /api/sessions', () => {
     expect(refused.status).toBe(429)
     expect(refused.headers.get('retry-after')).toBe('3600')
     expect((await start(client())).status).toBe(201)
+  })
+
+  it('counts every address in one IPv6 /64 as one client, and another /64 apart', async () => {
+    // A machine handed a /64 could otherwise start every session from a new address.
+    const [a, b] = [0, 0].map(() => Math.floor(Math.random() * 0xffff))
+    const network = `2001:db8:${a!.toString(16)}:${b!.toString(16)}`
+    const elsewhere = `2001:db8:${a!.toString(16)}:${(b! + 1).toString(16)}`
+    for (let i = 0; i < SESSION_STARTS_ALLOWED; i++) {
+      expect((await start(`${network}::${(i + 1).toString(16)}`)).status).toBe(201)
+    }
+    expect((await start(`${network}:ffff:ffff:ffff:ffff`)).status).toBe(429)
+    expect((await start(`${elsewhere}::1`)).status).toBe(201)
+  })
+
+  it('reads one /64 however it is written, and anything else as the shared bucket', () => {
+    expect(clientKey('2001:db8::1')).toBe('2001:0db8:0000:0000::/64')
+    expect(clientKey('2001:0DB8:0:0::2')).toBe('2001:0db8:0000:0000::/64')
+    expect(clientKey('203.0.113.7')).toBe('203.0.113.7')
+    expect(clientKey('2001:db8::1::2')).toBe('unknown')
+    expect(clientKey(undefined)).toBe('unknown')
   })
 
   it('counts starts that arrive together, rather than letting them all read the same count', async () => {

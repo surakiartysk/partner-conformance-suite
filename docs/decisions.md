@@ -412,7 +412,9 @@ What keeps that safe:
   marks it shown is the check, so two requests together cannot both see it.
 - **Starts are limited per address**, five an hour, counted in one upsert and
   charged before the partner is asked to provision anything, so refused or
-  failing starts still count.
+  failing starts still count. An IPv6 address is counted by its /64 (14
+  October): counted one by one, a machine handed a /64 could start every
+  session from a new address, and a security review found it.
 - **A session ends when its tenant does.** Its expiry is the one the partner
   answered with, so there is never a session pointing at a partner that has
   forgotten it.
@@ -421,7 +423,7 @@ What keeps that safe:
 
 **Cost.** Whoever has the database and `SECRET_KEY` together can sign as the
 provider for every live session. Visitors behind one address — an office, a
-conference network — share five starts an hour. And a visitor who closes the
+conference network, or one IPv6 /64 — share five starts an hour. And a visitor who closes the
 dialog that showed the secret cannot see it again; they start a new session.
 
 The secret is decrypted before the showing is claimed, not after. Claimed first,

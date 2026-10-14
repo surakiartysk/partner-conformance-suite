@@ -22,10 +22,50 @@ export const SESSION_START_WINDOW_SECONDS = 60 * 60
 const now = () => Math.floor(Date.now() / 1000)
 
 /**
- * The client's address as Cloudflare reports it. Absent locally, where every
- * caller shares one bucket — which is the safe direction to be wrong in.
+ * The client a start is counted against: its address as Cloudflare reports it,
+ * an IPv6 one by its /64. Absent locally, where every caller shares one bucket
+ * — which is the safe direction to be wrong in. So does a header that is not
+ * an address.
+ *
+ * Counted per IPv6 address, the limit was per address in a range the client
+ * picks from: a home line or a cloud VM is handed a whole /64, so one machine
+ * could start a session, and provision a tenant on the partner, from a new
+ * address every time.
  */
-const clientOf = (c: Context) => c.req.header('cf-connecting-ip') ?? 'unknown'
+export function clientKey(address: string | undefined): string {
+  if (!address) return 'unknown'
+  if (!address.includes(':')) return address
+  const prefix = ipv6Prefix64(address)
+  return prefix ? `${prefix}::/64` : 'unknown'
+}
+
+/**
+ * The first four groups of an IPv6 address, written out in full, or null when
+ * the text is not one. Written out because `2001:db8::1` and `2001:0db8:0:0::2`
+ * are one /64, and a prefix taken from the text as written would count them
+ * apart.
+ */
+export function ipv6Prefix64(address: string): string | null {
+  const text = address.toLowerCase().split('%')[0]!
+  const halves = text.split('::')
+  if (halves.length > 2) return null
+  const groupsOf = (part: string) => (part === '' ? [] : part.split(':'))
+  const head = groupsOf(halves[0]!)
+  const tail = halves.length === 2 ? groupsOf(halves[1]!) : []
+  // A trailing dotted quad (`::ffff:192.0.2.1`) is two groups; only the first
+  // four matter here, so it is counted and not decoded.
+  const last = tail.length ? tail : head
+  const width = last.length && last[last.length - 1]!.includes('.') ? 1 : 0
+  const missing = 8 - head.length - tail.length - width
+  if (halves.length === 2 ? missing < 1 : missing !== 0) return null
+
+  const groups = [...head, ...Array<string>(halves.length === 2 ? missing : 0).fill('0'), ...tail]
+  const prefix = groups.slice(0, 4)
+  if (!prefix.every((g) => /^[0-9a-f]{1,4}$/.test(g))) return null
+  return prefix.map((g) => g.padStart(4, '0')).join(':')
+}
+
+const clientOf = (c: Context) => clientKey(c.req.header('cf-connecting-ip'))
 
 /**
  * Charges one start to the client and returns the count in the window. One

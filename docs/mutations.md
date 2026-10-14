@@ -981,6 +981,8 @@ end-to-end test on a touch screen measured 40 px. The stylesheet test now checks
 | 709 | The frame not named "You, the partner"                | how-it-works: frames the browser and the API together as the partner, the suite outside the frame         | `expected '<h1>How it works</h1><p class="lede">…' to contain '>…`  |
 | 710 | The API lifeline named the sample partner again       | how-it-works: has three lifelines named for who they are, …                                               | `expected '<h1>How it works</h1><p class="lede">…' to contain '>…`  |
 | 711 | The caption does not say the sample stands in         | how-it-works: says that a sample partner stands in for yours, …                                           | `expected '<h1>How it works</h1><p class="lede">…' to match /<fi…`  |
+| 712 | IPv6 starts counted per address, not per /64          | sessions: counts every address in one IPv6 /64 as one client, and another /64 apart                       | `expected 201 to be 429`                                            |
+| 713 | The /64 taken as written, not written out             | sessions: reads one /64 however it is written, and anything else as the shared bucket                     | `expected '2001:db8:0:0::/64' to be '2001:0db8:0000:0000::/64'`     |
 
 Rows 657 to 695 are for the change of decision 42: 31 in the unit tests and 8 in the end-to-end test. Row 660's
 mutation ("Lines paired by path alone") survived the first version of the tests, which had no body where one path is
@@ -996,6 +998,8 @@ their text turned red in the browser while every test stayed green. It was seen 
 `.verdict-bad`, and a test now refuses a bare `.bad` rule.
 
 Rows 708 to 711 are for the How it works picture redrawn with the browser and the API in one frame (decision 42).
+
+Rows 712 and 713 are for counting "Try it" starts by IPv6 /64 (decision 21's limit), after the security review of 14 October.
 
 ## Tests that could not fail, found on the way
 
