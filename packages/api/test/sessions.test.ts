@@ -168,11 +168,12 @@ describe('POST /api/sessions', () => {
   it('refuses a start from another site’s page, and charges it nothing', async () => {
     // Starting needs no cookie, so SameSite cannot stop another page doing it.
     const visitor = client()
-    for (const headers of [
+    const elsewhere: Record<string, string>[] = [
       { 'sec-fetch-site': 'cross-site' },
       { 'sec-fetch-site': 'same-site' },
       { origin: 'https://elsewhere.example' },
-    ]) {
+    ]
+    for (const headers of elsewhere) {
       expect((await start(visitor, { headers })).status, JSON.stringify(headers)).toBe(403)
     }
     for (let i = 0; i < SESSION_STARTS_ALLOWED; i++) {
