@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@conformance/cases": "workspace:*",
-    "hono": "^4.6.14"
+    "hono": "^4.13.16"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.22.0",
